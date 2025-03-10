@@ -1,22 +1,14 @@
-[Event "Rated bullet game"]
-[Site "https://lichess.org/oA4zcHf9"]
-[Date "2025.03.10"]
-[White "Misterbisterr"]
-[Black "Mysterious-Master"]
+[Event "Casual Game"]
+[Site "London"]
+[Date "1851.??.??"]
+[Round "?"]
+[White "Anderssen, Adolf"]
+[Black "Kieseritzky, Lionel"]
 [Result "1-0"]
-[GameId "oA4zcHf9"]
-[UTCDate "2025.03.10"]
-[UTCTime "07:03:29"]
-[WhiteElo "2794"]
-[BlackElo "2712"]
-[WhiteRatingDiff "+4"]
-[BlackRatingDiff "-4"]
-[Variant "Standard"]
-[TimeControl "60+0"]
-[ECO "A40"]
-[Opening "Queen's Pawn Game: Modern Defense"]
-[Termination "Normal"]
 
-1. d4 g6 2. h4 Bg7 3. h5 Nf6 4. h6 Bf8 5. Nc3 d5 6. Bf4 c6 7. e3 e6 8. f3 Bd6 9. Nge2 Bxf4 10. Nxf4 Nbd7 11. Qd3 Qe7 12. O-O-O e5 13. dxe5 Nxe5 14. Qd4 Bf5 15. g4 Bc8 16. g5 Nfd7 17. Nfxd5 cxd5 18. Nxd5 Qd8 19. f4 b6 20. fxe5 O-O 21. Nf6+ Nxf6 22. Qxd8 1-0
+1. e4 e5 2. f4 exf4 3. Bc4 Qh4+ 4. Kf1 b5 5. Bxb5 Nf6 6. Nf3 Qh6 7. d3 Nh5 8. Nh4 Qg5 
+9. Nf5 c6 10. g4 Nf6 11. Rg1 cxb5 12. h4 Qg6 13. h5 Qg5 14. Qf3 Ng8 15. Bxf4 Qf6 
+16. Nc3 Bc5 17. Nd5 Qxb2 18. Bd6 Bxg1 19. e5 Qxa1+ 20. Ke2 Na6 21. Nxg7+ Kd8 
+22. Qf6+ Nxf6 23. Be7# 1-0
 
 
