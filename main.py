@@ -1317,14 +1317,7 @@ def main():
         # Run as a REST API server
         app = Flask(__name__, 
                    static_folder='static',
-                   template_folder='templates')
-        
-        # Create a ChessDoctor instance to be used by the API
-        try:
-            chess_doctor_instance = ChessDoctor(args.engine)
-        except Exception as e:
-            print(f"Error initializing ChessDoctor: {e}")
-            sys.exit(1)
+                   template_folder='templates') 
         
         @app.route('/')
         def index():
@@ -1357,7 +1350,8 @@ def main():
                     
                 # Analyze the game
                 try:
-                    analysis_data = chess_doctor_instance.analyze_game(tmp_path)
+                    chess_doctor = ChessDoctor(args.engine)
+                    analysis_data = chess_doctor.analyze_game(tmp_path)
                     
                     # Cleanup
                     os.unlink(tmp_path)
