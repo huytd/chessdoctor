@@ -4,6 +4,9 @@ import chess.pgn
 import chess.engine
 import os
 import sys
+import json
+import tempfile
+from flask import Flask, request, jsonify, render_template, send_from_directory
 
 class ChessDoctor:
     def __init__(self, stockfish_path=None):
@@ -1104,18 +1107,34 @@ class ChessDoctor:
         return False
 
     def analyze_game(self, pgn_file_path):
-        """Analyze a game from a PGN file."""
+        """Analyze a game from a PGN file and return the analysis as JSON data."""
+        analysis_data = {
+            "game_info": {},
+            "moves": [],
+            "errors": []
+        }
+        
         try:
             with open(pgn_file_path) as pgn_file:
                 game = chess.pgn.read_game(pgn_file)
                 
             if not game:
-                print("Error: Could not read game from PGN file")
-                return
+                error_msg = "Error: Could not read game from PGN file"
+                print(error_msg)
+                analysis_data["errors"].append(error_msg)
+                return analysis_data
                 
-            print(f"Analyzing game: {game.headers.get('White', 'Unknown')} vs {game.headers.get('Black', 'Unknown')}")
-            print(f"Event: {game.headers.get('Event', 'Unknown')}")
-            print(f"Date: {game.headers.get('Date', 'Unknown')}")
+            # Game headers
+            analysis_data["game_info"] = {
+                "white": game.headers.get('White', 'Unknown'),
+                "black": game.headers.get('Black', 'Unknown'),
+                "event": game.headers.get('Event', 'Unknown'),
+                "date": game.headers.get('Date', 'Unknown')
+            }
+            
+            print(f"Analyzing game: {analysis_data['game_info']['white']} vs {analysis_data['game_info']['black']}")
+            print(f"Event: {analysis_data['game_info']['event']}")
+            print(f"Date: {analysis_data['game_info']['date']}")
             print("-" * 60)
             
             # Start from initial position
@@ -1176,44 +1195,76 @@ class ChessDoctor:
                     # Classify the move
                     move_quality = self._classify_move(score_diff)
                     
+                    # Create move data structure
+                    move_data = {
+                        "move_number": move_number,
+                        "ply": ply,
+                        "move": san_move,
+                        "player": player,
+                        "is_white": is_white_move,
+                        "quality": move_quality,
+                        "evaluation": str(curr_score),
+                        "notation": current_move_line
+                    }
+                    
                     # If it's the end of a full move or a non-good move, print the move line
                     if not is_white_move or move_quality != "good move":
                         print(f"{current_move_line}")
                     
-                    # For non-good moves, print analysis
+                    # For non-good moves, print analysis and add to JSON
                     if move_quality != "good move":
                         player_symbol = "♔" if player == "White" else "♚"
                         print(f"  {player_symbol} {player}'s move: {san_move} ({move_quality}, eval: {curr_score})")
                         
                         try:
                             # Now get the best move for that position
-                            best_move, _, explanation = self._get_best_move_and_explanation(board_before_move, move)
+                            best_move, best_score, explanation = self._get_best_move_and_explanation(board_before_move, move)
                             best_san = board_before_move.san(best_move)
                             print(f"  ✓ Better move: {best_san}")
                             print(f"  ℹ Why: {explanation}")
                             print()
+                            
+                            # Add to move data
+                            move_data["analysis"] = {
+                                "best_move": best_san,
+                                "explanation": explanation,
+                                "best_evaluation": str(best_score) if best_score else None
+                            }
                         except Exception as e:
-                            print(f"  ⚠ Unable to determine best move: {str(e)}")
+                            error_msg = f"Unable to determine best move: {str(e)}"
+                            print(f"  ⚠ {error_msg}")
                             print()
+                            move_data["analysis_error"] = error_msg
+                    
+                    # Add the move data to our analysis
+                    analysis_data["moves"].append(move_data)
                     
                     # Store current evaluation for next move
                     prev_score = curr_score
                     
                 except Exception as e:
-                    print(f"\nError analyzing move: {str(e)}")
+                    error_msg = f"Error analyzing move: {str(e)}"
+                    print(f"\n{error_msg}")
+                    analysis_data["errors"].append(error_msg)
                     # Try to continue with the next move
                     continue
             
             print("\nAnalysis complete!")
             
         except FileNotFoundError:
-            print(f"Error: PGN file '{pgn_file_path}' not found")
+            error_msg = f"Error: PGN file '{pgn_file_path}' not found"
+            print(error_msg)
+            analysis_data["errors"].append(error_msg)
         except Exception as e:
-            print(f"Error analyzing game: {str(e)}")
+            error_msg = f"Error analyzing game: {str(e)}"
+            print(error_msg)
+            analysis_data["errors"].append(error_msg)
         finally:
             # Make sure to quit the engine
             if hasattr(self, 'engine'):
                 self.engine.quit()
+        
+        return analysis_data
     
     def _get_position_evaluation(self, board):
         """Get the evaluation of the current position."""
@@ -1234,24 +1285,106 @@ class ChessDoctor:
         return "good move"
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze chess games with Stockfish")
-    parser.add_argument("pgn_file", help="Path to the PGN file containing the chess game")
+    parser = argparse.ArgumentParser(description="Run Chess Doctor as a REST API or CLI tool")
     parser.add_argument("--engine", help="Path to Stockfish engine executable (optional, auto-detected if not provided)")
+    parser.add_argument("--port", type=int, default=3030, help="Port to run the REST API on (default: 3030)")
+    parser.add_argument("--host", default="0.0.0.0", help="Host to run the REST API on (default: 0.0.0.0)")
+    parser.add_argument("--cli", action="store_true", help="Run in CLI mode instead of API mode")
+    parser.add_argument("--pgn_file", help="Path to the PGN file (required in CLI mode)")
     args = parser.parse_args()
     
-    try:
-        chess_doctor = ChessDoctor(args.engine)
-        chess_doctor.analyze_game(args.pgn_file)
-    except FileNotFoundError as e:
-        print(f"Error: {e}")
-        print("\nStockfish could not be found automatically. Please make sure Stockfish is installed and either:")
-        print("1. Add it to your system PATH")
-        print("2. Provide the path using --engine option")
-        print("\nInstallation instructions:")
-        print("- Linux: sudo apt-get install stockfish (Debian/Ubuntu)")
-        print("- macOS: brew install stockfish (using Homebrew)")
-        print("- Windows: Download from https://stockfishchess.org/download/ and install")
-        sys.exit(1)
+    if args.cli:
+        # Run in traditional CLI mode
+        if not args.pgn_file:
+            print("Error: --pgn_file is required when running in CLI mode")
+            sys.exit(1)
+            
+        try:
+            chess_doctor = ChessDoctor(args.engine)
+            analysis_data = chess_doctor.analyze_game(args.pgn_file)
+            print(json.dumps(analysis_data, indent=2))
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
+            print("\nStockfish could not be found automatically. Please make sure Stockfish is installed and either:")
+            print("1. Add it to your system PATH")
+            print("2. Provide the path using --engine option")
+            print("\nInstallation instructions:")
+            print("- Linux: sudo apt-get install stockfish (Debian/Ubuntu)")
+            print("- macOS: brew install stockfish (using Homebrew)")
+            print("- Windows: Download from https://stockfishchess.org/download/ and install")
+            sys.exit(1)
+    else:
+        # Run as a REST API server
+        app = Flask(__name__, 
+                   static_folder='static',
+                   template_folder='templates')
+        
+        # Create a ChessDoctor instance to be used by the API
+        try:
+            chess_doctor_instance = ChessDoctor(args.engine)
+        except Exception as e:
+            print(f"Error initializing ChessDoctor: {e}")
+            sys.exit(1)
+        
+        @app.route('/')
+        def index():
+            """Serve the index.html page at the root URL"""
+            return render_template('index.html')
+
+        @app.route('/<path:path>')
+        def serve_static(path):
+            """Serve static files from the templates directory"""
+            return send_from_directory('templates', path)
+        
+        @app.route('/api/analyze', methods=['POST'])
+        def analyze():
+            """Analyze a chess game from PGN data"""
+            # Check if PGN data is provided
+            if not request.is_json:
+                return jsonify({"error": "Request must be JSON"}), 400
+                
+            data = request.get_json()
+            if 'pgn' not in data:
+                return jsonify({"error": "Missing 'pgn' field in request"}), 400
+                
+            pgn_data = data['pgn']
+            
+            # Write PGN data to a temporary file
+            try:
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.pgn', mode='w') as tmp_file:
+                    tmp_file.write(pgn_data)
+                    tmp_path = tmp_file.name
+                    
+                # Analyze the game
+                try:
+                    analysis_data = chess_doctor_instance.analyze_game(tmp_path)
+                    
+                    # Cleanup
+                    os.unlink(tmp_path)
+                    
+                    return jsonify(analysis_data)
+                    
+                except Exception as e:
+                    return jsonify({"error": f"Analysis failed: {str(e)}"}), 500
+                finally:
+                    # Ensure temp file is removed
+                    if os.path.exists(tmp_path):
+                        try:
+                            os.unlink(tmp_path)
+                        except:
+                            pass
+                        
+            except Exception as e:
+                return jsonify({"error": f"Failed to process PGN data: {str(e)}"}), 500
+                
+        @app.route('/health', methods=['GET'])
+        def health():
+            return jsonify({"status": "ok"})
+        
+        # Start the Flask server
+        print(f"Starting Chess Doctor API on {args.host}:{args.port}")
+        print(f"Web UI available at http://{args.host if args.host != '0.0.0.0' else 'localhost'}:{args.port}/")
+        app.run(host=args.host, port=args.port, debug=False)
 
 if __name__ == "__main__":
     main()

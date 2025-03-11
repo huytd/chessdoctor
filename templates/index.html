@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Doctor - Game Analysis</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/chessboard-1.0.0.css">
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .chessboard {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+        }
+        #board {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .board-container {
+            position: relative;
+            width: 100%;
+        }
+        #arrow-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .analysis-container {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: white;
+        }
+        .move-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .move-item:hover {
+            background-color: #f1f1f1;
+        }
+        .move-item.active {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        .move-pair {
+            display: flex;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .move-number {
+            width: 40px;
+            font-weight: bold;
+        }
+        .white-move, .black-move {
+            flex: 1;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        .white-move:hover, .black-move:hover {
+            background-color: #f1f1f1;
+        }
+        .white-move.active, .black-move.active {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        .blunder {
+            color: #dc3545;
+        }
+        .mistake {
+            color: #fd7e14;
+        }
+        .inaccuracy {
+            color: #ffc107;
+        }
+        .good-move {
+            color: #28a745;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        .game-info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .controls {
+            margin: 15px 0;
+        }
+        .controls button {
+            margin: 0 5px;
+        }
+        .explanation {
+            font-style: italic;
+            margin-top: 5px;
+        }
+        .move-explanation {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            min-height: 100px;
+        }
+        .move-quality-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .quality-blunder {
+            background-color: #dc3545;
+        }
+        .quality-mistake {
+            background-color: #fd7e14;
+        }
+        .quality-inaccuracy {
+            background-color: #ffc107;
+        }
+        .quality-good {
+            background-color: #28a745;
+        }
+        /* Arrow styles */
+        .arrow-current {
+            stroke: rgba(0, 0, 255, 0.7);
+            stroke-width: 8px;
+        }
+        .arrow-better {
+            stroke: rgba(0, 128, 0, 0.7);
+            stroke-width: 8px;
+        }
+        .arrow-head-current {
+            fill: rgba(0, 0, 255, 0.7);
+        }
+        .arrow-head-better {
+            fill: rgba(0, 128, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Chess Doctor</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <!-- Chessboard -->
+                <div class="chessboard">
+                    <div class="board-container">
+                        <div id="board"></div>
+                        <svg id="arrow-svg"></svg>
+                    </div>
+                    
+                    <!-- Controls -->
+                    <div class="controls text-center">
+                        <button id="btnFirst" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-skip-start-fill"></i> First
+                        </button>
+                        <button id="btnPrev" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-caret-left-fill"></i> Prev
+                        </button>
+                        <button id="btnNext" class="btn btn-sm btn-outline-secondary">
+                            Next <i class="bi bi-caret-right-fill"></i>
+                        </button>
+                        <button id="btnLast" class="btn btn-sm btn-outline-secondary">
+                            Last <i class="bi bi-skip-end-fill"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Game Info -->
+                    <div class="game-info" id="gameInfo">
+                        <p class="mb-0">Paste a PGN to analyze a game</p>
+                    </div>
+                </div>
+                
+                <!-- PGN Input -->
+                <div class="mb-3">
+                    <label for="pgnInput" class="form-label">Paste PGN:</label>
+                    <textarea class="form-control" id="pgnInput" rows="6" placeholder="Paste your PGN here..."></textarea>
+                </div>
+                
+                <button id="analyzeBtn" class="btn btn-primary">Analyze Game</button>
+                
+                <!-- Loading Indicator -->
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Analyzing game... This may take a minute.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <!-- Analysis Results -->
+                <h3>Analysis</h3>
+                <div class="analysis-container" id="analysisContainer">
+                    <p class="text-center text-muted">Analysis will appear here after you analyze a game.</p>
+                </div>
+                
+                <!-- Move Explanation -->
+                <div class="move-explanation mt-3" id="moveExplanation">
+                    <p class="text-muted">Select a move to see analysis</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="js/chessboard-1.0.0.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize variables
+            const board = Chessboard('board', {
+                position: 'start',
+                pieceTheme: 'img/chesspieces/wikipedia/{piece}.png'
+            });
+            const chess = new Chess();
+            let analysisData = null;
+            let currentMoveIndex = -1;
+            let moves = [];
+            let moveHistory = [];
+            
+            // DOM elements
+            const pgnInput = document.getElementById('pgnInput');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const analysisContainer = document.getElementById('analysisContainer');
+            const moveExplanation = document.getElementById('moveExplanation');
+            const gameInfo = document.getElementById('gameInfo');
+            const btnFirst = document.getElementById('btnFirst');
+            const btnPrev = document.getElementById('btnPrev');
+            const btnNext = document.getElementById('btnNext');
+            const btnLast = document.getElementById('btnLast');
+            const arrowSvg = document.getElementById('arrow-svg');
+            const boardContainer = document.querySelector('.board-container');
+            
+            // Ensure the SVG has the same dimensions as the board
+            function updateSvgDimensions() {
+                const boardEl = document.getElementById('board');
+                if (boardEl) {
+                    const boardRect = boardEl.getBoundingClientRect();
+                    arrowSvg.setAttribute('width', boardRect.width);
+                    arrowSvg.setAttribute('height', boardRect.width); // Square board
+                }
+            }
+            
+            // Call once on load
+            setTimeout(updateSvgDimensions, 100);
+            
+            // Set up SVG definitions for arrow markers
+            setupArrowMarkers();
+            
+            // Event listeners
+            analyzeBtn.addEventListener('click', analyzeGame);
+            btnFirst.addEventListener('click', goToFirstMove);
+            btnPrev.addEventListener('click', goToPrevMove);
+            btnNext.addEventListener('click', goToNextMove);
+            btnLast.addEventListener('click', goToLastMove);
+            
+            // Set up arrow markers
+            function setupArrowMarkers() {
+                const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                
+                // Current move marker
+                const markerCurrent = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                markerCurrent.setAttribute('id', 'arrowhead-current');
+                markerCurrent.setAttribute('markerWidth', '6');
+                markerCurrent.setAttribute('markerHeight', '4');
+                markerCurrent.setAttribute('refX', '4');
+                markerCurrent.setAttribute('refY', '2');
+                markerCurrent.setAttribute('orient', 'auto');
+                
+                const polygonCurrent = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygonCurrent.setAttribute('points', '0 0, 6 2, 0 4');
+                polygonCurrent.setAttribute('class', 'arrow-head-current');
+                
+                markerCurrent.appendChild(polygonCurrent);
+                defs.appendChild(markerCurrent);
+                
+                // Better move marker
+                const markerBetter = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                markerBetter.setAttribute('id', 'arrowhead-better');
+                markerBetter.setAttribute('markerWidth', '6');
+                markerBetter.setAttribute('markerHeight', '4');
+                markerBetter.setAttribute('refX', '4');
+                markerBetter.setAttribute('refY', '2');
+                markerBetter.setAttribute('orient', 'auto');
+                
+                const polygonBetter = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygonBetter.setAttribute('points', '0 0, 6 2, 0 4');
+                polygonBetter.setAttribute('class', 'arrow-head-better');
+                
+                markerBetter.appendChild(polygonBetter);
+                defs.appendChild(markerBetter);
+                
+                arrowSvg.appendChild(defs);
+            }
+            
+            // Analyze game function
+            function analyzeGame() {
+                const pgn = pgnInput.value.trim();
+                if (!pgn) {
+                    alert('Please paste a PGN to analyze.');
+                    return;
+                }
+                
+                // Show loading indicator
+                loadingIndicator.style.display = 'block';
+                analyzeBtn.disabled = true;
+                
+                // Reset the board and analysis
+                chess.reset();
+                board.position('start');
+                clearArrows();
+                analysisContainer.innerHTML = '<p class="text-center">Analyzing...</p>';
+                moveExplanation.innerHTML = '<p class="text-muted">Select a move to see analysis</p>';
+                currentMoveIndex = -1;
+                moveHistory = [];
+                
+                // Send the PGN to the API
+                fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ pgn: pgn })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Analysis failed. Please check your PGN and try again.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Hide loading indicator
+                    loadingIndicator.style.display = 'none';
+                    analyzeBtn.disabled = false;
+                    
+                    // Store analysis data
+                    analysisData = data;
+                    
+                    // Display game info
+                    displayGameInfo(data.game_info);
+                    
+                    // Process moves
+                    moves = data.moves;
+                    
+                    // Pre-calculate move data for each position
+                    preprocessMoves();
+                    
+                    // Display analysis
+                    displayAnalysis(moves);
+                    
+                    // Go to first position
+                    goToFirstMove();
+                })
+                .catch(error => {
+                    // Hide loading indicator
+                    loadingIndicator.style.display = 'none';
+                    analyzeBtn.disabled = false;
+                    
+                    // Show error
+                    analysisContainer.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+                    console.error('Analysis error:', error);
+                });
+            }
+            
+            // Preprocess moves to calculate from/to squares
+            function preprocessMoves() {
+                // Reset chess position
+                chess.reset();
+                moveHistory = [];
+                
+                // Process each move
+                moves.forEach((move, index) => {
+                    try {
+                        // Save current position
+                        const currentFen = chess.fen();
+                        
+                        // Make the move and capture from/to
+                        const chessMove = chess.move(move.move);
+                        
+                        if (chessMove) {
+                            // Store move data
+                            moveHistory.push({
+                                from: chessMove.from,
+                                to: chessMove.to,
+                                fen: currentFen
+                            });
+                            
+                            // If there's a better move, calculate its from/to
+                            if (move.quality !== 'good move' && move.analysis && move.analysis.best_move) {
+                                // Load the position before this move
+                                const tempChess = new Chess(currentFen);
+                                
+                                try {
+                                    const betterMove = tempChess.move(move.analysis.best_move);
+                                    if (betterMove) {
+                                        // Store better move data
+                                        moves[index].betterMoveData = {
+                                            from: betterMove.from,
+                                            to: betterMove.to
+                                        };
+                                    }
+                                } catch (e) {
+                                    console.error('Error parsing better move:', move.analysis.best_move, e);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error preprocessing move:', move.move, e);
+                    }
+                });
+                
+                // Reset chess position
+                chess.reset();
+            }
+            
+            // Display game info
+            function displayGameInfo(info) {
+                if (!info) return;
+                
+                gameInfo.innerHTML = `
+                    <strong>${info.white || 'Unknown'} vs ${info.black || 'Unknown'}</strong><br>
+                    ${info.event ? `Event: ${info.event}<br>` : ''}
+                    ${info.date ? `Date: ${info.date}` : ''}
+                `;
+            }
+            
+            // Display analysis
+            function displayAnalysis(moves) {
+                if (!moves || moves.length === 0) {
+                    analysisContainer.innerHTML = '<p class="text-center text-muted">No moves to analyze.</p>';
+                    return;
+                }
+                
+                // Group moves by move number
+                const movesByNumber = {};
+                moves.forEach(move => {
+                    if (!movesByNumber[move.move_number]) {
+                        movesByNumber[move.move_number] = { white: null, black: null };
+                    }
+                    
+                    if (move.is_white) {
+                        movesByNumber[move.move_number].white = move;
+                    } else {
+                        movesByNumber[move.move_number].black = move;
+                    }
+                });
+                
+                let html = '<div class="move-list">';
+                
+                // Create move pairs
+                Object.keys(movesByNumber).sort((a, b) => parseInt(a) - parseInt(b)).forEach(moveNumber => {
+                    const movePair = movesByNumber[moveNumber];
+                    html += `<div class="move-pair">`;
+                    html += `<div class="move-number">${moveNumber}.</div>`;
+                    
+                    // White move
+                    if (movePair.white) {
+                        const whiteIndex = moves.findIndex(m => m.move_number === parseInt(moveNumber) && m.is_white);
+                        const whiteQuality = getQualityClass(movePair.white.quality);
+                        html += `<div class="white-move ${whiteQuality}" data-index="${whiteIndex}" id="move-${whiteIndex}">`;
+                        html += `<span class="move-quality-indicator quality-${whiteQuality.replace('blunder', 'blunder').replace('mistake', 'mistake').replace('inaccuracy', 'inaccuracy').replace('good-move', 'good')}"></span>`;
+                        html += `${movePair.white.move}`;
+                        if (movePair.white.evaluation) {
+                            html += ` <span class="text-muted">(${movePair.white.evaluation})</span>`;
+                        }
+                        html += `</div>`;
+                    } else {
+                        html += `<div class="white-move"></div>`;
+                    }
+                    
+                    // Black move
+                    if (movePair.black) {
+                        const blackIndex = moves.findIndex(m => m.move_number === parseInt(moveNumber) && !m.is_white);
+                        const blackQuality = getQualityClass(movePair.black.quality);
+                        html += `<div class="black-move ${blackQuality}" data-index="${blackIndex}" id="move-${blackIndex}">`;
+                        html += `<span class="move-quality-indicator quality-${blackQuality.replace('blunder', 'blunder').replace('mistake', 'mistake').replace('inaccuracy', 'inaccuracy').replace('good-move', 'good')}"></span>`;
+                        html += `${movePair.black.move}`;
+                        if (movePair.black.evaluation) {
+                            html += ` <span class="text-muted">(${movePair.black.evaluation})</span>`;
+                        }
+                        html += `</div>`;
+                    } else {
+                        html += `<div class="black-move"></div>`;
+                    }
+                    
+                    html += `</div>`;
+                });
+                
+                html += '</div>';
+                analysisContainer.innerHTML = html;
+                
+                // Add click event to move items
+                document.querySelectorAll('.white-move, .black-move').forEach(item => {
+                    if (item.dataset.index) {
+                        item.addEventListener('click', function() {
+                            const index = parseInt(this.dataset.index);
+                            goToMove(index);
+                        });
+                    }
+                });
+            }
+            
+            // Show move explanation
+            function showMoveExplanation(index) {
+                if (index < 0 || index >= moves.length) {
+                    moveExplanation.innerHTML = '<p class="text-muted">Select a move to see analysis</p>';
+                    return;
+                }
+                
+                const move = moves[index];
+                let html = '';
+                
+                if (move.quality !== 'good move' && move.analysis) {
+                    html += `<h5 class="${getQualityClass(move.quality)}">${move.quality.toUpperCase()}: ${move.move}</h5>`;
+                    
+                    if (move.analysis.best_move) {
+                        html += `<div><strong>Better move:</strong> ${move.analysis.best_move}</div>`;
+                    }
+                    
+                    if (move.analysis.explanation) {
+                        html += `<div class="mt-2"><strong>Why:</strong> ${move.analysis.explanation}</div>`;
+                    }
+                } else {
+                    html = `<h5 class="good-move">GOOD MOVE: ${move.move}</h5>`;
+                    html += '<p>This move is considered good.</p>';
+                }
+                
+                moveExplanation.innerHTML = html;
+            }
+            
+            // Draw arrows on the board
+            function drawMoveArrows(index) {
+                clearArrows();
+                updateSvgDimensions();
+                
+                if (index < 0 || index >= moves.length) return;
+                
+                const move = moves[index];
+                
+                // Draw arrow for current move using preprocessed data
+                if (moveHistory[index]) {
+                    const moveData = moveHistory[index];
+                    drawArrow(moveData.from, moveData.to, 'current');
+                    
+                    // If there's a better move and it's not a good move, draw that too
+                    if (move.quality !== 'good move' && move.betterMoveData) {
+                        drawArrow(move.betterMoveData.from, move.betterMoveData.to, 'better');
+                    }
+                }
+            }
+            
+            // Draw an arrow on the board
+            function drawArrow(from, to, type) {
+                // Get board dimensions
+                const boardEl = document.getElementById('board');
+                const boardRect = boardEl.getBoundingClientRect();
+                const squareSize = boardRect.width / 8;
+                
+                // Calculate center points of squares
+                const fromFile = from.charCodeAt(0) - 'a'.charCodeAt(0);
+                const fromRank = 8 - parseInt(from.charAt(1));
+                const toFile = to.charCodeAt(0) - 'a'.charCodeAt(0);
+                const toRank = 8 - parseInt(to.charAt(1));
+                
+                const fromX = (fromFile + 0.5) * squareSize;
+                const fromY = (fromRank + 0.5) * squareSize;
+                const toX = (toFile + 0.5) * squareSize;
+                const toY = (toRank + 0.5) * squareSize;
+                
+                // Calculate the angle for the arrowhead
+                const angle = Math.atan2(toY - fromY, toX - fromX);
+                
+                // Adjust end point to not overlap with the piece
+                const shortenBy = squareSize * 0.25;
+                const adjustedToX = toX - shortenBy * Math.cos(angle);
+                const adjustedToY = toY - shortenBy * Math.sin(angle);
+                
+                // Create arrow line
+                const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                arrow.setAttribute('x1', fromX);
+                arrow.setAttribute('y1', fromY);
+                arrow.setAttribute('x2', adjustedToX);
+                arrow.setAttribute('y2', adjustedToY);
+                arrow.setAttribute('class', `arrow-${type}`);
+                arrow.setAttribute('marker-end', `url(#arrowhead-${type})`);
+                
+                arrowSvg.appendChild(arrow);
+                
+                console.log(`Drew arrow from ${from} to ${to} (${fromX},${fromY} to ${adjustedToX},${adjustedToY})`);
+            }
+            
+            // Clear all arrows from the board
+            function clearArrows() {
+                // Keep the defs element with markers
+                const defs = arrowSvg.querySelector('defs');
+                arrowSvg.innerHTML = '';
+                if (defs) {
+                    arrowSvg.appendChild(defs);
+                } else {
+                    setupArrowMarkers();
+                }
+            }
+            
+            // Get CSS class for move quality
+            function getQualityClass(quality) {
+                switch (quality) {
+                    case 'blunder': return 'blunder';
+                    case 'mistake': return 'mistake';
+                    case 'inaccuracy': return 'inaccuracy';
+                    case 'good move': return 'good-move';
+                    default: return '';
+                }
+            }
+            
+            // Navigation functions
+            function goToFirstMove() {
+                chess.reset();
+                board.position('start');
+                currentMoveIndex = -1;
+                updateMoveHighlight();
+                clearArrows();
+                moveExplanation.innerHTML = '<p class="text-muted">Select a move to see analysis</p>';
+            }
+            
+            function goToPrevMove() {
+                if (currentMoveIndex > 0) {
+                    goToMove(currentMoveIndex - 1);
+                } else if (currentMoveIndex === 0) {
+                    goToFirstMove();
+                }
+            }
+            
+            function goToNextMove() {
+                if (currentMoveIndex < moves.length - 1) {
+                    goToMove(currentMoveIndex + 1);
+                }
+            }
+            
+            function goToLastMove() {
+                if (moves.length > 0) {
+                    goToMove(moves.length - 1);
+                }
+            }
+            
+            function goToMove(index) {
+                if (index < 0 || index >= moves.length) return;
+                
+                // Reset the position
+                chess.reset();
+                
+                // Apply all moves up to the selected index
+                for (let i = 0; i <= index; i++) {
+                    const move = moves[i];
+                    try {
+                        // Try to make the move in algebraic notation
+                        chess.move(move.move);
+                    } catch (e) {
+                        console.error('Invalid move:', move.move, e);
+                    }
+                }
+                
+                // Update the board
+                board.position(chess.fen());
+                
+                // Update current index
+                currentMoveIndex = index;
+                
+                // Update move highlight
+                updateMoveHighlight();
+                
+                // Show move explanation
+                showMoveExplanation(index);
+                
+                // Draw arrows
+                setTimeout(() => {
+                    drawMoveArrows(index);
+                }, 100);
+                
+                // Scroll to the move in the analysis container
+                const currentMove = document.getElementById(`move-${index}`);
+                if (currentMove) {
+                    currentMove.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+            
+            function updateMoveHighlight() {
+                // Remove highlight from all moves
+                document.querySelectorAll('.white-move, .black-move').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Add highlight to current move
+                if (currentMoveIndex >= 0) {
+                    const currentMove = document.getElementById(`move-${currentMoveIndex}`);
+                    if (currentMove) {
+                        currentMove.classList.add('active');
+                    }
+                }
+            }
+            
+            // Handle window resize to redraw arrows
+            window.addEventListener('resize', function() {
+                updateSvgDimensions();
+                if (currentMoveIndex >= 0) {
+                    drawMoveArrows(currentMoveIndex);
+                }
+            });
+            
+            // Add a debug button to test arrow drawing
+            const debugBtn = document.createElement('button');
+            debugBtn.textContent = 'Test Arrows';
+            debugBtn.className = 'btn btn-sm btn-outline-secondary ms-2';
+            debugBtn.addEventListener('click', function() {
+                clearArrows();
+                updateSvgDimensions();
+                drawArrow('e2', 'e4', 'current');
+                drawArrow('g8', 'f6', 'better');
+            });
+            document.querySelector('.controls').appendChild(debugBtn);
+        });
+    </script>
+</body>
+</html> 

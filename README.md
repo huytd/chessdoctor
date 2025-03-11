@@ -1,124 +1,137 @@
 # Chess Doctor
 
-Chess Doctor is a Python tool that analyzes chess games from PGN files using the Stockfish chess engine to identify blunders, mistakes, and inaccuracies.
+Chess Doctor is a powerful chess game analyzer that uses the Stockfish engine to provide detailed analysis of chess games. It identifies mistakes, blunders, and suggests better moves with explanations.
 
 ## Features
 
-- Analyzes chess games from PGN (Portable Game Notation) files
-- Uses Stockfish chess engine for accurate evaluations
-- Identifies blunders, mistakes, and inaccuracies
-- Shows position evaluation after each move
-- Provides explanations for suboptimal moves
-- Suggests best move alternatives with tactical explanations
-- **Automatic Stockfish detection** - no need to provide engine path
-- **Detailed positional analysis** - explains strategic mistakes beyond tactics
+- Analyze chess games from PGN notation
+- Identify blunders, mistakes, and inaccuracies
+- Suggest better moves with detailed explanations
+- Interactive web UI to visualize the analysis
+- RESTful API for integration with other applications
 
 ## Requirements
 
-- Python 3.6 or higher
+- Python 3.7+
 - Stockfish chess engine
-- python-chess library
+- Flask
+- Requests
+- python-chess
 
 ## Installation
 
-1. Clone this repository or download the source code.
+1. Clone this repository:
+   ```
+   git clone https://github.com/yourusername/chessdoctor.git
+   cd chessdoctor
+   ```
 
 2. Install the required Python packages:
-
-```bash
-pip install -r requirements.txt
-```
+   ```
+   pip install flask requests python-chess
+   ```
 
 3. Install Stockfish:
-   - **Linux**: `sudo apt-get install stockfish` (Debian/Ubuntu) or use your distribution's package manager
+   - **Linux**: `sudo apt-get install stockfish` (Debian/Ubuntu)
    - **macOS**: `brew install stockfish` (using Homebrew)
-   - **Windows**: Download from the [official Stockfish website](https://stockfishchess.org/download/) and install
+   - **Windows**: Download from [stockfishchess.org](https://stockfishchess.org/download/) and install
 
-## Usage
+## Running the Application
 
-Simply run:
+The application consists of two parts:
+1. The Chess Doctor API (main.py)
+2. The Web UI (app.py)
 
-```bash
-python main.py path/to/your/game.pgn
-```
-
-The program will automatically detect your Stockfish installation. No additional configuration required in most cases.
-
-If Stockfish can't be found automatically (rare), you can specify its location:
-
-```bash
-python main.py path/to/your/game.pgn --engine path/to/stockfish
-```
-
-## Interpreting Results
-
-The program will analyze each move and classify them as:
-
-- **Blunder**: A very bad move that significantly worsens the position (≥ 3 pawns worse)
-- **Mistake**: A bad move that noticeably worsens the position (≥ 1 pawn worse)
-- **Inaccuracy**: A suboptimal move (≥ 0.5 pawns worse)
-- **Good move**: A move that doesn't significantly worsen the position
-
-For blunders, mistakes, and inaccuracies, Chess Doctor will also provide:
-- The best move you could have played instead
-- A clear explanation of why your move was suboptimal
-- Tactical opportunities that were missed
-- Positional factors such as center control, king safety, and piece development
-
-## Example Output
-
-Here's an example of what the analysis output looks like:
+### Running the API
 
 ```
-Analyzing game: Carlsen, Magnus vs. Nepomniachtchi, Ian
-Event: World Chess Championship 2021
-Date: 2021.11.26
-------------------------------------------------------------
-1. e4 e5
-2. Nf3 Nc6
-3. Bb5 a6
-4. Ba4 Nf6
-5. O-O Nxe4
-
-  ♚ Black's move: Nxe4 (mistake, eval: PovScore(Cp(+64), WHITE))
-  ✓ Better move: Be7
-  ℹ Why: Nxe4 missed a check. Be7 would be better.
-
-6. d4 b5
-7. Bb3 d5
-8. dxe5 Be6
-9. Nbd2 Be7
-
-  ♔ White's move: Nbd2 (inaccuracy, eval: PovScore(Cp(-24), BLACK))
-  ✓ Better move: Qe2
-  ℹ Why: Qe2 is better than Nbd2 because it improves king safety and provides better control of the center.
-
-10. Bc2 O-O
-11. Nb3 Qd7
-
-  ♚ Black's move: Qd7 (mistake, eval: PovScore(Cp(+355), WHITE))
-  ✓ Better move: f5
-  ℹ Why: f5 is better than Qd7 because it improves piece development and creates a better pawn structure.
+python main.py
 ```
 
-The format clearly shows:
-- The full sequence of moves on a single line
-- Detailed analysis for problematic moves only
-- Player indicators (♔ for White, ♚ for Black)
-- Clear explanations that directly state what opportunities were missed
-- Better move suggestions with reasoning
-- Positional factors that explain strategic errors (not just tactical ones)
+By default, the API runs on port 5000. You can specify a different port or Stockfish engine path:
 
-## Customization
+```
+python main.py --port 5001 --engine /path/to/stockfish
+```
 
-You can adjust the analysis parameters by modifying the constants in the `ChessDoctor` class:
+### Running the Web UI
 
-- `depth`: Search depth for standard Stockfish evaluation (default: 18)
-- `time_limit`: Time limit per position in seconds (default: 0.5)
-- `deep_analysis_depth`: Search depth for blunder/mistake analysis (default: 22)
-- `deep_analysis_time`: Time limit for deep analysis (default: 1.0)
-- Thresholds for classifying moves (in centipawns)
+```
+python app.py
+```
+
+The web UI runs on port 8080 by default and connects to the API on localhost:5000.
+
+You can configure the API host and port using environment variables:
+
+```
+API_HOST=localhost API_PORT=5001 python app.py
+```
+
+## Using the Web UI
+
+1. Open your browser and navigate to `http://localhost:8080`
+2. Paste a PGN (Portable Game Notation) of a chess game into the text area
+3. Click "Analyze Game"
+4. Once analysis is complete, you can:
+   - View the game move by move using the navigation buttons
+   - See analysis for each move, with mistakes and blunders highlighted
+   - Click on any move in the analysis panel to jump to that position
+
+## API Endpoints
+
+### `/analyze` (POST)
+
+Analyzes a chess game from PGN notation.
+
+**Request:**
+```json
+{
+  "pgn": "[PGN string of the chess game]"
+}
+```
+
+**Response:**
+```json
+{
+  "game_info": {
+    "white": "Player Name",
+    "black": "Opponent Name",
+    "event": "Tournament Name",
+    "date": "2023.01.01"
+  },
+  "moves": [
+    {
+      "move_number": 1,
+      "ply": 1,
+      "move": "e4",
+      "player": "White",
+      "is_white": true,
+      "quality": "good move",
+      "evaluation": "PovScore(Cp(+20), WHITE)",
+      "notation": "1. e4"
+    },
+    // More moves...
+  ],
+  "errors": []
+}
+```
+
+## CLI Mode
+
+You can also run Chess Doctor in CLI mode to analyze a PGN file directly:
+
+```
+python main.py --cli --pgn_file game.pgn
+```
 
 ## License
 
-MIT 
+[MIT License](LICENSE)
+
+## Acknowledgements
+
+- [Stockfish](https://stockfishchess.org/) - The powerful chess engine used for analysis
+- [python-chess](https://python-chess.readthedocs.io/) - Chess library for Python
+- [chessboard.js](https://chessboardjs.com/) - JavaScript chessboard component
+- [chess.js](https://github.com/jhlywa/chess.js) - JavaScript chess library 
