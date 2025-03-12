@@ -159,6 +159,27 @@
         .arrow-head-better {
             fill: rgba(0, 128, 0, 0.7);
         }
+        /* Principal variation styling */
+        .principal-variation {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 5px;
+            border-radius: 3px;
+            border-left: 3px solid #007bff;
+            margin-top: 5px;
+        }
+        .clickable {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .clickable:hover {
+            background-color: #e9ecef;
+        }
+        .play-button {
+            margin-left: 10px;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+        }
     </style>
 </head>
 <body>
@@ -245,6 +266,9 @@
             let currentMoveIndex = -1;
             let moves = [];
             let moveHistory = [];
+            let isPlayingVariation = false;
+            let animationSpeed = 1000; // milliseconds per move
+            let animationTimeout = null;
             
             // DOM elements
             const pgnInput = document.getElementById('pgnInput');
@@ -420,13 +444,58 @@
                                 const tempChess = new Chess(currentFen);
                                 
                                 try {
-                                    const betterMove = tempChess.move(move.analysis.best_move);
+                                    // Try different formats for the better move
+                                    let betterMove = null;
+                                    
+                                    // First try standard algebraic notation (SAN)
+                                    try {
+                                        betterMove = tempChess.move(move.analysis.best_move);
+                                    } catch (e) {
+                                        console.log("Failed to parse better move as SAN, trying UCI format");
+                                        
+                                        // If that fails, try UCI format (e.g., "e2e4")
+                                        if (move.analysis.best_move.length >= 4) {
+                                            try {
+                                                betterMove = tempChess.move({
+                                                    from: move.analysis.best_move.substring(0, 2),
+                                                    to: move.analysis.best_move.substring(2, 4),
+                                                    promotion: move.analysis.best_move.length > 4 ? 
+                                                        move.analysis.best_move[4] : undefined
+                                                });
+                                            } catch (e2) {
+                                                console.error("UCI format also failed:", e2);
+                                            }
+                                        }
+                                    }
+                                    
+                                    // If that didn't work, try to extract move from principal variation
+                                    if (!betterMove && move.analysis.principal_variation) {
+                                        console.log("Trying to extract better move from principal variation");
+                                        
+                                        // Look for a pattern like "33...Rxd2" or just "Rxd2"
+                                        const pvMoves = parsePrincipalVariation(move.analysis.principal_variation, currentFen);
+                                        if (pvMoves.length > 0) {
+                                            betterMove = {
+                                                from: pvMoves[0].from,
+                                                to: pvMoves[0].to,
+                                                san: pvMoves[0].san,
+                                                promotion: pvMoves[0].promotion
+                                            };
+                                            console.log("Extracted first move from PV:", betterMove);
+                                        }
+                                    }
+                                    
                                     if (betterMove) {
                                         // Store better move data
                                         moves[index].betterMoveData = {
                                             from: betterMove.from,
-                                            to: betterMove.to
+                                            to: betterMove.to,
+                                            san: betterMove.san,
+                                            promotion: betterMove.promotion
                                         };
+                                        console.log("Stored better move data for move", index, ":", moves[index].betterMoveData);
+                                    } else {
+                                        console.error("Could not parse better move:", move.analysis.best_move);
                                     }
                                 } catch (e) {
                                     console.error('Error parsing better move:', move.analysis.best_move, e);
@@ -489,9 +558,6 @@
                         html += `<div class="white-move ${whiteQuality}" data-index="${whiteIndex}" id="move-${whiteIndex}">`;
                         html += `<span class="move-quality-indicator quality-${whiteQuality.replace('blunder', 'blunder').replace('mistake', 'mistake').replace('inaccuracy', 'inaccuracy').replace('good-move', 'good')}"></span>`;
                         html += `${movePair.white.move}`;
-                        if (movePair.white.evaluation) {
-                            html += ` <span class="text-muted">(${movePair.white.evaluation})</span>`;
-                        }
                         html += `</div>`;
                     } else {
                         html += `<div class="white-move"></div>`;
@@ -504,9 +570,6 @@
                         html += `<div class="black-move ${blackQuality}" data-index="${blackIndex}" id="move-${blackIndex}">`;
                         html += `<span class="move-quality-indicator quality-${blackQuality.replace('blunder', 'blunder').replace('mistake', 'mistake').replace('inaccuracy', 'inaccuracy').replace('good-move', 'good')}"></span>`;
                         html += `${movePair.black.move}`;
-                        if (movePair.black.evaluation) {
-                            html += ` <span class="text-muted">(${movePair.black.evaluation})</span>`;
-                        }
                         html += `</div>`;
                     } else {
                         html += `<div class="black-move"></div>`;
@@ -549,12 +612,48 @@
                     if (move.analysis.explanation) {
                         html += `<div class="mt-2"><strong>Why:</strong> ${move.analysis.explanation}</div>`;
                     }
+                    
+                    if (move.analysis.principal_variation) {
+                        html += `<div class="mt-2"><strong>Expected line:</strong></div>`;
+                        html += `<div class="principal-variation clickable" data-index="${index}">${move.analysis.principal_variation}</div>`;
+                        html += `<div class="d-flex align-items-center mt-2">
+                                    <button class="btn btn-sm btn-outline-primary play-button" data-index="${index}">
+                                        <i class="bi bi-play-fill"></i> Play on board
+                                    </button>
+                                    <div class="ms-2">
+                                        <select id="speedControl" class="form-select form-select-sm" style="width: auto;">
+                                            <option value="2000">Slow</option>
+                                            <option value="1000" selected>Normal</option>
+                                            <option value="500">Fast</option>
+                                            <option value="200">Very Fast</option>
+                                        </select>
+                                    </div>
+                                </div>`;
+                    }
                 } else {
                     html = `<h5 class="good-move">GOOD MOVE: ${move.move}</h5>`;
                     html += '<p>This move is considered good.</p>';
                 }
                 
                 moveExplanation.innerHTML = html;
+                
+                // Add click event listener to the principal variation
+                const pvElement = moveExplanation.querySelector('.principal-variation.clickable');
+                if (pvElement) {
+                    pvElement.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.index);
+                        playVariation(index);
+                    });
+                }
+                
+                // Add click event listener to the play button
+                const playButton = moveExplanation.querySelector('.play-button');
+                if (playButton) {
+                    playButton.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.index);
+                        playVariation(index);
+                    });
+                }
             }
             
             // Draw arrows on the board
@@ -643,6 +742,9 @@
             
             // Navigation functions
             function goToFirstMove() {
+                // Stop any ongoing variation playback
+                stopVariationPlayback();
+                
                 chess.reset();
                 board.position('start');
                 currentMoveIndex = -1;
@@ -652,6 +754,9 @@
             }
             
             function goToPrevMove() {
+                // Stop any ongoing variation playback
+                stopVariationPlayback();
+                
                 if (currentMoveIndex > 0) {
                     goToMove(currentMoveIndex - 1);
                 } else if (currentMoveIndex === 0) {
@@ -660,12 +765,18 @@
             }
             
             function goToNextMove() {
+                // Stop any ongoing variation playback
+                stopVariationPlayback();
+                
                 if (currentMoveIndex < moves.length - 1) {
                     goToMove(currentMoveIndex + 1);
                 }
             }
             
             function goToLastMove() {
+                // Stop any ongoing variation playback
+                stopVariationPlayback();
+                
                 if (moves.length > 0) {
                     goToMove(moves.length - 1);
                 }
@@ -673,6 +784,9 @@
             
             function goToMove(index) {
                 if (index < 0 || index >= moves.length) return;
+                
+                // Stop any ongoing variation playback
+                stopVariationPlayback();
                 
                 // Reset the position
                 chess.reset();
@@ -746,6 +860,422 @@
                 drawArrow('g8', 'f6', 'better');
             });
             document.querySelector('.controls').appendChild(debugBtn);
+            
+            // Parse principal variation string into a sequence of moves
+            function parsePrincipalVariation(pvString, startingFen) {
+                console.log("Parsing PV string:", pvString);
+                console.log("Starting FEN:", startingFen);
+                
+                if (!pvString) {
+                    console.error("Empty PV string");
+                    return [];
+                }
+                
+                // Create a new chess instance with the starting position
+                const tempChess = new Chess(startingFen);
+                console.log("Chess position set to:", tempChess.fen());
+                
+                // Clean the PV string - remove any extra formatting that might cause issues
+                let cleanPV = pvString.replace(/\s+/g, ' ').trim();
+                
+                // Handle common formats of principal variation strings
+                // If the PV starts with a move number and ellipsis (like "33...Rxd2"), 
+                // this indicates a black move alternative
+                const blackMoveRegex = /^(\d+)\.\.\.(.+?)(?=\s+\d+\.|$)/;
+                const blackMoveMatch = cleanPV.match(blackMoveRegex);
+                
+                if (blackMoveMatch) {
+                    // For clarity, extract the first black move
+                    const moveNumber = blackMoveMatch[1];
+                    const firstBlackMove = blackMoveMatch[2].trim();
+                    console.log(`Detected black move format: Move ${moveNumber}, first black move: ${firstBlackMove}`);
+                }
+                
+                // Split the PV string into tokens
+                const tokens = cleanPV.split(' ');
+                console.log("Tokens:", tokens);
+                
+                const moves = [];
+                
+                // Store all the tokens that could be moves (without move numbers)
+                const potentialMoves = [];
+                
+                // First pass: extract all potential moves, removing move numbers
+                for (let i = 0; i < tokens.length; i++) {
+                    let token = tokens[i];
+                    
+                    // Handle move numbers with ellipsis (e.g., "33..." for black moves)
+                    if (token.includes('...')) {
+                        const parts = token.split('...');
+                        if (parts.length > 1 && parts[1]) {
+                            token = parts[1].trim(); // Extract the move part
+                            potentialMoves.push(token);
+                        }
+                    }
+                    // Handle move numbers (e.g., "1.", "2.", etc.)
+                    else if (token.includes('.')) {
+                        // Check if it's a move number with a move (e.g., "1.e4")
+                        const parts = token.split('.');
+                        if (parts.length > 1 && parts[1]) {
+                            token = parts[1].trim(); // Extract the move part
+                            potentialMoves.push(token);
+                        }
+                        // Skip pure move numbers
+                    } else {
+                        // It's probably a move
+                        potentialMoves.push(token);
+                    }
+                }
+                
+                console.log("Potential moves extracted:", potentialMoves);
+                
+                // Second pass: try to make each potential move
+                for (let i = 0; i < potentialMoves.length; i++) {
+                    const moveText = potentialMoves[i];
+                    console.log("Attempting to make move:", moveText);
+                    
+                    // Try multiple formats to parse the move
+                    let move = null;
+                    
+                    // Try as SAN (Standard Algebraic Notation - e.g., "e4", "Nf3")
+                    try {
+                        move = tempChess.move(moveText);
+                    } catch (e) {
+                        console.log("SAN move failed:", e.message);
+                    }
+                    
+                    // If SAN failed, try as UCI format (e.g., "e2e4")
+                    if (!move && moveText.length >= 4) {
+                        try {
+                            move = tempChess.move({
+                                from: moveText.substring(0, 2),
+                                to: moveText.substring(2, 4),
+                                promotion: moveText.length > 4 ? moveText[4] : undefined
+                            });
+                        } catch (e) {
+                            console.log("UCI move failed:", e.message);
+                        }
+                    }
+                    
+                    // If move was successfully made, add to the list
+                    if (move) {
+                        console.log("Move successful:", move);
+                        moves.push({
+                            from: move.from,
+                            to: move.to,
+                            promotion: move.promotion,
+                            san: move.san,
+                            fen: tempChess.fen()
+                        });
+                    } else {
+                        console.error("Failed to parse move:", moveText);
+                        // Don't break the loop, try to parse the next move
+                    }
+                }
+                
+                console.log("Successfully parsed moves:", moves.length);
+                return moves;
+            }
+            
+            // Play through a variation with animation
+            function playVariation(moveIndex) {
+                console.log("Starting variation playback for move index:", moveIndex);
+                
+                // Stop any ongoing animation
+                stopVariationPlayback();
+                
+                // Get the move and its analysis
+                const move = moves[moveIndex];
+                if (!move || !move.analysis) {
+                    console.error("No valid move or analysis found for index:", moveIndex);
+                    return;
+                }
+                
+                // Get the selected animation speed
+                const speedControl = document.getElementById('speedControl');
+                if (speedControl) {
+                    animationSpeed = parseInt(speedControl.value);
+                }
+                console.log("Animation speed:", animationSpeed);
+                
+                // Get the position before this move was played
+                let startingFen = 'start';
+                if (moveIndex < moveHistory.length && moveHistory[moveIndex]) {
+                    // The moveHistory already stores the position before each move
+                    startingFen = moveHistory[moveIndex].fen;
+                    console.log("Using position from moveHistory");
+                } else if (moveIndex > 0) {
+                    // Fallback: reconstruct the position by playing all moves up to but not including the current one
+                    const tempChess = new Chess();
+                    for (let i = 0; i < moveIndex; i++) {
+                        try {
+                            tempChess.move(moves[i].move);
+                        } catch (e) {
+                            console.error('Error reconstructing position:', e);
+                        }
+                    }
+                    startingFen = tempChess.fen();
+                    console.log("Reconstructed position from previous moves");
+                } else {
+                    console.log("Using starting position");
+                }
+                console.log("Starting FEN:", startingFen);
+                
+                // Check if we have a principal variation
+                if (!move.analysis.principal_variation) {
+                    console.log("No principal variation available, using only the better move");
+                    // If there's no principal variation but there is a better move,
+                    // we can still show at least that move
+                    if (move.analysis.best_move && move.betterMoveData) {
+                        showBetterMoveOnly(moveIndex, move.betterMoveData);
+                    } else {
+                        console.error("No better move available either");
+                        alert("Sorry, no alternative moves available for this position.");
+                    }
+                    return;
+                }
+                
+                console.log("Principal variation:", move.analysis.principal_variation);
+                
+                // Parse the principal variation
+                const variationMoves = parsePrincipalVariation(move.analysis.principal_variation, startingFen);
+                console.log("Parsed variation moves:", variationMoves);
+                
+                if (variationMoves.length === 0) {
+                    console.error("No valid moves parsed from principal variation");
+                    
+                    // Fallback: Try to directly use the better move from the analysis
+                    if (move.analysis.best_move && move.betterMoveData) {
+                        console.log("Falling back to using just the better move");
+                        // Show a simplified animation with just the better move
+                        showBetterMoveOnly(moveIndex, move.betterMoveData);
+                        return;
+                    }
+                    
+                    alert("Sorry, couldn't play the variation. The move format isn't recognized.");
+                    return;
+                }
+                
+                // Set flag to indicate we're playing a variation
+                isPlayingVariation = true;
+                
+                // Reset the board to the starting position
+                chess.load(startingFen);
+                board.position(startingFen);
+                
+                // Add a stop button to the move explanation
+                const stopButton = document.createElement('button');
+                stopButton.className = 'btn btn-sm btn-outline-danger mt-2';
+                stopButton.innerHTML = '<i class="bi bi-stop-fill"></i> Stop Animation';
+                stopButton.id = 'stopVariationBtn';
+                stopButton.addEventListener('click', stopVariationPlayback);
+                moveExplanation.appendChild(stopButton);
+                
+                // Add a visual indicator that we're showing the expected line
+                const variationIndicator = document.createElement('div');
+                variationIndicator.className = 'alert alert-info mt-2';
+                variationIndicator.id = 'variationIndicator';
+                variationIndicator.innerHTML = `<strong>Playing expected line</strong> - Showing what could have happened with the better move`;
+                moveExplanation.appendChild(variationIndicator);
+                
+                // Add a move counter indicator
+                const moveCounter = document.createElement('div');
+                moveCounter.id = 'moveIndicator';
+                moveCounter.className = 'badge bg-primary mt-2';
+                moveCounter.textContent = `Move 0 of ${variationMoves.length}`;
+                moveExplanation.appendChild(moveCounter);
+                
+                // Highlight the principal variation element
+                const pvElement = document.querySelector('.principal-variation.clickable');
+                if (pvElement) {
+                    pvElement.style.backgroundColor = '#e2f0ff';
+                }
+                
+                // Simplified animation logic
+                let currentMoveIndex = 0;
+                
+                // Draw an arrow for the first move
+                if (variationMoves.length > 0) {
+                    clearArrows();
+                    const firstMove = variationMoves[0];
+                    drawArrow(firstMove.from, firstMove.to, 'better');
+                }
+                
+                // Function to play the next move
+                function playNextMove() {
+                    if (!isPlayingVariation) return;
+                    
+                    if (currentMoveIndex < variationMoves.length) {
+                        // Update the move indicator
+                        const indicator = document.getElementById('moveIndicator');
+                        if (indicator) {
+                            indicator.textContent = `Move ${currentMoveIndex + 1} of ${variationMoves.length}`;
+                        }
+                        
+                        // Make the move
+                        const moveData = variationMoves[currentMoveIndex];
+                        try {
+                            chess.move({
+                                from: moveData.from,
+                                to: moveData.to,
+                                promotion: moveData.promotion
+                            });
+                            
+                            // Update the board
+                            board.position(chess.fen(), true);
+                            
+                            // Clear old arrows and draw new arrow for the next move if available
+                            clearArrows();
+                            if (currentMoveIndex + 1 < variationMoves.length) {
+                                const nextMove = variationMoves[currentMoveIndex + 1];
+                                drawArrow(nextMove.from, nextMove.to, 'better');
+                            }
+                            
+                            // Increment the counter and schedule the next move
+                            currentMoveIndex++;
+                            if (currentMoveIndex < variationMoves.length) {
+                                animationTimeout = setTimeout(playNextMove, animationSpeed);
+                            } else {
+                                // Animation complete
+                                setTimeout(finishVariationPlayback, 1000);
+                            }
+                        } catch (e) {
+                            console.error("Failed to make move:", e);
+                            alert("Error playing variation: " + e.message);
+                            stopVariationPlayback();
+                        }
+                    }
+                }
+                
+                // Start the animation with a delay to show the arrow first
+                setTimeout(() => {
+                    if (isPlayingVariation) {
+                        playNextMove();
+                    }
+                }, 1000);
+            }
+            
+            // Fallback function to show just the better move when principal variation fails
+            function showBetterMoveOnly(moveIndex, betterMoveData) {
+                // Stop any ongoing animation
+                stopVariationPlayback();
+                
+                // Get the move and its analysis
+                const move = moves[moveIndex];
+                if (!move) return;
+                
+                // Get the position before this move was played
+                let startingFen = 'start';
+                if (moveIndex < moveHistory.length && moveHistory[moveIndex]) {
+                    startingFen = moveHistory[moveIndex].fen;
+                } else if (moveIndex > 0) {
+                    const tempChess = new Chess();
+                    for (let i = 0; i < moveIndex; i++) {
+                        try {
+                            tempChess.move(moves[i].move);
+                        } catch (e) {
+                            console.error('Error reconstructing position:', e);
+                        }
+                    }
+                    startingFen = tempChess.fen();
+                }
+                
+                // Set flag to indicate we're playing a variation
+                isPlayingVariation = true;
+                
+                // Reset the board to the starting position
+                chess.load(startingFen);
+                board.position(startingFen);
+                
+                // Add indicators
+                const variationIndicator = document.createElement('div');
+                variationIndicator.className = 'alert alert-info mt-2';
+                variationIndicator.id = 'variationIndicator';
+                variationIndicator.innerHTML = `<strong>Showing better move</strong>: ${betterMoveData.san || move.analysis.best_move} <span class="text-muted">(couldn't parse full variation)</span>`;
+                moveExplanation.appendChild(variationIndicator);
+                
+                // Show the arrow for the better move
+                clearArrows();
+                drawArrow(betterMoveData.from, betterMoveData.to, 'better');
+                
+                // Add a stop button
+                const stopButton = document.createElement('button');
+                stopButton.className = 'btn btn-sm btn-outline-danger mt-2';
+                stopButton.innerHTML = '<i class="bi bi-stop-fill"></i> Return to Game';
+                stopButton.id = 'stopVariationBtn';
+                stopButton.addEventListener('click', stopVariationPlayback);
+                moveExplanation.appendChild(stopButton);
+                
+                // After a delay, return to the game position
+                setTimeout(() => {
+                    if (isPlayingVariation) {
+                        finishVariationPlayback();
+                    }
+                }, 3000);
+            }
+            
+            // Stop the variation playback
+            function stopVariationPlayback() {
+                isPlayingVariation = false;
+                if (animationTimeout) {
+                    clearTimeout(animationTimeout);
+                    animationTimeout = null;
+                }
+                
+                // Remove the stop button
+                const stopButton = document.getElementById('stopVariationBtn');
+                if (stopButton) {
+                    stopButton.remove();
+                }
+                
+                // Remove the variation indicator
+                const variationIndicator = document.getElementById('variationIndicator');
+                if (variationIndicator) {
+                    variationIndicator.remove();
+                }
+                
+                // Remove the move indicator
+                const moveIndicator = document.getElementById('moveIndicator');
+                if (moveIndicator) {
+                    moveIndicator.remove();
+                }
+                
+                // Clear any arrows on the board
+                clearArrows();
+                
+                // Reset highlighting and restore original text
+                const pvElement = document.querySelector('.principal-variation.clickable');
+                if (pvElement) {
+                    pvElement.style.backgroundColor = '';
+                    
+                    // Restore original text if we're showing a move with analysis
+                    if (currentMoveIndex >= 0 && currentMoveIndex < moves.length) {
+                        const move = moves[currentMoveIndex];
+                        if (move && move.analysis && move.analysis.principal_variation) {
+                            pvElement.innerHTML = move.analysis.principal_variation;
+                        }
+                    }
+                }
+            }
+            
+            // Finish variation playback and return to the original position
+            function finishVariationPlayback() {
+                stopVariationPlayback();
+                
+                // Return to the current move after a short delay
+                setTimeout(() => {
+                    if (currentMoveIndex >= 0) {
+                        goToMove(currentMoveIndex);
+                        
+                        // Redraw the arrows for the current move
+                        setTimeout(() => {
+                            drawMoveArrows(currentMoveIndex);
+                        }, 100);
+                    } else {
+                        goToFirstMove();
+                    }
+                }, 1000);
+            }
         });
     </script>
 </body>
