@@ -3,13 +3,21 @@ FROM python:3.10-alpine
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including Stockfish and build dependencies
+# Install build dependencies and tools
 RUN apk add --no-cache \
-    stockfish \
-    gcc \
-    musl-dev \
-    libffi-dev \
-    && ln -s /usr/bin/stockfish /usr/local/bin/stockfish
+    build-base \
+    wget \
+    unzip
+
+# Download and install Stockfish (using version 16 as an example)
+RUN wget https://github.com/official-stockfish/Stockfish/releases/download/sf_16/stockfish_16_linux_x64.zip && \
+    unzip stockfish_16_linux_x64.zip && \
+    mv stockfish_16_linux_x64/stockfish_16_x64 /usr/local/bin/stockfish && \
+    chmod +x /usr/local/bin/stockfish && \
+    rm -rf stockfish_16_linux_x64 stockfish_16_linux_x64.zip
+
+# Verify installation
+RUN stockfish --version
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
