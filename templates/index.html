@@ -223,15 +223,7 @@
                     <textarea class="form-control" id="pgnInput" rows="6" placeholder="Paste your PGN here..."></textarea>
                 </div>
                 
-                <button id="analyzeBtn" class="btn btn-primary">Analyze Game</button>
-                
-                <!-- Loading Indicator -->
-                <div class="loading" id="loadingIndicator">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2">Analyzing game... This may take a minute.</p>
-                </div>
+                <button id="analyzeBtn" class="btn btn-primary">Analyze Game</button> 
             </div>
             
             <div class="col-md-6">
@@ -239,6 +231,14 @@
                 <h3>Analysis</h3>
                 <div class="analysis-container" id="analysisContainer">
                     <p class="text-center text-muted">Analysis will appear here after you analyze a game.</p>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Analyzing game... This may take a minute.</p>
                 </div>
                 
                 <!-- Move Explanation -->
