@@ -2,6 +2,8 @@
 
 Chess Doctor is a powerful chess game analyzer that uses the Stockfish engine to provide detailed analysis of chess games. It identifies mistakes, blunders, and suggests better moves with explanations.
 
+<img width="1418" alt="image" src="https://github.com/user-attachments/assets/750a4c91-aafc-42d9-a491-adb01199c853" />
+
 ## Features
 
 - Analyze chess games from PGN notation
