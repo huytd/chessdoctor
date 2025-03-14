@@ -1,20 +1,23 @@
-FROM python:3.10-alpine
+FROM python:3.12-slim
+
+ENV PATH="/usr/local/bin:$PATH"
 
 # Set working directory
 WORKDIR /app
 
 # Install build dependencies and tools
-RUN apk add --no-cache \
-    build-base \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     wget \
-    unzip
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
 
-# Download and install Stockfish (using version 16 as an example)
-RUN wget https://github.com/official-stockfish/Stockfish/releases/download/sf_16/stockfish_16_linux_x64.zip && \
-    unzip stockfish_16_linux_x64.zip && \
-    mv stockfish_16_linux_x64/stockfish_16_x64 /usr/local/bin/stockfish && \
-    chmod +x /usr/local/bin/stockfish && \
-    rm -rf stockfish_16_linux_x64 stockfish_16_linux_x64.zip
+# Download and install Stockfish
+RUN wget https://github.com/official-stockfish/Stockfish/releases/download/sf_17/stockfish-ubuntu-x86-64-avx2.tar -O stockfish.tar \
+    && tar -xf stockfish.tar \
+    && mv stockfish/stockfish-ubuntu-x86-64-avx2 /usr/local/bin/stockfish \
+    && chmod +x /usr/local/bin/stockfish \
+    && rm -rf stockfish.tar stockfish
 
 # Verify installation
 RUN stockfish --version
