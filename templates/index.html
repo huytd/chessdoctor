@@ -849,18 +849,6 @@
                 }
             });
             
-            // Add a debug button to test arrow drawing
-            const debugBtn = document.createElement('button');
-            debugBtn.textContent = 'Test Arrows';
-            debugBtn.className = 'btn btn-sm btn-outline-secondary ms-2';
-            debugBtn.addEventListener('click', function() {
-                clearArrows();
-                updateSvgDimensions();
-                drawArrow('e2', 'e4', 'current');
-                drawArrow('g8', 'f6', 'better');
-            });
-            document.querySelector('.controls').appendChild(debugBtn);
-            
             // Parse principal variation string into a sequence of moves
             function parsePrincipalVariation(pvString, startingFen) {
                 console.log("Parsing PV string:", pvString);
@@ -1279,4 +1267,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
