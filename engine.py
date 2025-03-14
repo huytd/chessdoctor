@@ -19,7 +19,7 @@ class ChessDoctor:
         self.engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
         
         # Configure analysis settings
-        self.depth = 18
+        self.depth = 22
         self.time_limit = 0.5  # seconds per position
         
         # Thresholds for classifying moves (in centipawns)
@@ -207,6 +207,49 @@ class ChessDoctor:
                 # From black's perspective
                 score_diff = best_position_score.white().score() - played_position_score.white().score()
             
+            # Additional context for the explanation
+            context = {
+                "pv_info": None,
+                "captures_in_pv": [],
+                "checks_in_pv": [],
+                "is_best_move_capture": board.is_capture(best_move),
+                "captured_piece": self._get_captured_piece_name(board, best_move) if board.is_capture(best_move) else None
+            }
+            
+            # Extract information from the PV for the best move
+            if "pv" in result[0]:
+                context["pv_info"] = result[0]["pv"]
+                
+                # Analyze the PV to find captures and checks
+                board_copy = board.copy()
+                current_turn = board_copy.turn
+                
+                for i, pv_move in enumerate(result[0]["pv"][:4]):  # Look at first 4 moves
+                    is_player_turn = (current_turn == board.turn)
+                    san_pv_move = board_copy.san(pv_move)
+                    
+                    # Check for captures
+                    if board_copy.is_capture(pv_move):
+                        captured = self._get_captured_piece_name(board_copy, pv_move)
+                        context["captures_in_pv"].append({
+                            "move_index": i,
+                            "is_player": is_player_turn,
+                            "piece": captured,
+                            "san": san_pv_move
+                        })
+                    
+                    # Check for checks
+                    if "+" in san_pv_move:
+                        context["checks_in_pv"].append({
+                            "move_index": i,
+                            "is_player": is_player_turn,
+                            "san": san_pv_move
+                        })
+                    
+                    # Make the move and switch turns
+                    board_copy.push(pv_move)
+                    current_turn = board_copy.turn
+                
             # Build explanation based on the context
             if is_played_move_top:
                 if played_move_index == 0:
@@ -222,15 +265,84 @@ class ChessDoctor:
                 # Check for piece hanging or capture missed
                 try:
                     if abs(score_diff) >= 100:  # 1 pawn or more
-                        # Correct way to check for legal captures in python-chess
-                        has_captures = any(board.is_capture(move) for move in board.legal_moves)
-                        if has_captures and not board.is_capture(played_move):
+                        # Check if the best move itself is a capture (current player can capture immediately)
+                        if context["is_best_move_capture"]:
+                            if context["captured_piece"]:
+                                missed_opportunities.append(f"an immediate capture of a {context['captured_piece']}")
+                            else:
+                                missed_opportunities.append("an immediate capture")
+                        
+                        # Check if there are legal captures that weren't played
+                        elif any(board.is_capture(move) for move in board.legal_moves) and not board.is_capture(played_move):
                             missed_opportunities.append("a capture opportunity")
+                        
+                        # Check if the PV line shows a forced material gain through a sequence
+                        elif context["pv_info"] and len(context["pv_info"]) >= 2:
+                            # If there are player-initiated captures in the PV
+                            player_captures = [c for c in context["captures_in_pv"] if c["is_player"]]
+                            opponent_captures = [c for c in context["captures_in_pv"] if not c["is_player"]]
                             
-                        # Check if best move is a capture
-                        if board.is_capture(best_move):
-                            missed_opportunities.append("material gain")
-                except Exception:
+                            # Check if there's a sacrifice followed by a major gain
+                            sacrifice_and_gain = False
+                            significant_capture = None
+                            
+                            # Look for a pattern where player sacrifices a piece and then captures something valuable
+                            if opponent_captures and player_captures:
+                                for opp_capture in opponent_captures:
+                                    for player_capture in player_captures:
+                                        if opp_capture["move_index"] < player_capture["move_index"]:
+                                            sacrifice_and_gain = True
+                                            significant_capture = player_capture
+                                            break
+                            
+                            if sacrifice_and_gain and significant_capture and significant_capture["piece"] in ["queen", "rook"]:
+                                missed_opportunities.append(f"a tactical sacrifice leading to capturing the {significant_capture['piece']}")
+                            elif player_captures:
+                                first_capture = player_captures[0]
+                                if first_capture["piece"]:
+                                    # PV should show the player's capture
+                                    if first_capture["move_index"] == 0:
+                                        # Already covered by immediate capture case above
+                                        pass
+                                    else:
+                                        missed_opportunities.append(f"a tactical sequence leading to capturing a {first_capture['piece']}")
+                                else:
+                                    missed_opportunities.append("a tactical sequence leading to material gain")
+                            else:
+                                # Check if there are player-initiated checks
+                                player_checks = [c for c in context["checks_in_pv"] if c["is_player"]]
+                                if player_checks:
+                                    missed_opportunities.append("a tactical sequence with check")
+                                elif len(context["pv_info"]) >= 3:
+                                    # Look deeper into the evaluation to better characterize the advantage
+                                    board_copy = board.copy()
+                                    # Apply the first few moves of the PV to see the resulting position
+                                    for i, pv_move in enumerate(context["pv_info"][:3]):
+                                        board_copy.push(pv_move)
+                                    
+                                    # Get evaluation after the sequence
+                                    try:
+                                        result = self.engine.analyse(
+                                            board_copy, 
+                                            chess.engine.Limit(depth=18, time=0.2)
+                                        )
+                                        final_score = result["score"].white().score()
+                                        
+                                        # Determine magnitude of advantage
+                                        if abs(final_score) > 500:  # More than 5 pawns
+                                            missed_opportunities.append("a decisive tactical sequence")
+                                        elif abs(final_score) > 200:  # More than 2 pawns
+                                            missed_opportunities.append("a winning tactical opportunity")
+                                        else:
+                                            missed_opportunities.append("a strong positional improvement")
+                                    except Exception:
+                                        missed_opportunities.append("a stronger tactical move")
+                                else:
+                                    missed_opportunities.append("a stronger positional move")
+                        else:
+                            missed_opportunities.append("a stronger positional move")
+                except Exception as e:
+                    print(f"Error checking for captures: {e}")
                     pass
                 
                 # Check for tactical themes
@@ -243,10 +355,12 @@ class ChessDoctor:
                 # Generate explanation based on themes
                 if missed_opportunities:
                     if len(missed_opportunities) == 1:
-                        explanation = f"{san_played} missed {missed_opportunities[0]}. {san_best} would be better."
+                        turn_text = "White" if board.turn == chess.WHITE else "Black"
+                        explanation = f"{san_played} missed {missed_opportunities[0]} for {turn_text}. {san_best} would be better."
                     else:
                         opportunities_text = " and ".join(missed_opportunities)
-                        explanation = f"{san_played} missed {opportunities_text}. {san_best} would be better."
+                        turn_text = "White" if board.turn == chess.WHITE else "Black"
+                        explanation = f"{san_played} missed {opportunities_text} for {turn_text}. {san_best} would be better."
                 else:
                     # Enhanced positional analysis when no tactical themes are found
                     try:
@@ -260,6 +374,43 @@ class ChessDoctor:
                     except Exception:
                         # Fallback to generic explanation if positional analysis fails
                         explanation = f"{san_best} would give better position control than {san_played}."
+            
+            # Provide custom PV based on the explanation if needed
+            if "tactical sequence" in explanation or "tactical sacrifice" in explanation:
+                # Ensure the PV includes the complete tactical sequence
+                if context["pv_info"]:
+                    # For captures, make sure the PV includes at least the move after the capture
+                    player_captures = [c for c in context["captures_in_pv"] if c["is_player"]]
+                    opponent_captures = [c for c in context["captures_in_pv"] if not c["is_player"]]
+                    
+                    # If there's a sacrifice pattern (opponent captures, then player captures something valuable)
+                    if "sacrifice" in explanation and opponent_captures and player_captures:
+                        # Find the last relevant capture
+                        max_capture_index = max([c["move_index"] for c in player_captures])
+                        # Include at least one move after the significant capture
+                        pv_end_index = min(len(context["pv_info"]) - 1, max_capture_index + 1)
+                        relevant_pv = context["pv_info"][:pv_end_index + 1]
+                        best_pv = self._get_principal_variation(board, relevant_pv)
+                    
+                    # For other tactical sequences, show an appropriate portion
+                    elif player_captures:
+                        max_capture_index = max([c["move_index"] for c in player_captures])
+                        pv_end_index = min(len(context["pv_info"]) - 1, max_capture_index + 1)
+                        relevant_pv = context["pv_info"][:pv_end_index + 1]
+                        best_pv = self._get_principal_variation(board, relevant_pv)
+                    
+                    # If the explanation mentions a specific tactic but we didn't find the pattern,
+                    # ensure we show a reasonable number of moves
+                    elif "winning" in explanation or "decisive" in explanation:
+                        # Show a longer sequence for decisive tactics
+                        relevant_pv = context["pv_info"][:min(5, len(context["pv_info"]))]
+                        best_pv = self._get_principal_variation(board, relevant_pv)
+                        
+            # For immediate captures, show a bit of follow-up if available
+            elif context["is_best_move_capture"] and context["pv_info"] and len(context["pv_info"]) > 1:
+                # Show the capture plus one more move
+                relevant_pv = context["pv_info"][:min(2, len(context["pv_info"]))]
+                best_pv = self._get_principal_variation(board, relevant_pv)
             
             return best_move, best_moves, explanation, best_pv
             
@@ -409,6 +560,27 @@ class ChessDoctor:
         }
         
         return piece_names.get(piece.piece_type)
+    
+    def _analyze_pv_for_captures(self, board, pv_moves, player_color):
+        """Analyze the PV line to determine if there are player-initiated captures."""
+        if not pv_moves:
+            return False, None
+            
+        board_copy = board.copy()
+        current_turn = board_copy.turn
+        
+        # Only check the first few moves to keep it relevant
+        for i, move in enumerate(pv_moves[:4]):
+            # If it's the player's turn and the move is a capture
+            if current_turn == player_color and board_copy.is_capture(move):
+                captured_piece = self._get_captured_piece_name(board_copy, move)
+                return True, captured_piece
+                
+            # Make the move and switch turns
+            board_copy.push(move)
+            current_turn = board_copy.turn
+                
+        return False, None
     
     def _analyze_positional_strengths(self, board, move):
         """Analyze the positional strengths of a move."""
@@ -1285,7 +1457,26 @@ class ChessDoctor:
                             print(f"  ✓ Better move: {best_san}")
                             print(f"  ℹ Why: {explanation}")
                             if best_pv:
-                                print(f"  ➡ Expected line: {best_pv}")
+                                # Check if the explanation refers to a tactical sequence
+                                if "tactical sacrifice" in explanation:
+                                    print(f"  ➡ Sacrifice sequence: {best_pv}")
+                                elif "tactical sequence" in explanation:
+                                    print(f"  ➡ Tactical sequence: {best_pv}")
+                                # Check if the explanation refers to a decisive opportunity
+                                elif "decisive" in explanation or "winning" in explanation:
+                                    print(f"  ➡ Winning sequence: {best_pv}")
+                                # Check if the explanation refers to a capture
+                                elif "capture" in explanation:
+                                    if "immediate" in explanation:
+                                        print(f"  ➡ After capture: {best_pv}")
+                                    else:
+                                        print(f"  ➡ Capture sequence: {best_pv}")
+                                # Check if it's a positional improvement
+                                elif "position" in explanation:
+                                    print(f"  ➡ Better position: {best_pv}")
+                                # Default PV display
+                                else:
+                                    print(f"  ➡ Expected line: {best_pv}")
                             print()
                             
                             # Add to move data
