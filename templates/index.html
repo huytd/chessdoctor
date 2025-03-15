@@ -27,6 +27,9 @@
         .board-container {
             position: relative;
             width: 100%;
+            height: 0;
+            padding-bottom: 100%; /* Makes the container square */
+            overflow: visible; /* Allow annotations to overflow if needed */
         }
         #arrow-svg {
             position: absolute;
@@ -158,6 +161,60 @@
         }
         .arrow-head-better {
             fill: rgba(0, 128, 0, 0.7);
+        }
+        /* Square annotation styles */
+        .square-annotation {
+            position: absolute;
+            width: 12.5%;
+            height: 12.5%;
+            z-index: 9999;
+            pointer-events: none;
+            box-sizing: border-box;
+            border: 2px solid #000;
+        }
+        .square-annotation::before {
+            content: attr(data-symbol);
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            transform: none;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            border-radius: 50%;
+            width: 1.2rem;
+            height: 1.2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            line-height: 1;
+        }
+        .square-annotation::after {
+            content: none;
+        }
+        
+        .annotation-blunder {
+            background-color: transparent;
+            border-color: rgba(220, 53, 69, 0.3);
+        }
+        .annotation-mistake {
+            background-color: transparent;
+            border-color: rgba(253, 126, 20, 0.3);
+        }
+        .annotation-inaccuracy {
+            background-color: transparent;
+            border-color: rgba(255, 193, 7, 0.3);
+        }
+        .annotation-blunder::before {
+            background-color: rgba(220, 53, 69, 0.9);
+        }
+        .annotation-mistake::before {
+            background-color: rgba(253, 126, 20, 0.9);
+        }
+        .annotation-inaccuracy::before {
+            background-color: rgba(255, 193, 7, 0.9);
         }
         /* Principal variation styling */
         .principal-variation {
@@ -659,6 +716,7 @@
             // Draw arrows on the board
             function drawMoveArrows(index) {
                 clearArrows();
+                clearSquareAnnotations();
                 updateSvgDimensions();
                 
                 if (index < 0 || index >= moves.length) return;
@@ -669,6 +727,12 @@
                 if (moveHistory[index]) {
                     const moveData = moveHistory[index];
                     drawArrow(moveData.from, moveData.to, 'current');
+                    
+                    // Add annotation if it's a poor move
+                    if (move.quality === 'blunder' || move.quality === 'mistake' || move.quality === 'inaccuracy') {
+                        // Add annotation on the destination square
+                        addSquareAnnotation(moveData.to, move.quality);
+                    }
                     
                     // If there's a better move and it's not a good move, draw that too
                     if (move.quality !== 'good move' && move.betterMoveData) {
@@ -729,6 +793,50 @@
                 }
             }
             
+            // Add square annotation for poor moves
+            function addSquareAnnotation(square, moveQuality) {
+                // Clear any existing annotations first
+                clearSquareAnnotations();
+                
+                if (!square || !moveQuality || moveQuality === 'good move') return;
+                
+                // Calculate position based on square
+                const file = square.charCodeAt(0) - 'a'.charCodeAt(0); // 'a' = 0, 'b' = 1, etc.
+                const rank = 8 - parseInt(square.charAt(1));           // '8' = 0, '7' = 1, etc.
+                
+                // Get appropriate symbol for the move quality
+                let symbol = '';
+                switch(moveQuality) {
+                    case 'blunder': 
+                        symbol = '??';
+                        break;
+                    case 'mistake': 
+                        symbol = '?';
+                        break;
+                    case 'inaccuracy': 
+                        symbol = '?!';
+                        break;
+                }
+                
+                // Create annotation element
+                const annotation = document.createElement('div');
+                annotation.className = `square-annotation annotation-${moveQuality.replace(' ', '-')}`;
+                annotation.style.left = `${file * 12.5}%`;
+                annotation.style.top = `${rank * 12.5}%`;
+                annotation.setAttribute('data-symbol', symbol);
+                
+                // Add to board container
+                boardContainer.appendChild(annotation);
+                
+                console.log(`Added ${moveQuality} annotation (${symbol}) to ${square}`);
+            }
+            
+            // Clear all square annotations
+            function clearSquareAnnotations() {
+                const annotations = document.querySelectorAll('.square-annotation');
+                annotations.forEach(annotation => annotation.remove());
+            }
+            
             // Get CSS class for move quality
             function getQualityClass(quality) {
                 switch (quality) {
@@ -750,6 +858,7 @@
                 currentMoveIndex = -1;
                 updateMoveHighlight();
                 clearArrows();
+                clearSquareAnnotations();
                 moveExplanation.innerHTML = '<p class="text-muted">Select a move to see analysis</p>';
             }
             
@@ -1082,9 +1191,10 @@
                 // Simplified animation logic
                 let currentMoveIndex = 0;
                 
-                // Draw an arrow for the first move
+                // Clear any existing annotations and draw an arrow for the first move
+                clearArrows();
+                clearSquareAnnotations();
                 if (variationMoves.length > 0) {
-                    clearArrows();
                     const firstMove = variationMoves[0];
                     drawArrow(firstMove.from, firstMove.to, 'better');
                 }
@@ -1114,6 +1224,7 @@
                             
                             // Clear old arrows and draw new arrow for the next move if available
                             clearArrows();
+                            clearSquareAnnotations();
                             if (currentMoveIndex + 1 < variationMoves.length) {
                                 const nextMove = variationMoves[currentMoveIndex + 1];
                                 drawArrow(nextMove.from, nextMove.to, 'better');
@@ -1184,6 +1295,7 @@
                 
                 // Show the arrow for the better move
                 clearArrows();
+                clearSquareAnnotations();
                 drawArrow(betterMoveData.from, betterMoveData.to, 'better');
                 
                 // Add a stop button
@@ -1230,6 +1342,7 @@
                 
                 // Clear any arrows on the board
                 clearArrows();
+                clearSquareAnnotations();
                 
                 // Reset highlighting and restore original text
                 const pvElement = document.querySelector('.principal-variation.clickable');
