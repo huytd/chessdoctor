@@ -241,9 +241,8 @@
         }
 
         .board-container.variation-mode #board {
-            filter: brightness(1.28) contrast(0.92) saturate(0.85);
-            box-shadow: inset 0 0 0 3px #38bdf8, 0 0 24px rgba(56, 189, 248, 0.25);
-            transition: filter 0.25s ease, box-shadow 0.25s ease;
+            filter: brightness(1.22) contrast(0.95);
+            transition: filter 0.25s ease;
         }
 
         #board {
@@ -256,27 +255,22 @@
             border: none !important;
         }
 
-        /* Variation Floating Status Banner */
-        .variation-banner {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1005;
-            background: rgba(13, 16, 23, 0.95);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(56, 189, 248, 0.35);
-            padding: 7px 12px;
+        /* Variation Status Bar (Under the Board) */
+        .variation-under-board {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 8px 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            animation: slideDown 0.2s ease-out;
+            gap: 8px;
+            animation: fadeIn 0.2s ease-out;
         }
 
-        @keyframes slideDown {
-            from { transform: translateY(-100%); }
-            to { transform: translateY(0); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .var-type-badge {
@@ -566,10 +560,10 @@
             line-height: 1.5;
             color: #cbd5e1;
             margin-bottom: 8px;
-            padding: 6px 10px;
+            padding: 8px 12px;
             background: rgba(255, 255, 255, 0.02);
-            border-radius: 4px;
-            border-left: 2px solid var(--accent);
+            border-radius: 6px;
+            border: 1px solid var(--border-subtle);
         }
 
         /* Variations: Full Untruncated Display */
@@ -581,11 +575,9 @@
             margin-bottom: 8px;
         }
         .variation-box.box-refutation {
-            border-left: 3px solid var(--q-blunder);
             background: rgba(239, 68, 68, 0.04);
         }
         .variation-box.box-better {
-            border-left: 3px solid var(--q-good);
             background: rgba(34, 197, 94, 0.04);
         }
 
@@ -940,21 +932,21 @@
                 </div>
 
                 <div class="board-wrapper">
-                    <!-- Variation Mode Banner (Overlay) -->
-                    <div id="variationBanner" class="variation-banner d-none">
-                        <div class="d-flex align-items-center gap-2 text-truncate me-2">
-                            <span id="variationTypeBadge" class="var-type-badge refutation">Punishing Line</span>
-                            <span id="variationStatusText" class="var-status-text text-truncate">Playing variation...</span>
-                        </div>
-                        <button type="button" id="btnReturnMainLine" class="btn-return-game" title="Return to original position (Space)">
-                            <i class="bi bi-arrow-return-left me-1"></i> Return to Game
-                        </button>
-                    </div>
-
                     <div class="board-container">
                         <div id="board"></div>
                         <svg id="arrow-svg"></svg>
                     </div>
+                </div>
+
+                <!-- Return to Game Box (shown under the board during/after alt line play) -->
+                <div id="variationBanner" class="variation-under-board d-none">
+                    <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                        <span id="variationTypeBadge" class="var-type-badge refutation">Punishing Line</span>
+                        <span id="variationStatusText" class="var-status-text text-truncate">Playing variation...</span>
+                    </div>
+                    <button type="button" id="btnReturnMainLine" class="btn-return-game" title="Return to original position (Space)">
+                        <i class="bi bi-arrow-return-left me-1"></i> Return to Game
+                    </button>
                 </div>
             </div>
 
