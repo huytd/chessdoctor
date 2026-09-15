@@ -205,14 +205,14 @@
 
         /* Studio Main Layout */
         .studio-container {
-            max-width: 1040px;
+            max-width: 1100px;
             margin: 0 auto;
             padding: 12px 1.25rem 2rem 1.25rem;
         }
 
         .studio-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 280px;
+            grid-template-columns: minmax(0, 1fr) 330px;
             gap: 1.25rem;
             align-items: start;
         }
@@ -390,8 +390,8 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            width: 280px;
-            min-width: 0;
+            width: 330px;
+            min-width: 320px;
         }
 
         @media (min-width: 992px) {
@@ -722,31 +722,31 @@
 
         .move-pair {
             display: grid;
-            grid-template-columns: 36px 1fr 1fr;
+            grid-template-columns: 38px 1fr 1fr;
             align-items: center;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.84rem;
+            font-size: 0.85rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.025);
-            padding: 1px 3px;
+            padding: 2px 4px;
         }
 
         .move-number {
             color: var(--text-muted);
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             padding-left: 4px;
         }
 
         .white-move, .black-move {
-            padding: 4px 6px;
+            padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             color: var(--text-secondary);
             transition: all 0.12s;
             user-select: none;
-            font-size: 0.82rem;
+            font-size: 0.84rem;
             min-width: 0;
         }
 
@@ -865,14 +865,22 @@
             }
             .studio-panel {
                 width: 100%;
+                min-width: 0;
                 position: static;
+            }
+            .board-column .sheet-toolbar {
+                background: var(--bg-surface);
+                border: 1px solid var(--border-subtle);
+                border-radius: 8px;
+                padding: 6px 12px;
             }
             .analysis-container {
                 max-height: 280px;
             }
             .sheet-toolbar .btn-tool {
                 min-height: 42px;
-                min-width: 42px;
+                min-width: 46px;
+                font-size: 1.05rem;
             }
             .white-move, .black-move {
                 padding: 8px 10px;
@@ -1133,10 +1141,38 @@
                     arrowSvg.setAttribute('height', boardRect.width);
                 }
             }
+            function adaptToolbarPosition() {
+                const toolbar = document.getElementById('boardToolbar');
+                const boardCol = document.querySelector('.board-column');
+                const sheetCard = document.querySelector('.sheet-card');
+                const variationBanner = document.getElementById('variationBanner');
+                const boardWrapper = document.querySelector('.board-wrapper');
+                if (!toolbar || !boardCol || !sheetCard) return;
+
+                const isMobile = window.innerWidth < 992;
+                if (isMobile) {
+                    // Mobile: place right under the chessboard (after board-wrapper, before variationBanner)
+                    if (toolbar.parentElement !== boardCol) {
+                        if (variationBanner && variationBanner.parentElement === boardCol) {
+                            boardCol.insertBefore(toolbar, variationBanner);
+                        } else if (boardWrapper && boardWrapper.parentElement === boardCol) {
+                            boardCol.insertBefore(toolbar, boardWrapper.nextSibling);
+                        }
+                    }
+                } else {
+                    // Desktop: dock at the bottom of the move notation sheet card
+                    if (toolbar.parentElement !== sheetCard) {
+                        sheetCard.appendChild(toolbar);
+                    }
+                }
+            }
+            adaptToolbarPosition();
+
             setTimeout(updateSvgDimensions, 100);
             window.addEventListener('resize', function() {
                 if (board && board.resize) board.resize();
                 updateSvgDimensions();
+                adaptToolbarPosition();
                 if (currentMoveIndex >= 0 && !isPlayingVariation && !isInVariationMode) {
                     drawMoveArrows(currentMoveIndex);
                 }
