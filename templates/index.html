@@ -1897,9 +1897,12 @@
                     drawMoveArrows(index);
                 }, 80);
                 
-                const currentMove = document.getElementById(`move-${index}`);
-                if (currentMove) {
-                    currentMove.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                // Auto-scroll move item into view on desktop only (disabled on mobile to keep chessboard and controls in view)
+                if (window.innerWidth >= 992) {
+                    const currentMove = document.getElementById(`move-${index}`);
+                    if (currentMove) {
+                        currentMove.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
                 }
             }
 
