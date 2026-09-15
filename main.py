@@ -2,51 +2,36 @@ import argparse
 import os
 import sys
 import json
-import atexit
-from flask import Flask, request, jsonify, render_template, send_from_directory
-from engine import ChessDoctor
+from flask import Flask, render_template, send_from_directory
 
 def main():
-    parser = argparse.ArgumentParser(description="Run Chess Doctor as a REST API or CLI tool")
-    parser.add_argument("--engine", help="Path to Stockfish engine executable (optional, auto-detected if not provided)")
-    parser.add_argument("--port", type=int, default=3030, help="Port to run the REST API on (default: 3030)")
-    parser.add_argument("--host", default="0.0.0.0", help="Host to run the REST API on (default: 0.0.0.0)")
-    parser.add_argument("--cli", action="store_true", help="Run in CLI mode instead of API mode")
+    parser = argparse.ArgumentParser(description="Run Chess Doctor Web App (In-Browser WebAssembly)")
+    parser.add_argument("--port", type=int, default=3030, help="Port to run the web server on (default: 3030)")
+    parser.add_argument("--host", default="0.0.0.0", help="Host to run the web server on (default: 0.0.0.0)")
+    parser.add_argument("--cli", action="store_true", help="Run in CLI mode instead of web server mode")
+    parser.add_argument("--engine", help="Path to Stockfish engine executable (only needed for CLI mode)")
     parser.add_argument("--pgn_file", help="Path to the PGN file (required in CLI mode)")
     args = parser.parse_args()
     
     if args.cli:
-        # Run in traditional CLI mode
+        # Run in traditional CLI mode with native Stockfish
         if not args.pgn_file:
             print("Error: --pgn_file is required when running in CLI mode")
             sys.exit(1)
             
         try:
+            from engine import ChessDoctor
             with ChessDoctor(args.engine) as chess_doctor:
                 analysis_data = chess_doctor.analyze_game(args.pgn_file)
                 print(json.dumps(analysis_data, indent=2))
         except FileNotFoundError as e:
             print(f"Error: {e}")
-            print("\nStockfish could not be found automatically. Please make sure Stockfish is installed and either:")
-            print("1. Add it to your system PATH")
-            print("2. Provide the path using --engine option")
-            print("\nInstallation instructions:")
-            print("- Linux: sudo apt-get install stockfish (Debian/Ubuntu)")
-            print("- macOS: brew install stockfish (using Homebrew)")
-            print("- Windows: Download from https://stockfishchess.org/download/ and install")
             sys.exit(1)
     else:
-        # Run as a REST API server
+        # Run web server for In-Browser WebAssembly application
         app = Flask(__name__, 
                    static_folder='static',
                    template_folder='templates') 
-        
-        try:
-            chess_doctor = ChessDoctor(args.engine)
-            atexit.register(chess_doctor.close)
-        except FileNotFoundError as e:
-            print(f"Error initializing ChessDoctor: {e}")
-            sys.exit(1)
 
         @app.route('/')
         def index():
@@ -57,32 +42,13 @@ def main():
         def serve_static(path):
             """Serve static files from the templates directory"""
             return send_from_directory('templates', path)
-        
-        @app.route('/api/analyze', methods=['POST'])
-        def analyze():
-            """Analyze a chess game from PGN data"""
-            if not request.is_json:
-                return jsonify({"error": "Request must be JSON"}), 400
-                
-            data = request.get_json()
-            if 'pgn' not in data:
-                return jsonify({"error": "Missing 'pgn' field in request"}), 400
-                
-            pgn_data = data['pgn']
-            
-            try:
-                analysis_data = chess_doctor.analyze_game(pgn_data)
-                return jsonify(analysis_data)
-            except Exception as e:
-                return jsonify({"error": f"Analysis failed: {str(e)}"}), 500
-                
+
         @app.route('/health', methods=['GET'])
         def health():
-            return jsonify({"status": "ok"})
+            return {"status": "ok"}
         
         # Start the Flask server
-        print(f"Starting Chess Doctor API on {args.host}:{args.port}")
-        print(f"Web UI available at http://{args.host if args.host != '0.0.0.0' else 'localhost'}:{args.port}/")
+        print(f"Starting Chess Doctor (In-Browser WebAssembly) on http://{args.host if args.host != '0.0.0.0' else 'localhost'}:{args.port}/")
         app.run(host=args.host, port=args.port, debug=False)
 
 if __name__ == "__main__":

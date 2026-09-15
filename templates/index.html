@@ -315,11 +315,41 @@
                 
                 <!-- PGN Input -->
                 <div class="mb-3">
-                    <label for="pgnInput" class="form-label">Paste PGN:</label>
+                    <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
+                        <label for="pgnInput" class="form-label mb-0">Paste PGN:</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-cpu"></i> In-Browser (WASM)</span>
+                            <div class="d-flex align-items-center gap-1">
+                                <label for="analysisDepth" class="small text-muted mb-0">Depth:</label>
+                                <select id="analysisDepth" class="form-select form-select-sm py-0 px-2" style="width: auto; font-size: 0.82rem;" title="Higher depth provides deeper tactics and higher accuracy">
+                                    <option value="10">Fast (10)</option>
+                                    <option value="12" selected>Standard (12)</option>
+                                    <option value="14">Deep (14)</option>
+                                    <option value="16">Master (16)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <textarea class="form-control" id="pgnInput" rows="6" placeholder="Paste your PGN here..."></textarea>
                 </div>
                 
-                <button id="analyzeBtn" class="btn btn-primary">Analyze Game</button> 
+                <div class="d-flex align-items-center gap-2">
+                    <button id="analyzeBtn" class="btn btn-primary">Analyze Game</button>
+                    <button id="cancelAnalyzeBtn" class="btn btn-outline-danger d-none">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                </div>
+
+                <!-- In-Browser Analysis Progress Bar -->
+                <div id="analysisProgressContainer" class="mt-3 p-2 bg-light rounded border d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span id="progressText" class="small fw-semibold text-primary">Initializing Stockfish WASM...</span>
+                        <span id="progressPercent" class="badge bg-primary">0%</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
             </div>
             
             <div class="col-md-6">
@@ -329,14 +359,7 @@
                     <p class="text-center text-muted">Analysis will appear here after you analyze a game.</p>
                 </div>
 
-                <!-- Loading Indicator -->
-                <div class="loading" id="loadingIndicator">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2">Analyzing game... This may take a minute.</p>
-                </div>
-                
+
                 <!-- Move Explanation -->
                 <div class="move-explanation mt-3" id="moveExplanation">
                     <p class="text-muted">Select a move to see analysis</p>
@@ -350,6 +373,10 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="js/chessboard-1.0.0.js"></script>
+    <script src="js/chess-evaluator.js"></script>
+    <script src="js/opening-detector.js"></script>
+    <script src="js/situation-recognizer.js"></script>
+    <script src="js/browser-analyzer.js"></script>
     <script>
         $(document).ready(function() {
             // Initialize variables
@@ -365,11 +392,12 @@
             let isPlayingVariation = false;
             let animationSpeed = 1000; // milliseconds per move
             let animationTimeout = null;
+            let browserDoctor = null;
             
             // DOM elements
             const pgnInput = document.getElementById('pgnInput');
             const analyzeBtn = document.getElementById('analyzeBtn');
-            const loadingIndicator = document.getElementById('loadingIndicator');
+            const cancelAnalyzeBtn = document.getElementById('cancelAnalyzeBtn');
             const analysisContainer = document.getElementById('analysisContainer');
             const moveExplanation = document.getElementById('moveExplanation');
             const gameInfo = document.getElementById('gameInfo');
@@ -398,6 +426,13 @@
             
             // Event listeners
             analyzeBtn.addEventListener('click', analyzeGame);
+            if (cancelAnalyzeBtn) {
+                cancelAnalyzeBtn.addEventListener('click', function() {
+                    if (browserDoctor) {
+                        browserDoctor.cancel();
+                    }
+                });
+            }
             btnFirst.addEventListener('click', goToFirstMove);
             btnPrev.addEventListener('click', goToPrevMove);
             btnNext.addEventListener('click', goToNextMove);
@@ -483,73 +518,94 @@
                 arrowSvg.appendChild(defs);
             }
             
-            // Analyze game function
-            function analyzeGame() {
+            // Handle completed game analysis data
+            function handleAnalysisResult(data) {
+                if (!data) return;
+                
+                // Store analysis data
+                analysisData = data;
+                
+                // Display game info
+                displayGameInfo(data.game_info || {});
+                
+                // Process moves
+                moves = data.moves || [];
+                
+                if (moves.length === 0) {
+                    analysisContainer.innerHTML = '<div class="alert alert-warning">No moves were analyzed. Please check your PGN format.</div>';
+                    return;
+                }
+
+                // Pre-calculate move data for each position
+                preprocessMoves();
+                
+                // Display analysis
+                displayAnalysis(moves);
+                
+                // Go to first position
+                goToFirstMove();
+            }
+
+            // Analyze game function (In-Browser WebAssembly)
+            async function analyzeGame() {
                 const pgn = pgnInput.value.trim();
                 if (!pgn) {
                     alert('Please paste a PGN to analyze.');
                     return;
                 }
                 
-                // Show loading indicator
-                loadingIndicator.style.display = 'block';
-                analyzeBtn.disabled = true;
-                
+                const analysisDepth = parseInt(document.getElementById('analysisDepth')?.value || '12', 10);
+
                 // Reset the board and analysis
                 chess.reset();
                 board.position('start');
                 clearArrows();
-                analysisContainer.innerHTML = '<p class="text-center">Analyzing...</p>';
+                clearSquareAnnotations();
+                analysisContainer.innerHTML = '<p class="text-center text-muted">Analyzing...</p>';
                 moveExplanation.innerHTML = '<p class="text-muted">Select a move to see analysis</p>';
                 currentMoveIndex = -1;
                 moveHistory = [];
-                
-                // Send the PGN to the API
-                fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ pgn: pgn })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Analysis failed. Please check your PGN and try again.');
+
+                // In-Browser (WebAssembly) Engine
+                const progressContainer = document.getElementById('analysisProgressContainer');
+                const progressBar = document.getElementById('progressBar');
+                const progressText = document.getElementById('progressText');
+                const progressPercent = document.getElementById('progressPercent');
+                const cancelBtn = document.getElementById('cancelAnalyzeBtn');
+
+                if (progressContainer) progressContainer.classList.remove('d-none');
+                if (cancelBtn) cancelBtn.classList.remove('d-none');
+                analyzeBtn.disabled = true;
+                if (progressBar) progressBar.style.width = '0%';
+                if (progressPercent) progressPercent.textContent = '0%';
+                if (progressText) progressText.textContent = `Initializing Stockfish WASM (Depth ${analysisDepth})...`;
+
+                if (!browserDoctor) {
+                    browserDoctor = new BrowserChessDoctor();
+                }
+
+                const onProgress = (prog) => {
+                    if (progressBar) progressBar.style.width = `${prog.percentage}%`;
+                    if (progressPercent) progressPercent.textContent = `${prog.percentage}%`;
+                    if (progressText) {
+                        progressText.textContent = `Analyzing move ${prog.ply} of ${prog.totalPlies} (${prog.move}) • Depth ${prog.depth || analysisDepth}...`;
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    // Hide loading indicator
-                    loadingIndicator.style.display = 'none';
-                    analyzeBtn.disabled = false;
-                    
-                    // Store analysis data
-                    analysisData = data;
-                    
-                    // Display game info
-                    displayGameInfo(data.game_info);
-                    
-                    // Process moves
-                    moves = data.moves;
-                    
-                    // Pre-calculate move data for each position
-                    preprocessMoves();
-                    
-                    // Display analysis
-                    displayAnalysis(moves);
-                    
-                    // Go to first position
-                    goToFirstMove();
-                })
-                .catch(error => {
-                    // Hide loading indicator
-                    loadingIndicator.style.display = 'none';
-                    analyzeBtn.disabled = false;
-                    
-                    // Show error
+                };
+
+                try {
+                    const data = await browserDoctor.analyzeGame(pgn, onProgress, analysisDepth);
+                    if (data.errors && data.errors.length > 0 && (!data.moves || data.moves.length === 0)) {
+                        throw new Error(data.errors.join(', '));
+                    }
+                    handleAnalysisResult(data);
+                } catch (error) {
                     analysisContainer.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
-                    console.error('Analysis error:', error);
-                });
+                    console.error('Browser analysis error:', error);
+                } finally {
+                    if (progressContainer) progressContainer.classList.add('d-none');
+                    if (cancelBtn) cancelBtn.classList.add('d-none');
+                    analyzeBtn.disabled = false;
+                }
             }
             
             // Preprocess moves to calculate from/to squares
@@ -741,11 +797,12 @@
                 const move = moves[index];
                 let html = '';
                 
+                const playerName = move.player || (move.is_white ? 'White' : 'Black');
                 const qualityTitle = (move.detailed_quality || move.quality || 'move').toUpperCase();
                 const qualityClass = getQualityClass(move.detailed_quality || move.quality);
                 
                 html += `<h5 class="${qualityClass} d-flex align-items-center justify-content-between mb-2">
-                            <span>${qualityTitle}: ${move.move}</span>
+                            <span><span class="badge ${move.is_white ? 'bg-light text-dark border' : 'bg-dark text-white'} me-2">${playerName}</span>${qualityTitle}: ${move.move}</span>
                             <span class="badge bg-light text-dark border fs-6">${move.evaluation || ''}</span>
                          </h5>`;
                 
@@ -1225,6 +1282,50 @@
                 return moves;
             }
             
+            // Find king square for a given color ('w' or 'b')
+            function findKingSquare(chessInstance, color) {
+                for (const f of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
+                    for (let r = 1; r <= 8; r++) {
+                        const sq = f + r;
+                        const p = chessInstance.get(sq);
+                        if (p && p.type === 'k' && p.color === color) {
+                            return sq;
+                        }
+                    }
+                }
+                return null;
+            }
+
+            // Helper to detect threats created by a move on the board
+            function getMoveThreats(boardAfter, moveData) {
+                let threats = [];
+                if (typeof SituationRecognizer !== 'undefined' && boardAfter && moveData) {
+                    threats = SituationRecognizer.detectThreatsCreated(boardAfter, moveData) || [];
+
+                    // Discovered check or general check detection
+                    if (boardAfter.in_check && boardAfter.in_check()) {
+                        if (!threats.some(t => t.is_check)) {
+                            const oppKingSq = findKingSquare(boardAfter, boardAfter.turn());
+                            if (oppKingSq) {
+                                const moverColor = (boardAfter.turn() === 'w') ? 'b' : 'w';
+                                const checkers = SituationRecognizer.getAttackers(boardAfter, moverColor, oppKingSq);
+                                checkers.forEach(sq => {
+                                    threats.push({
+                                        from: sq,
+                                        to: oppKingSq,
+                                        target: 'king',
+                                        is_check: true,
+                                        is_undefended: true,
+                                        description: 'checks the enemy King'
+                                    });
+                                });
+                            }
+                        }
+                    }
+                }
+                return threats;
+            }
+
             // Play through a variation with animation
             function playVariation(moveIndex, lineType = 'better') {
                 console.log("Starting variation playback for move index:", moveIndex, "lineType:", lineType);
@@ -1284,7 +1385,7 @@
                 console.log("Starting FEN:", startingFen);
                 
                 const rawVariation = isRefutation ? move.analysis.refutation_variation : move.analysis.principal_variation;
-                const arrowStyle = isRefutation ? 'threat' : 'better';
+                const arrowStyle = isRefutation ? 'opponent-threat' : 'better';
 
                 // Check if variation is available
                 if (!rawVariation) {
@@ -1331,12 +1432,12 @@
                 chess.load(startingFen);
                 board.position(startingFen);
                 
-                // Add a stop button to the move explanation
+                // Add a Return to Game button to the move explanation
                 const stopButton = document.createElement('button');
                 stopButton.className = 'btn btn-sm btn-outline-danger mt-2';
-                stopButton.innerHTML = '<i class="bi bi-stop-fill"></i> Stop Animation';
+                stopButton.innerHTML = '<i class="bi bi-arrow-return-left me-1"></i> Return to Game';
                 stopButton.id = 'stopVariationBtn';
-                stopButton.addEventListener('click', stopVariationPlayback);
+                stopButton.addEventListener('click', returnToGamePosition);
                 moveExplanation.appendChild(stopButton);
                 
                 // Add a visual indicator
@@ -1354,6 +1455,12 @@
                 moveCounter.className = isRefutation ? 'badge bg-danger mt-2' : 'badge bg-primary mt-2';
                 moveCounter.textContent = `Move 0 of ${variationMoves.length}`;
                 moveExplanation.appendChild(moveCounter);
+
+                // Add threat banner
+                const threatBanner = document.createElement('div');
+                threatBanner.id = 'variationThreatBanner';
+                threatBanner.className = 'mt-2 text-danger small';
+                moveExplanation.appendChild(threatBanner);
                 
                 // Highlight the active variation element
                 const pvElement = isRefutation
@@ -1377,33 +1484,62 @@
                     if (!isPlayingVariation) return;
                     
                     if (currentVarMoveIndex < variationMoves.length) {
-                        const indicator = document.getElementById('moveIndicator');
-                        if (indicator) {
-                            indicator.textContent = `Move ${currentVarMoveIndex + 1} of ${variationMoves.length}`;
-                        }
-                        
                         const moveData = variationMoves[currentVarMoveIndex];
+                        let executedMove = null;
                         try {
-                            chess.move({
+                            executedMove = chess.move({
                                 from: moveData.from,
                                 to: moveData.to,
-                                promotion: moveData.promotion
+                                promotion: moveData.promotion || 'q'
                             });
                             
                             board.position(chess.fen(), true);
                             
                             clearArrows();
                             clearSquareAnnotations();
+
+                            // 1. Detect and draw threats created by the move just played
+                            const moveThreats = getMoveThreats(chess, moveData);
+                            const showThreats = document.getElementById('toggleThreats') ? document.getElementById('toggleThreats').checked : true;
+                            if (showThreats && moveThreats.length > 0) {
+                                moveThreats.slice(0, 3).forEach(threat => {
+                                    drawArrow(threat.from, threat.to, 'threat');
+                                });
+                            }
+
+                            // 2. Draw arrow for the NEXT move in the variation (if available)
                             if (currentVarMoveIndex + 1 < variationMoves.length) {
                                 const nextMove = variationMoves[currentVarMoveIndex + 1];
                                 drawArrow(nextMove.from, nextMove.to, arrowStyle);
+                            }
+
+                            // 3. Update move counter & threat banner
+                            const indicator = document.getElementById('moveIndicator');
+                            if (indicator) {
+                                const moveNotation = executedMove ? executedMove.san : (moveData.san || '');
+                                indicator.innerHTML = `Move ${currentVarMoveIndex + 1} of ${variationMoves.length}: <strong>${moveNotation}</strong>`;
+                            }
+
+                            const tb = document.getElementById('variationThreatBanner');
+                            if (tb) {
+                                let threatHtml = '';
+                                if (chess.in_checkmate && chess.in_checkmate()) {
+                                    threatHtml = `<div class="badge bg-danger p-2 fs-6"><i class="bi bi-trophy-fill me-1"></i> Checkmate delivered!</div>`;
+                                } else if (chess.in_check && chess.in_check()) {
+                                    threatHtml = `<span class="badge bg-danger p-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Check!</span> <span class="ms-1">Enemy King is under attack.</span>`;
+                                } else if (moveThreats.length > 0) {
+                                    const threatDescs = moveThreats.map(t => `<span class="badge bg-danger text-white border me-1">${t.description}</span>`).join(' ');
+                                    threatHtml = `<div><strong><i class="bi bi-bullseye"></i> Threat created:</strong> ${threatDescs}</div>`;
+                                }
+                                tb.innerHTML = threatHtml;
                             }
                             
                             currentVarMoveIndex++;
                             if (currentVarMoveIndex < variationMoves.length) {
                                 animationTimeout = setTimeout(playNextMove, animationSpeed);
                             } else {
-                                setTimeout(finishVariationPlayback, 1000);
+                                // Line complete: Keep position and threats on board. DO NOT AUTOSWITCH!
+                                onVariationComplete(move, isRefutation);
                             }
                         } catch (e) {
                             console.error("Failed to make move:", e);
@@ -1417,7 +1553,7 @@
                     if (isPlayingVariation) {
                         playNextMove();
                     }
-                }, 1000);
+                }, 700);
             }
             
             // Fallback function to show just the better move when principal variation fails
@@ -1452,35 +1588,95 @@
                 chess.load(startingFen);
                 board.position(startingFen);
                 
-                // Add indicators
+                // Add a Return to Game button
+                const stopButton = document.createElement('button');
+                stopButton.className = 'btn btn-sm btn-outline-danger mt-2';
+                stopButton.innerHTML = '<i class="bi bi-arrow-return-left me-1"></i> Return to Game';
+                stopButton.id = 'stopVariationBtn';
+                stopButton.addEventListener('click', returnToGamePosition);
+                moveExplanation.appendChild(stopButton);
+
+                // Add visual indicator
                 const variationIndicator = document.createElement('div');
                 variationIndicator.className = 'alert alert-info mt-2';
                 variationIndicator.id = 'variationIndicator';
-                variationIndicator.innerHTML = `<strong>Showing better move</strong>: ${betterMoveData.san || move.analysis.best_move} <span class="text-muted">(couldn't parse full variation)</span>`;
+                variationIndicator.innerHTML = `<strong>Playing better move</strong>: ${betterMoveData.san || move.analysis.best_move}`;
                 moveExplanation.appendChild(variationIndicator);
+
+                const threatBanner = document.createElement('div');
+                threatBanner.id = 'variationThreatBanner';
+                threatBanner.className = 'mt-2 text-danger small';
+                moveExplanation.appendChild(threatBanner);
                 
-                // Show the arrow for the better move
+                // Show the arrow for the better move initially
                 clearArrows();
                 clearSquareAnnotations();
                 drawArrow(betterMoveData.from, betterMoveData.to, 'better');
                 
-                // Add a stop button
-                const stopButton = document.createElement('button');
-                stopButton.className = 'btn btn-sm btn-outline-danger mt-2';
-                stopButton.innerHTML = '<i class="bi bi-stop-fill"></i> Return to Game';
-                stopButton.id = 'stopVariationBtn';
-                stopButton.addEventListener('click', stopVariationPlayback);
-                moveExplanation.appendChild(stopButton);
-                
-                // After a delay, return to the game position
-                setTimeout(() => {
-                    if (isPlayingVariation) {
-                        finishVariationPlayback();
+                // Execute move after a brief delay
+                animationTimeout = setTimeout(() => {
+                    if (!isPlayingVariation) return;
+                    try {
+                        chess.move({
+                            from: betterMoveData.from,
+                            to: betterMoveData.to,
+                            promotion: betterMoveData.promotion || 'q'
+                        });
+                        board.position(chess.fen(), true);
+                        clearArrows();
+                        clearSquareAnnotations();
+
+                        const moveThreats = getMoveThreats(chess, betterMoveData);
+                        const showThreats = document.getElementById('toggleThreats') ? document.getElementById('toggleThreats').checked : true;
+                        if (showThreats && moveThreats.length > 0) {
+                            moveThreats.slice(0, 3).forEach(threat => {
+                                drawArrow(threat.from, threat.to, 'threat');
+                            });
+                        }
+
+                        if (threatBanner) {
+                            let threatHtml = '';
+                            if (chess.in_checkmate && chess.in_checkmate()) {
+                                threatHtml = `<div class="badge bg-danger p-2 fs-6"><i class="bi bi-trophy-fill me-1"></i> Checkmate delivered!</div>`;
+                            } else if (chess.in_check && chess.in_check()) {
+                                threatHtml = `<span class="badge bg-danger p-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Check!</span> <span class="ms-1">Enemy King is under attack.</span>`;
+                            } else if (moveThreats.length > 0) {
+                                const threatDescs = moveThreats.map(t => `<span class="badge bg-danger text-white border me-1">${t.description}</span>`).join(' ');
+                                threatHtml = `<div><strong><i class="bi bi-bullseye"></i> Threat created:</strong> ${threatDescs}</div>`;
+                            }
+                            threatBanner.innerHTML = threatHtml;
+                        }
+
+                        // Line complete: Keep position and threats on board. DO NOT AUTOSWITCH!
+                        onVariationComplete(move, false);
+                    } catch (e) {
+                        console.error("Error executing better move:", e);
                     }
-                }, 3000);
+                }, 700);
             }
             
-            // Stop the variation playback
+            // Called when a variation finishes playing - DO NOT AUTOSWITCH!
+            function onVariationComplete(move, isRefutation) {
+                isPlayingVariation = false;
+                
+                const variationIndicator = document.getElementById('variationIndicator');
+                if (variationIndicator) {
+                    variationIndicator.className = isRefutation ? 'alert alert-danger mt-2' : 'alert alert-success mt-2';
+                    variationIndicator.innerHTML = isRefutation
+                        ? `<strong><i class="bi bi-check2-circle"></i> Punishment line complete.</strong> Notice the threats created on the board.`
+                        : `<strong><i class="bi bi-check2-circle"></i> Better line complete.</strong> Notice the position and threats achieved.`;
+                }
+                
+                const stopButton = document.getElementById('stopVariationBtn');
+                if (stopButton) {
+                    stopButton.className = 'btn btn-primary btn-sm mt-2 w-100 shadow-sm py-2';
+                    const moveLabel = move ? (move.notation || move.move || '') : '';
+                    stopButton.innerHTML = `<i class="bi bi-arrow-return-left me-1"></i> Return to Game (${moveLabel})`;
+                    stopButton.onclick = returnToGamePosition;
+                }
+            }
+
+            // Stop the variation playback and cleanup temporary UI
             function stopVariationPlayback() {
                 isPlayingVariation = false;
                 if (animationTimeout) {
@@ -1488,7 +1684,7 @@
                     animationTimeout = null;
                 }
                 
-                // Remove the stop button
+                // Remove the stop / return button
                 const stopButton = document.getElementById('stopVariationBtn');
                 if (stopButton) {
                     stopButton.remove();
@@ -1505,6 +1701,12 @@
                 if (moveIndicator) {
                     moveIndicator.remove();
                 }
+
+                // Remove threat banner
+                const threatBanner = document.getElementById('variationThreatBanner');
+                if (threatBanner) {
+                    threatBanner.remove();
+                }
                 
                 // Clear any arrows on the board
                 clearArrows();
@@ -1517,23 +1719,14 @@
                 });
             }
             
-            // Finish variation playback and return to the original position
-            function finishVariationPlayback() {
+            // Return to the original game position when the user chooses to
+            function returnToGamePosition() {
                 stopVariationPlayback();
-                
-                // Return to the current move after a short delay
-                setTimeout(() => {
-                    if (currentMoveIndex >= 0) {
-                        goToMove(currentMoveIndex);
-                        
-                        // Redraw the arrows for the current move
-                        setTimeout(() => {
-                            drawMoveArrows(currentMoveIndex);
-                        }, 100);
-                    } else {
-                        goToFirstMove();
-                    }
-                }, 1000);
+                if (currentMoveIndex >= 0) {
+                    goToMove(currentMoveIndex);
+                } else {
+                    goToFirstMove();
+                }
             }
         });
     </script>

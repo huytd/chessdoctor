@@ -114,7 +114,7 @@ class ChessDoctor:
             b.push(m)
         return " ".join(tokens)
 
-    def analyze_game(self, pgn_input: str) -> Dict[str, Any]:
+    def analyze_game(self, pgn_input: str, depth: Optional[int] = None) -> Dict[str, Any]:
         """
         Analyze a game from a PGN file path or PGN text string and return JSON analysis data.
         """
@@ -123,6 +123,7 @@ class ChessDoctor:
             "moves": [],
             "errors": []
         }
+        target_depth = depth if depth is not None else self.depth
 
         try:
             if os.path.isfile(pgn_input):
@@ -146,27 +147,18 @@ class ChessDoctor:
                 "opening": game.headers.get("Opening", "")
             }
 
-            # Collect all moves in main line
-            all_moves = []
-            node = game
-            while node.variations:
-                node = node.variations[0]
-                all_moves.append(node.move)
-
-            # Generate SAN list for opening detection
+            all_moves = list(game.mainline_moves())
             san_moves = []
-            tmp_board = game.board()
+            temp_board = game.board()
             for m in all_moves:
-                san_moves.append(tmp_board.san(m))
-                tmp_board.push(m)
+                san_moves.append(temp_board.san(m))
+                temp_board.push(m)
 
-            # Identify opening if missing from headers
-            if not analysis_data["game_info"]["eco"] or not analysis_data["game_info"]["opening"]:
-                eco, opening_name = OpeningDetector.identify_opening(san_moves)
-                if not analysis_data["game_info"]["eco"]:
-                    analysis_data["game_info"]["eco"] = eco
-                if not analysis_data["game_info"]["opening"]:
-                    analysis_data["game_info"]["opening"] = opening_name
+            # Auto-detect opening if header is missing or irregular
+            if not analysis_data["game_info"]["opening"] or analysis_data["game_info"]["opening"] == "Unknown":
+                detected_eco, detected_opening = OpeningDetector.identify_opening(san_moves)
+                analysis_data["game_info"]["eco"] = detected_eco
+                analysis_data["game_info"]["opening"] = detected_opening
 
             board = game.board()
             ply = 0
@@ -195,45 +187,46 @@ class ChessDoctor:
                     else:
                         multipv_res = self.engine.analyse(
                             board_before_move,
-                            chess.engine.Limit(depth=self.depth, time=self.time_limit),
+                            chess.engine.Limit(depth=target_depth, time=self.time_limit),
                             multipv=min(3, board_before_move.legal_moves.count())
                         )
                         self._eval_cache[fen_before] = multipv_res
 
-                    best_info = multipv_res[0] if multipv_res else {}
-                    best_move = best_info.get("pv", [None])[0] if best_info.get("pv") else None
-                    best_score = best_info.get("score", chess.engine.PovScore(chess.engine.Cp(0), chess.WHITE))
-                    best_pv = best_info.get("pv", [])
+                    best_entry = multipv_res[0] if multipv_res else {}
+                    best_pv = best_entry.get("pv", [])
+                    best_move = best_pv[0] if best_pv else move
+                    best_score = best_entry.get("score", chess.engine.PovScore(chess.engine.Cp(0), chess.WHITE))
                     best_san = board_before_move.san(best_move) if best_move else san_move
-
                     wp_best = score_to_win_prob(best_score, turn_color)
 
-                    # Determine score and refutation of played move
+                    # Check if played move was best or found in MultiPV
+                    played_is_best = (move == best_move)
                     played_score = None
                     refutation_move = None
-                    refutation_pv = []
-                    played_is_best = (best_move is not None and move == best_move)
+                    refutation_pv = None
 
-                    # Check if played move was in the top 3 multipv lines
-                    for candidate in multipv_res:
-                        cand_pv = candidate.get("pv", [])
-                        if cand_pv and cand_pv[0] == move:
-                            played_score = candidate.get("score")
-                            if len(cand_pv) > 1:
-                                refutation_move = cand_pv[1]
-                                refutation_pv = cand_pv[1:]
-                            break
+                    if played_is_best:
+                        played_score = best_score
+                        if len(best_pv) > 1:
+                            refutation_move = best_pv[1]
+                            refutation_pv = best_pv[1:]
+                    else:
+                        for entry in multipv_res[1:]:
+                            entry_pv = entry.get("pv", [])
+                            if entry_pv and entry_pv[0] == move:
+                                played_score = entry.get("score", None)
+                                break
 
-                    # Apply move to board
+                    # Advance board with the played move
                     board.push(move)
                     ply += 1
                     move_history.append(move)
 
-                    # If played move was not in top 3, analyze position after move
-                    if played_score is None:
+                    # If not found in MultiPV, evaluate board after move to get score & refutation
+                    if played_score is None or not refutation_move:
                         post_res = self.engine.analyse(
                             board,
-                            chess.engine.Limit(depth=self.depth, time=self.time_limit),
+                            chess.engine.Limit(depth=max(8, target_depth - 2), time=self.time_limit),
                             multipv=1
                         )
                         if post_res and len(post_res) > 0:
