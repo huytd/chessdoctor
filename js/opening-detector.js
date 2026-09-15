@@ -1,5 +1,5 @@
 /**
- * opening-detector.js - Opening classification, ECO recognition, and opening principles for Chess Doctor.
+ * opening-detector.js - Opening classification, ECO recognition, and opening principles for WhyBlunder.
  * Compatible with Browser and Node.js.
  */
 (function(root, factory) {

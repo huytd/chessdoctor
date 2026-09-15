@@ -1,12 +1,12 @@
 /**
- * browser-analyzer.js - Client-Side Stockfish WASM Game Analyzer for Chess Doctor.
+ * browser-analyzer.js - Client-Side Stockfish WASM Game Analyzer for WhyBlunder.
  * Runs Stockfish in a Web Worker, parses UCI output, and orchestrates game analysis in the browser.
  */
 (function(root, factory) {
     if (typeof module === 'object' && module.exports) {
         module.exports = factory();
     } else {
-        root.BrowserChessDoctor = factory();
+        root.BrowserWhyBlunder = factory();
     }
 }(typeof self !== 'undefined' ? self : this, function() {
     'use strict';
@@ -136,7 +136,7 @@
         }
     }
 
-    class BrowserChessDoctor {
+    class BrowserWhyBlunder {
         constructor() {
             this.engine = new StockfishWorker();
             this.isCancelled = false;
@@ -471,5 +471,5 @@
         }
     }
 
-    return BrowserChessDoctor;
+    return BrowserWhyBlunder;
 }));

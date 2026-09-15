@@ -1,5 +1,5 @@
 /**
- * situation-recognizer.js - Tactical and positional pattern recognition for Chess Doctor.
+ * situation-recognizer.js - Tactical and positional pattern recognition for WhyBlunder.
  * Compatible with Browser and Node.js.
  */
 (function(root, factory) {

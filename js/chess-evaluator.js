@@ -1,5 +1,5 @@
 /**
- * chess-evaluator.js - Score evaluation, win probability, and move classification for Chess Doctor.
+ * chess-evaluator.js - Score evaluation, win probability, and move classification for WhyBlunder.
  * Compatible with Browser and Node.js.
  */
 (function(root, factory) {

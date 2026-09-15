@@ -1,6 +1,6 @@
-# Chess Doctor
+# WhyBlunder
 
-Chess Doctor is a powerful chess game analyzer that runs entirely in your browser using WebAssembly. It uses the Stockfish engine (compiled to WASM) to provide detailed analysis of chess games — no server or installation required.
+WhyBlunder is a powerful chess game analyzer that runs entirely in your browser using WebAssembly. It uses the Stockfish engine (compiled to WASM) to provide detailed analysis of chess games — no server or installation required.
 
 <img width="1418" alt="image" src="https://github.com/user-attachments/assets/750a4c91-aafc-42d9-a491-adb01199c853" />
 
@@ -16,7 +16,7 @@ Chess Doctor is a powerful chess game analyzer that runs entirely in your browse
 
 Simply open the app in your browser:
 
-👉 **[chessdoctor.vercel.app](https://chessdoctor.vercel.app)**
+👉 **[whyblunder.vercel.app](https://whyblunder.vercel.app)**
 
 1. Paste a PGN (Portable Game Notation) of a chess game into the text area
 2. Click **Analyze Game**
