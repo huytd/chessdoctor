@@ -2,7 +2,7 @@
 
 WhyBlunder is a powerful chess game analyzer that runs entirely in your browser using WebAssembly. It uses the Stockfish engine (compiled to WASM) to provide detailed analysis of chess games — no server or installation required.
 
-<img width="1418" alt="image" src="https://github.com/user-attachments/assets/750a4c91-aafc-42d9-a491-adb01199c853" />
+<img width="1665" height="966" alt="image" src="https://github.com/user-attachments/assets/9b04cc90-d12e-4714-84c8-0ecfa542f125" />
 
 ## Features
 
