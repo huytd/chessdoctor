@@ -872,6 +872,95 @@
             color: var(--lic-text-bright);
         }
 
+        /* Variation Outcome Explanation Card */
+        .variation-outcome-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            animation: fadeIn 0.2s ease-out;
+        }
+        .outcome-banner-box {
+            background: var(--lic-bg-surface-header);
+            border: 1px solid var(--lic-border);
+            border-radius: 4px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .outcome-banner-box.refutation {
+            border-left: 3px solid var(--lic-red);
+        }
+        .outcome-banner-box.better {
+            border-left: 3px solid var(--lic-green);
+        }
+        .outcome-title {
+            font-size: var(--lic-fs-base);
+            font-weight: 700;
+            color: var(--lic-text-bright);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .outcome-subtitle {
+            font-size: var(--lic-fs-sm);
+            color: var(--lic-text-secondary);
+            line-height: 1.4;
+        }
+        .outcome-diff-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .outcome-diff-cell {
+            background: var(--lic-bg-canvas);
+            border: 1px solid var(--lic-border-subtle);
+            border-radius: 4px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .outcome-diff-label {
+            font-size: var(--lic-fs-sm);
+            color: var(--lic-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .outcome-diff-val {
+            font-size: var(--lic-fs-base);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .outcome-takeaways-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .outcome-takeaway-item {
+            font-size: var(--lic-fs-base);
+            color: var(--lic-text-primary);
+            line-height: 1.45;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            background: var(--lic-bg-surface-header);
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: 1px solid var(--lic-border-subtle);
+        }
+        .outcome-takeaway-item i {
+            color: var(--lic-blue);
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
         /* COLUMN 3: MOVE LIST (RIGHT) */
         .col-moves {
             position: sticky;
@@ -2930,7 +3019,7 @@
                             if (currentVarMoveIndex < variationMoves.length) {
                                 animationTimeout = setTimeout(playNextMove, animationSpeed);
                             } else {
-                                onVariationComplete(move, isRefutation);
+                                onVariationComplete(move, isRefutation, startingFen, variationMoves);
                             }
                         } catch (e) {
                             console.error('Error playing variation:', e);
@@ -3002,18 +3091,277 @@
                                 drawArrow(threat.from, threat.to, 'threat');
                             });
                         }
-                        onVariationComplete(move, false);
+                        onVariationComplete(move, false, startingFen, [betterMoveData]);
                     } catch (e) {
                         console.error('Error executing better move:', e);
                     }
                 }, 600);
             }
 
-            function onVariationComplete(move, isRefutation) {
-                isPlayingVariation = false;
-                if (variationStatusText) {
-                    variationStatusText.innerHTML = `<span class="text-success fw-medium">Line completed.</span>`;
+            function getMaterialScore(fen) {
+                const pieceValues = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+                const counts = {
+                    w: { p: 0, n: 0, b: 0, r: 0, q: 0, total: 0 },
+                    b: { p: 0, n: 0, b: 0, r: 0, q: 0, total: 0 }
+                };
+                if (!fen || fen === 'start') {
+                    return {
+                        w: { p: 8, n: 2, b: 2, r: 2, q: 1, total: 39 },
+                        b: { p: 8, n: 2, b: 2, r: 2, q: 1, total: 39 }
+                    };
                 }
+                const boardPart = fen.split(' ')[0];
+                for (const char of boardPart) {
+                    if ((char >= '1' && char <= '8') || char === '/') continue;
+                    const isWhite = (char === char.toUpperCase());
+                    const type = char.toLowerCase();
+                    if (pieceValues[type] !== undefined) {
+                        const side = isWhite ? 'w' : 'b';
+                        counts[side][type]++;
+                        counts[side].total += pieceValues[type];
+                    }
+                }
+                return counts;
+            }
+
+            function getVariationOutcome(move, isRefutation, startingFen, variationMoves, finalChess) {
+                const startCounts = getMaterialScore(startingFen);
+                const finalCounts = getMaterialScore(finalChess.fen());
+
+                const movePlayerColor = move.is_white ? 'White' : 'Black';
+                const oppPlayerColor = move.is_white ? 'Black' : 'White';
+                const movePlayerSide = move.is_white ? 'w' : 'b';
+                const oppPlayerSide = move.is_white ? 'b' : 'w';
+
+                const isCheckmate = !!(finalChess.in_checkmate && finalChess.in_checkmate());
+                const isCheck = !!(finalChess.in_check && finalChess.in_check());
+
+                const pieceNames = { q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight', p: 'Pawn' };
+                const pieceSymbols = {
+                    w: { q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
+                    b: { q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' }
+                };
+
+                let wLostPieces = [];
+                let bLostPieces = [];
+                ['q', 'r', 'b', 'n', 'p'].forEach(type => {
+                    const wLost = startCounts.w[type] - finalCounts.w[type];
+                    if (wLost > 0) {
+                        wLostPieces.push(`${wLost > 1 ? wLost + ' ' : ''}${pieceSymbols.w[type]} ${pieceNames[type]}${wLost > 1 ? 's' : ''}`);
+                    }
+                    const bLost = startCounts.b[type] - finalCounts.b[type];
+                    if (bLost > 0) {
+                        bLostPieces.push(`${bLost > 1 ? bLost + ' ' : ''}${pieceSymbols.b[type]} ${pieceNames[type]}${bLost > 1 ? 's' : ''}`);
+                    }
+                });
+
+                const netScoreW = (finalCounts.w.total - startCounts.w.total) - (finalCounts.b.total - startCounts.b.total);
+                const netGainForLine = isRefutation
+                    ? (oppPlayerSide === 'w' ? netScoreW : -netScoreW)
+                    : (movePlayerSide === 'w' ? netScoreW : -netScoreW);
+
+                const punisherName = isRefutation ? oppPlayerColor : movePlayerColor;
+                const targetName = isRefutation ? movePlayerColor : oppPlayerColor;
+                const lostPiecesForTarget = isRefutation
+                    ? (movePlayerSide === 'w' ? wLostPieces : bLostPieces)
+                    : (oppPlayerSide === 'w' ? wLostPieces : bLostPieces);
+
+                let playedEval = (move.evaluation !== undefined && move.evaluation !== null) ? `${move.evaluation}` : 'N/A';
+                if (playedEval !== 'N/A' && !playedEval.startsWith('+') && !playedEval.startsWith('-') && !playedEval.startsWith('#') && !playedEval.startsWith('M')) {
+                    playedEval = '+' + playedEval;
+                }
+                let lineEval = move.analysis?.best_evaluation || (move.analysis?.evaluation !== undefined ? `${move.analysis.evaluation}` : 'Decisive');
+                if (lineEval !== 'Decisive' && !lineEval.startsWith('+') && !lineEval.startsWith('-') && !lineEval.startsWith('#') && !lineEval.startsWith('M')) {
+                    lineEval = '+' + lineEval;
+                }
+
+                let title = '';
+                let subtitle = '';
+                let punchline = '';
+                let playedSummary = '';
+                let lineSummary = '';
+                let takeaways = [];
+
+                if (isRefutation) {
+                    if (isCheckmate) {
+                        title = 'Forced Checkmate Delivered';
+                        subtitle = `${punisherName} capitalizes on ${move.move} to deliver an unstoppable checkmate.`;
+                        punchline = `Delivers Checkmate #`;
+                        playedSummary = `Allowed Mate`;
+                        lineSummary = `Checkmate #`;
+                        takeaways.push(`<strong>Checkmate Sequence:</strong> Playing ${move.move} compromised ${targetName}'s King safety, allowing a forced mating sequence.`);
+                    } else if (netGainForLine >= 9) {
+                        title = `${punisherName} Wins the Queen (+${netGainForLine})`;
+                        subtitle = `The blunder leaves ${targetName}'s queen trapped or completely lost.`;
+                        punchline = `Wins Queen (+${netGainForLine})`;
+                        playedSummary = `Loses Queen`;
+                        lineSummary = `+${netGainForLine} Queen Won`;
+                        takeaways.push(`<strong>Decisive Material Win:</strong> ${punisherName} captures the enemy Queen cleanly, obtaining an overwhelming winning advantage.`);
+                    } else if (netGainForLine >= 5) {
+                        title = `${punisherName} Wins a Rook (+${netGainForLine})`;
+                        subtitle = `A devastating tactical blow wins major material with no adequate compensation.`;
+                        punchline = `Wins Rook (+${netGainForLine})`;
+                        playedSummary = `Loses Rook`;
+                        lineSummary = `+${netGainForLine} Rook Won`;
+                        takeaways.push(`<strong>Major Material Gain:</strong> ${targetName} loses a full Rook due to an exposed tactical vulnerability.`);
+                    } else if (netGainForLine >= 3) {
+                        const capturedPiece = lostPiecesForTarget.length > 0 ? lostPiecesForTarget[0] : 'a Minor Piece';
+                        title = `${punisherName} Wins ${capturedPiece} (+${netGainForLine})`;
+                        subtitle = `The refutation sequence cleanly exploits an undefended or overloaded piece.`;
+                        punchline = `Wins Piece (+${netGainForLine})`;
+                        playedSummary = `Loses Piece`;
+                        lineSummary = `+${netGainForLine} Material`;
+                        takeaways.push(`<strong>Tactical Exploitation:</strong> ${punisherName} converts the loose piece weakness into a decisive material lead.`);
+                    } else if (netGainForLine > 0) {
+                        title = `${punisherName} Wins Pawn & Initiative (+${netGainForLine})`;
+                        subtitle = `Captures critical material while maintaining strong positional pressure.`;
+                        punchline = `Wins +${netGainForLine} material`;
+                        playedSummary = `Loses Material`;
+                        lineSummary = `+${netGainForLine} & Initiative`;
+                        takeaways.push(`<strong>Pawn & Structural Win:</strong> ${punisherName} dismantles ${targetName}'s pawn structure and creates a winning advantage.`);
+                    } else {
+                        title = `${punisherName} Seizes Total Positional Control`;
+                        subtitle = `The refutation paralyzes ${targetName}'s pieces and claims the initiative.`;
+                        punchline = `Decisive positional advantage`;
+                        playedSummary = `Positional Collapse`;
+                        lineSummary = `Crushing Pressure`;
+                        takeaways.push(`<strong>Positional Dominance:</strong> Constricts ${targetName}'s piece activity and opens dominant attacking avenues.`);
+                    }
+
+                    if (isCheck) {
+                        takeaways.push(`<strong>Ongoing Threat:</strong> ${targetName}'s King remains checked and vulnerable under heavy tactical pressure.`);
+                    }
+
+                    if (move.analysis?.explanation) {
+                        takeaways.push(`<strong>Engine Diagnosis:</strong> ${move.analysis.explanation}`);
+                    } else if (move.analysis?.refutation) {
+                        takeaways.push(`<strong>Key Refutation Move:</strong> ${move.analysis.refutation} immediately exploited the blunder.`);
+                    }
+                } else {
+                    const bestMoveSan = move.analysis?.best_move ? formatSanWithFigurines(move.analysis.best_move, move.is_white) : 'Engine Move';
+                    if (isCheckmate) {
+                        title = `Forces Checkmate with ${bestMoveSan}`;
+                        subtitle = `Finding ${bestMoveSan} unleashes an unstoppable mating attack against ${oppPlayerColor}.`;
+                        punchline = `Forces Checkmate #`;
+                        playedSummary = `Missed Mate`;
+                        lineSummary = `Checkmate #`;
+                        takeaways.push(`<strong>Direct Checkmate:</strong> ${bestMoveSan} was the fastest winning tactical path available.`);
+                    } else if (netGainForLine >= 3) {
+                        title = `Wins Decisive Material (+${netGainForLine})`;
+                        subtitle = `Playing ${bestMoveSan} cleanly captures material or traps an opposing piece.`;
+                        punchline = `Gains +${netGainForLine} material`;
+                        playedSummary = `Suboptimal (${move.move})`;
+                        lineSummary = `+${netGainForLine} Material Won`;
+                        takeaways.push(`<strong>Tactical Accuracy:</strong> ${bestMoveSan} secures clear material advantage instead of conceding counterplay.`);
+                    } else {
+                        title = `Maintains Strong Activity & Harmony`;
+                        subtitle = `${bestMoveSan} preserves king safety, piece harmony, and central control.`;
+                        punchline = `Preserves strong position`;
+                        playedSummary = `Suboptimal (${move.move})`;
+                        lineSummary = `Solid & Active`;
+                        takeaways.push(`<strong>Strategic Superiority:</strong> ${bestMoveSan} avoids unnecessary tactical weaknesses and keeps piece coordination intact.`);
+                    }
+
+                    if (move.analysis?.explanation) {
+                        takeaways.push(`<strong>Why this move is better:</strong> ${move.analysis.explanation}`);
+                    }
+                }
+
+                return {
+                    title,
+                    subtitle,
+                    punchline,
+                    playedSummary,
+                    lineSummary,
+                    playedEval,
+                    lineEval,
+                    takeaways,
+                    netGainForLine,
+                    isCheckmate,
+                    isCheck
+                };
+            }
+
+            function renderVariationOutcomeCard(outcome, move, isRefutation) {
+                if (!moveExplanation) return;
+                
+                let html = `
+                    <div class="variation-outcome-card">
+                        <div class="outcome-banner-box ${isRefutation ? 'refutation' : 'better'}">
+                            <div class="outcome-title">
+                                <i class="bi ${isRefutation ? 'bi-shield-slash-fill text-danger' : 'bi-check-circle-fill text-success'}"></i>
+                                <span>${outcome.title}</span>
+                            </div>
+                            <div class="outcome-subtitle">${outcome.subtitle}</div>
+                        </div>
+
+                        <div class="outcome-diff-grid">
+                            <div class="outcome-diff-cell">
+                                <span class="outcome-diff-label">Played Move (${move.move})</span>
+                                <div class="outcome-diff-val text-danger">
+                                    <span>${outcome.playedSummary}</span>
+                                    <span class="font-monospace small opacity-75">${outcome.playedEval}</span>
+                                </div>
+                            </div>
+                            <div class="outcome-diff-cell">
+                                <span class="outcome-diff-label">${isRefutation ? 'Punishing Line' : 'Recommended Line'}</span>
+                                <div class="outcome-diff-val text-success">
+                                    <span>${outcome.lineSummary}</span>
+                                    <span class="font-monospace small opacity-75">${outcome.lineEval}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="outcome-takeaways">
+                            <div class="outcome-diff-label mb-2">Conclusion & Key Takeaways</div>
+                            <ul class="outcome-takeaways-list">
+                                ${outcome.takeaways.map(t => `
+                                    <li class="outcome-takeaway-item">
+                                        <i class="bi bi-chevron-right"></i>
+                                        <span>${t}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+
+                        <div class="mt-2 d-flex gap-2">
+                            <button class="lic-btn lic-btn-primary flex-grow-1" id="outcomeReturnBtn">
+                                <i class="bi bi-arrow-return-left me-1"></i> Return to Game (Space)
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                moveExplanation.innerHTML = html;
+
+                const returnBtn = document.getElementById('outcomeReturnBtn');
+                if (returnBtn) {
+                    returnBtn.addEventListener('click', returnToGamePosition);
+                }
+            }
+
+            function onVariationComplete(move, isRefutation, startingFen, variationMoves) {
+                isPlayingVariation = false;
+                
+                const lastMove = (variationMoves && variationMoves.length > 0) ? variationMoves[variationMoves.length - 1] : null;
+                clearArrows();
+                clearSquareAnnotations();
+                if (lastMove) {
+                    const threats = getMoveThreats(chess, lastMove);
+                    if (threats.length > 0) {
+                        threats.slice(0, 3).forEach(threat => {
+                            drawArrow(threat.from, threat.to, 'threat');
+                        });
+                    }
+                }
+
+                const outcome = getVariationOutcome(move, isRefutation, startingFen, variationMoves, chess);
+
+                if (variationStatusText) {
+                    variationStatusText.innerHTML = `<span class="text-${isRefutation ? 'danger' : 'success'} fw-semibold">${isRefutation ? 'Punishment: ' : 'Outcome: '}</span> <span>${outcome.punchline}</span>`;
+                }
+
+                renderVariationOutcomeCard(outcome, move, isRefutation);
             }
 
             function stopVariationPlayback() {
