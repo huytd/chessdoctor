@@ -94,6 +94,17 @@
         .good-move {
             color: #28a745;
         }
+        .brilliant {
+            color: #1ba5b8;
+            font-weight: bold;
+        }
+        .great {
+            color: #5c8bb0;
+            font-weight: bold;
+        }
+        .book {
+            color: #a88865;
+        }
         .loading {
             display: none;
             text-align: center;
@@ -147,6 +158,15 @@
         .quality-good {
             background-color: #28a745;
         }
+        .quality-brilliant {
+            background-color: #1ba5b8;
+        }
+        .quality-great {
+            background-color: #5c8bb0;
+        }
+        .quality-book {
+            background-color: #a88865;
+        }
         /* Arrow styles */
         .arrow-current {
             stroke: rgba(0, 0, 255, 0.7);
@@ -156,11 +176,26 @@
             stroke: rgba(0, 128, 0, 0.7);
             stroke-width: 8px;
         }
+        .arrow-threat {
+            stroke: rgba(220, 53, 69, 0.85);
+            stroke-width: 6px;
+        }
+        .arrow-opponent-threat {
+            stroke: rgba(230, 57, 70, 0.85);
+            stroke-width: 6px;
+            stroke-dasharray: 6, 4;
+        }
         .arrow-head-current {
             fill: rgba(0, 0, 255, 0.7);
         }
         .arrow-head-better {
             fill: rgba(0, 128, 0, 0.7);
+        }
+        .arrow-head-threat {
+            fill: rgba(220, 53, 69, 0.85);
+        }
+        .arrow-head-opponent-threat {
+            fill: rgba(230, 57, 70, 0.85);
         }
         /* Square annotation styles */
         .square-annotation {
@@ -266,6 +301,10 @@
                         <button id="btnLast" class="btn btn-sm btn-outline-secondary">
                             Last <i class="bi bi-skip-end-fill"></i>
                         </button>
+                        <div class="form-check form-switch d-inline-block ms-3 align-middle">
+                            <input class="form-check-input" type="checkbox" id="toggleThreats" checked>
+                            <label class="form-check-label small fw-bold text-danger" for="toggleThreats">Threats</label>
+                        </div>
                     </div>
                     
                     <!-- Game Info -->
@@ -364,6 +403,15 @@
             btnNext.addEventListener('click', goToNextMove);
             btnLast.addEventListener('click', goToLastMove);
             
+            const toggleThreats = document.getElementById('toggleThreats');
+            if (toggleThreats) {
+                toggleThreats.addEventListener('change', function() {
+                    if (currentMoveIndex >= 0) {
+                        drawMoveArrows(currentMoveIndex);
+                    }
+                });
+            }
+            
             // Set up arrow markers
             function setupArrowMarkers() {
                 const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
@@ -399,6 +447,38 @@
                 
                 markerBetter.appendChild(polygonBetter);
                 defs.appendChild(markerBetter);
+
+                // Threat move marker
+                const markerThreat = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                markerThreat.setAttribute('id', 'arrowhead-threat');
+                markerThreat.setAttribute('markerWidth', '6');
+                markerThreat.setAttribute('markerHeight', '4');
+                markerThreat.setAttribute('refX', '4');
+                markerThreat.setAttribute('refY', '2');
+                markerThreat.setAttribute('orient', 'auto');
+                
+                const polygonThreat = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygonThreat.setAttribute('points', '0 0, 6 2, 0 4');
+                polygonThreat.setAttribute('class', 'arrow-head-threat');
+                
+                markerThreat.appendChild(polygonThreat);
+                defs.appendChild(markerThreat);
+
+                // Opponent threat marker
+                const markerOpponent = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                markerOpponent.setAttribute('id', 'arrowhead-opponent-threat');
+                markerOpponent.setAttribute('markerWidth', '6');
+                markerOpponent.setAttribute('markerHeight', '4');
+                markerOpponent.setAttribute('refX', '4');
+                markerOpponent.setAttribute('refY', '2');
+                markerOpponent.setAttribute('orient', 'auto');
+                
+                const polygonOpponent = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygonOpponent.setAttribute('points', '0 0, 6 2, 0 4');
+                polygonOpponent.setAttribute('class', 'arrow-head-opponent-threat');
+                
+                markerOpponent.appendChild(polygonOpponent);
+                defs.appendChild(markerOpponent);
                 
                 arrowSvg.appendChild(defs);
             }
@@ -611,9 +691,10 @@
                     // White move
                     if (movePair.white) {
                         const whiteIndex = moves.findIndex(m => m.move_number === parseInt(moveNumber) && m.is_white);
-                        const whiteQuality = getQualityClass(movePair.white.quality);
+                        const whiteQuality = getQualityClass(movePair.white.detailed_quality || movePair.white.quality);
+                        const dotClass = whiteQuality === 'good-move' ? 'good' : whiteQuality;
                         html += `<div class="white-move ${whiteQuality}" data-index="${whiteIndex}" id="move-${whiteIndex}">`;
-                        html += `<span class="move-quality-indicator quality-${whiteQuality.replace('blunder', 'blunder').replace('mistake', 'mistake').replace('inaccuracy', 'inaccuracy').replace('good-move', 'good')}"></span>`;
+                        html += `<span class="move-quality-indicator quality-${dotClass}"></span>`;
                         html += `${movePair.white.move}`;
                         html += `</div>`;
                     } else {
@@ -623,9 +704,10 @@
                     // Black move
                     if (movePair.black) {
                         const blackIndex = moves.findIndex(m => m.move_number === parseInt(moveNumber) && !m.is_white);
-                        const blackQuality = getQualityClass(movePair.black.quality);
+                        const blackQuality = getQualityClass(movePair.black.detailed_quality || movePair.black.quality);
+                        const dotClass = blackQuality === 'good-move' ? 'good' : blackQuality;
                         html += `<div class="black-move ${blackQuality}" data-index="${blackIndex}" id="move-${blackIndex}">`;
-                        html += `<span class="move-quality-indicator quality-${blackQuality.replace('blunder', 'blunder').replace('mistake', 'mistake').replace('inaccuracy', 'inaccuracy').replace('good-move', 'good')}"></span>`;
+                        html += `<span class="move-quality-indicator quality-${dotClass}"></span>`;
                         html += `${movePair.black.move}`;
                         html += `</div>`;
                     } else {
@@ -659,56 +741,107 @@
                 const move = moves[index];
                 let html = '';
                 
-                if (move.quality !== 'good move' && move.analysis) {
-                    html += `<h5 class="${getQualityClass(move.quality)}">${move.quality.toUpperCase()}: ${move.move}</h5>`;
+                const qualityTitle = (move.detailed_quality || move.quality || 'move').toUpperCase();
+                const qualityClass = getQualityClass(move.detailed_quality || move.quality);
+                
+                html += `<h5 class="${qualityClass} d-flex align-items-center justify-content-between mb-2">
+                            <span>${qualityTitle}: ${move.move}</span>
+                            <span class="badge bg-light text-dark border fs-6">${move.evaluation || ''}</span>
+                         </h5>`;
+                
+                // Display tactical / positional tags if available
+                if (move.tags && move.tags.length > 0) {
+                    html += `<div class="mb-2">`;
+                    move.tags.forEach(tag => {
+                        html += `<span class="badge bg-secondary me-1">${tag}</span>`;
+                    });
+                    html += `</div>`;
+                }
+                
+                if (move.analysis) {
+                    // Threat created by the played move
+                    if (move.analysis.threats_created && move.analysis.threats_created.length > 0) {
+                        html += `<div class="mt-2 text-danger">
+                                    <strong><i class="bi bi-bullseye"></i> Threat created:</strong>
+                                    ${move.analysis.threats_created.map(t => `<span class="badge bg-danger text-white border ms-1">${t.description}</span>`).join(' ')}
+                                 </div>`;
+                    }
+
+                    if (move.quality !== 'good move' && move.analysis.best_move) {
+                        html += `<div class="mt-2"><strong>Better move:</strong> <span class="badge bg-success">${move.analysis.best_move}</span></div>`;
+                    }
                     
-                    if (move.analysis.best_move) {
-                        html += `<div><strong>Better move:</strong> ${move.analysis.best_move}</div>`;
+                    if (move.analysis.refutation) {
+                        html += `<div class="mt-2 text-danger"><strong><i class="bi bi-exclamation-triangle"></i> Opponent's threat:</strong> <span class="badge bg-danger">${move.analysis.refutation}</span></div>`;
                     }
                     
                     if (move.analysis.explanation) {
                         html += `<div class="mt-2"><strong>Why:</strong> ${move.analysis.explanation}</div>`;
                     }
                     
-                    if (move.analysis.principal_variation) {
-                        html += `<div class="mt-2"><strong>Expected line:</strong></div>`;
-                        html += `<div class="principal-variation clickable" data-index="${index}">${move.analysis.principal_variation}</div>`;
-                        html += `<div class="d-flex align-items-center mt-2">
-                                    <button class="btn btn-sm btn-outline-primary play-button" data-index="${index}">
-                                        <i class="bi bi-play-fill"></i> Play on board
-                                    </button>
-                                    <div class="ms-2">
-                                        <select id="speedControl" class="form-select form-select-sm" style="width: auto;">
-                                            <option value="2000">Slow</option>
-                                            <option value="1000" selected>Normal</option>
-                                            <option value="500">Fast</option>
-                                            <option value="200">Very Fast</option>
-                                        </select>
+                    // Punishing continuation (Refutation line)
+                    if (move.quality !== 'good move' && move.analysis.refutation_variation) {
+                        html += `<div class="mt-3">
+                                    <strong class="text-danger"><i class="bi bi-shield-slash"></i> Punishing line (why this move is bad):</strong>
+                                    <div class="principal-variation clickable mt-1" data-index="${index}" data-type="refutation" style="border-left: 3px solid #dc3545; background-color: #fff5f5; color: #b02a37;">${move.analysis.refutation_variation}</div>
+                                    <div class="d-flex align-items-center mt-2">
+                                        <button class="btn btn-sm btn-outline-danger play-refutation-button" data-index="${index}">
+                                            <i class="bi bi-play-fill"></i> Play punishment line
+                                        </button>
                                     </div>
-                                </div>`;
+                                 </div>`;
+                    }
+
+                    // Recommended line
+                    if (move.analysis.principal_variation) {
+                        html += `<div class="mt-3">
+                                    <strong class="text-success"><i class="bi bi-check-circle"></i> Recommended better line:</strong>
+                                    <div class="principal-variation clickable mt-1" data-index="${index}" data-type="better" style="border-left: 3px solid #28a745; background-color: #f4faf4;">${move.analysis.principal_variation}</div>
+                                    <div class="d-flex align-items-center mt-2">
+                                        <button class="btn btn-sm btn-outline-success play-button" data-index="${index}">
+                                            <i class="bi bi-play-fill"></i> Play better line
+                                        </button>
+                                        <div class="ms-2">
+                                            <select id="speedControl" class="form-select form-select-sm" style="width: auto;">
+                                                <option value="2000">Slow</option>
+                                                <option value="1000" selected>Normal</option>
+                                                <option value="500">Fast</option>
+                                                <option value="200">Very Fast</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                 </div>`;
                     }
                 } else {
-                    html = `<h5 class="good-move">GOOD MOVE: ${move.move}</h5>`;
                     html += '<p>This move is considered good.</p>';
                 }
                 
                 moveExplanation.innerHTML = html;
                 
-                // Add click event listener to the principal variation
-                const pvElement = moveExplanation.querySelector('.principal-variation.clickable');
-                if (pvElement) {
-                    pvElement.addEventListener('click', function() {
-                        const index = parseInt(this.dataset.index);
-                        playVariation(index);
+                // Add click event listener to variations
+                moveExplanation.querySelectorAll('.principal-variation.clickable').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.index);
+                        const type = this.dataset.type || 'better';
+                        playVariation(idx, type);
                     });
-                }
+                });
                 
-                // Add click event listener to the play button
+                // Add click event listener to play better button
                 const playButton = moveExplanation.querySelector('.play-button');
                 if (playButton) {
                     playButton.addEventListener('click', function() {
-                        const index = parseInt(this.dataset.index);
-                        playVariation(index);
+                        const idx = parseInt(this.dataset.index);
+                        playVariation(idx, 'better');
+                    });
+                }
+
+                // Add click event listener to play refutation button
+                const playRefutationBtn = moveExplanation.querySelector('.play-refutation-button');
+                if (playRefutationBtn) {
+                    playRefutationBtn.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.index);
+                        playVariation(idx, 'refutation');
                     });
                 }
             }
@@ -722,6 +855,7 @@
                 if (index < 0 || index >= moves.length) return;
                 
                 const move = moves[index];
+                const showThreats = document.getElementById('toggleThreats') ? document.getElementById('toggleThreats').checked : true;
                 
                 // Draw arrow for current move using preprocessed data
                 if (moveHistory[index]) {
@@ -737,6 +871,17 @@
                     // If there's a better move and it's not a good move, draw that too
                     if (move.quality !== 'good move' && move.betterMoveData) {
                         drawArrow(move.betterMoveData.from, move.betterMoveData.to, 'better');
+                    }
+
+                    // Direct threat created by the played move (solid red arrow)
+                    if (showThreats && move.analysis && move.analysis.threats_created && move.analysis.threats_created.length > 0) {
+                        const threat = move.analysis.threats_created[0];
+                        drawArrow(threat.from, threat.to, 'threat');
+                    }
+
+                    // Opponent threat / refutation (dashed red arrow)
+                    if (showThreats && move.quality !== 'good move' && move.analysis && move.analysis.refutation_from && move.analysis.refutation_to) {
+                        drawArrow(move.analysis.refutation_from, move.analysis.refutation_to, 'opponent-threat');
                     }
                 }
             }
@@ -843,7 +988,13 @@
                     case 'blunder': return 'blunder';
                     case 'mistake': return 'mistake';
                     case 'inaccuracy': return 'inaccuracy';
-                    case 'good move': return 'good-move';
+                    case 'good move': 
+                    case 'good': return 'good-move';
+                    case 'best': return 'good-move';
+                    case 'excellent': return 'good-move';
+                    case 'brilliant': return 'brilliant';
+                    case 'great': return 'great';
+                    case 'book': return 'book';
                     default: return '';
                 }
             }
@@ -1075,8 +1226,8 @@
             }
             
             // Play through a variation with animation
-            function playVariation(moveIndex) {
-                console.log("Starting variation playback for move index:", moveIndex);
+            function playVariation(moveIndex, lineType = 'better') {
+                console.log("Starting variation playback for move index:", moveIndex, "lineType:", lineType);
                 
                 // Stop any ongoing animation
                 stopVariationPlayback();
@@ -1095,60 +1246,80 @@
                 }
                 console.log("Animation speed:", animationSpeed);
                 
-                // Get the position before this move was played
+                const isRefutation = (lineType === 'refutation');
+                
+                // Determine starting position:
+                // Refutation line starts AFTER the played move;
+                // Better alternative line starts BEFORE the played move.
                 let startingFen = 'start';
-                if (moveIndex < moveHistory.length && moveHistory[moveIndex]) {
-                    // The moveHistory already stores the position before each move
-                    startingFen = moveHistory[moveIndex].fen;
-                    console.log("Using position from moveHistory");
-                } else if (moveIndex > 0) {
-                    // Fallback: reconstruct the position by playing all moves up to but not including the current one
-                    const tempChess = new Chess();
-                    for (let i = 0; i < moveIndex; i++) {
-                        try {
-                            tempChess.move(moves[i].move);
-                        } catch (e) {
-                            console.error('Error reconstructing position:', e);
+                if (isRefutation) {
+                    if (moveIndex + 1 < moveHistory.length && moveHistory[moveIndex + 1]) {
+                        startingFen = moveHistory[moveIndex + 1].fen;
+                    } else {
+                        const tempChess = new Chess();
+                        for (let i = 0; i <= moveIndex; i++) {
+                            try {
+                                tempChess.move(moves[i].move);
+                            } catch (e) {
+                                console.error('Error reconstructing position:', e);
+                            }
                         }
+                        startingFen = tempChess.fen();
                     }
-                    startingFen = tempChess.fen();
-                    console.log("Reconstructed position from previous moves");
                 } else {
-                    console.log("Using starting position");
+                    if (moveIndex < moveHistory.length && moveHistory[moveIndex]) {
+                        startingFen = moveHistory[moveIndex].fen;
+                    } else if (moveIndex > 0) {
+                        const tempChess = new Chess();
+                        for (let i = 0; i < moveIndex; i++) {
+                            try {
+                                tempChess.move(moves[i].move);
+                            } catch (e) {
+                                console.error('Error reconstructing position:', e);
+                            }
+                        }
+                        startingFen = tempChess.fen();
+                    }
                 }
                 console.log("Starting FEN:", startingFen);
                 
-                // Check if we have a principal variation
-                if (!move.analysis.principal_variation) {
-                    console.log("No principal variation available, using only the better move");
-                    // If there's no principal variation but there is a better move,
-                    // we can still show at least that move
-                    if (move.analysis.best_move && move.betterMoveData) {
-                        showBetterMoveOnly(moveIndex, move.betterMoveData);
+                const rawVariation = isRefutation ? move.analysis.refutation_variation : move.analysis.principal_variation;
+                const arrowStyle = isRefutation ? 'threat' : 'better';
+
+                // Check if variation is available
+                if (!rawVariation) {
+                    if (isRefutation) {
+                        if (move.analysis.refutation_from && move.analysis.refutation_to) {
+                            // Single refutation move fallback
+                        } else {
+                            alert("Sorry, no punishment line available for this position.");
+                            return;
+                        }
                     } else {
-                        console.error("No better move available either");
-                        alert("Sorry, no alternative moves available for this position.");
+                        if (move.analysis.best_move && move.betterMoveData) {
+                            showBetterMoveOnly(moveIndex, move.betterMoveData);
+                        } else {
+                            alert("Sorry, no alternative moves available for this position.");
+                        }
+                        return;
                     }
-                    return;
                 }
                 
-                console.log("Principal variation:", move.analysis.principal_variation);
-                
-                // Parse the principal variation
-                const variationMoves = parsePrincipalVariation(move.analysis.principal_variation, startingFen);
-                console.log("Parsed variation moves:", variationMoves);
-                
+                // Parse the variation moves
+                let variationMoves = rawVariation ? parsePrincipalVariation(rawVariation, startingFen) : [];
+                if (variationMoves.length === 0 && isRefutation && move.analysis.refutation_from && move.analysis.refutation_to) {
+                    variationMoves = [{
+                        from: move.analysis.refutation_from,
+                        to: move.analysis.refutation_to,
+                        san: move.analysis.refutation || ''
+                    }];
+                }
+
                 if (variationMoves.length === 0) {
-                    console.error("No valid moves parsed from principal variation");
-                    
-                    // Fallback: Try to directly use the better move from the analysis
-                    if (move.analysis.best_move && move.betterMoveData) {
-                        console.log("Falling back to using just the better move");
-                        // Show a simplified animation with just the better move
+                    if (!isRefutation && move.analysis.best_move && move.betterMoveData) {
                         showBetterMoveOnly(moveIndex, move.betterMoveData);
                         return;
                     }
-                    
                     alert("Sorry, couldn't play the variation. The move format isn't recognized.");
                     return;
                 }
@@ -1168,50 +1339,50 @@
                 stopButton.addEventListener('click', stopVariationPlayback);
                 moveExplanation.appendChild(stopButton);
                 
-                // Add a visual indicator that we're showing the expected line
+                // Add a visual indicator
                 const variationIndicator = document.createElement('div');
-                variationIndicator.className = 'alert alert-info mt-2';
+                variationIndicator.className = isRefutation ? 'alert alert-danger mt-2' : 'alert alert-info mt-2';
                 variationIndicator.id = 'variationIndicator';
-                variationIndicator.innerHTML = `<strong>Playing expected line</strong> - Showing what could have happened with the better move`;
+                variationIndicator.innerHTML = isRefutation
+                    ? `<strong>Playing punishment line</strong> - Showing how the opponent can punish this mistake`
+                    : `<strong>Playing expected line</strong> - Showing what could have happened with the better move`;
                 moveExplanation.appendChild(variationIndicator);
                 
                 // Add a move counter indicator
                 const moveCounter = document.createElement('div');
                 moveCounter.id = 'moveIndicator';
-                moveCounter.className = 'badge bg-primary mt-2';
+                moveCounter.className = isRefutation ? 'badge bg-danger mt-2' : 'badge bg-primary mt-2';
                 moveCounter.textContent = `Move 0 of ${variationMoves.length}`;
                 moveExplanation.appendChild(moveCounter);
                 
-                // Highlight the principal variation element
-                const pvElement = document.querySelector('.principal-variation.clickable');
+                // Highlight the active variation element
+                const pvElement = isRefutation
+                    ? document.querySelector('.principal-variation.refutation-line.clickable')
+                    : document.querySelector('.principal-variation.clickable:not(.refutation-line)');
                 if (pvElement) {
-                    pvElement.style.backgroundColor = '#e2f0ff';
+                    pvElement.style.backgroundColor = isRefutation ? '#ffe2e2' : '#e2f0ff';
                 }
                 
-                // Simplified animation logic
-                let currentMoveIndex = 0;
+                // Animation logic
+                let currentVarMoveIndex = 0;
                 
-                // Clear any existing annotations and draw an arrow for the first move
                 clearArrows();
                 clearSquareAnnotations();
                 if (variationMoves.length > 0) {
                     const firstMove = variationMoves[0];
-                    drawArrow(firstMove.from, firstMove.to, 'better');
+                    drawArrow(firstMove.from, firstMove.to, arrowStyle);
                 }
                 
-                // Function to play the next move
                 function playNextMove() {
                     if (!isPlayingVariation) return;
                     
-                    if (currentMoveIndex < variationMoves.length) {
-                        // Update the move indicator
+                    if (currentVarMoveIndex < variationMoves.length) {
                         const indicator = document.getElementById('moveIndicator');
                         if (indicator) {
-                            indicator.textContent = `Move ${currentMoveIndex + 1} of ${variationMoves.length}`;
+                            indicator.textContent = `Move ${currentVarMoveIndex + 1} of ${variationMoves.length}`;
                         }
                         
-                        // Make the move
-                        const moveData = variationMoves[currentMoveIndex];
+                        const moveData = variationMoves[currentVarMoveIndex];
                         try {
                             chess.move({
                                 from: moveData.from,
@@ -1219,23 +1390,19 @@
                                 promotion: moveData.promotion
                             });
                             
-                            // Update the board
                             board.position(chess.fen(), true);
                             
-                            // Clear old arrows and draw new arrow for the next move if available
                             clearArrows();
                             clearSquareAnnotations();
-                            if (currentMoveIndex + 1 < variationMoves.length) {
-                                const nextMove = variationMoves[currentMoveIndex + 1];
-                                drawArrow(nextMove.from, nextMove.to, 'better');
+                            if (currentVarMoveIndex + 1 < variationMoves.length) {
+                                const nextMove = variationMoves[currentVarMoveIndex + 1];
+                                drawArrow(nextMove.from, nextMove.to, arrowStyle);
                             }
                             
-                            // Increment the counter and schedule the next move
-                            currentMoveIndex++;
-                            if (currentMoveIndex < variationMoves.length) {
+                            currentVarMoveIndex++;
+                            if (currentVarMoveIndex < variationMoves.length) {
                                 animationTimeout = setTimeout(playNextMove, animationSpeed);
                             } else {
-                                // Animation complete
                                 setTimeout(finishVariationPlayback, 1000);
                             }
                         } catch (e) {
@@ -1246,7 +1413,6 @@
                     }
                 }
                 
-                // Start the animation with a delay to show the arrow first
                 setTimeout(() => {
                     if (isPlayingVariation) {
                         playNextMove();
@@ -1344,19 +1510,11 @@
                 clearArrows();
                 clearSquareAnnotations();
                 
-                // Reset highlighting and restore original text
-                const pvElement = document.querySelector('.principal-variation.clickable');
-                if (pvElement) {
-                    pvElement.style.backgroundColor = '';
-                    
-                    // Restore original text if we're showing a move with analysis
-                    if (currentMoveIndex >= 0 && currentMoveIndex < moves.length) {
-                        const move = moves[currentMoveIndex];
-                        if (move && move.analysis && move.analysis.principal_variation) {
-                            pvElement.innerHTML = move.analysis.principal_variation;
-                        }
-                    }
-                }
+                // Reset highlighting on variation elements
+                const pvElements = document.querySelectorAll('.principal-variation.clickable');
+                pvElements.forEach(pv => {
+                    pv.style.backgroundColor = '';
+                });
             }
             
             // Finish variation playback and return to the original position

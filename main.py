@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 import json
-import tempfile
+import atexit
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from engine import ChessDoctor
 
@@ -22,9 +22,9 @@ def main():
             sys.exit(1)
             
         try:
-            chess_doctor = ChessDoctor(args.engine)
-            analysis_data = chess_doctor.analyze_game(args.pgn_file)
-            print(json.dumps(analysis_data, indent=2))
+            with ChessDoctor(args.engine) as chess_doctor:
+                analysis_data = chess_doctor.analyze_game(args.pgn_file)
+                print(json.dumps(analysis_data, indent=2))
         except FileNotFoundError as e:
             print(f"Error: {e}")
             print("\nStockfish could not be found automatically. Please make sure Stockfish is installed and either:")
@@ -41,6 +41,13 @@ def main():
                    static_folder='static',
                    template_folder='templates') 
         
+        try:
+            chess_doctor = ChessDoctor(args.engine)
+            atexit.register(chess_doctor.close)
+        except FileNotFoundError as e:
+            print(f"Error initializing ChessDoctor: {e}")
+            sys.exit(1)
+
         @app.route('/')
         def index():
             """Serve the index.html page at the root URL"""
@@ -54,7 +61,6 @@ def main():
         @app.route('/api/analyze', methods=['POST'])
         def analyze():
             """Analyze a chess game from PGN data"""
-            # Check if PGN data is provided
             if not request.is_json:
                 return jsonify({"error": "Request must be JSON"}), 400
                 
@@ -64,34 +70,11 @@ def main():
                 
             pgn_data = data['pgn']
             
-            # Write PGN data to a temporary file
             try:
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.pgn', mode='w') as tmp_file:
-                    tmp_file.write(pgn_data)
-                    tmp_path = tmp_file.name
-                    
-                # Analyze the game
-                try:
-                    chess_doctor = ChessDoctor(args.engine)
-                    analysis_data = chess_doctor.analyze_game(tmp_path)
-                    
-                    # Cleanup
-                    os.unlink(tmp_path)
-                    
-                    return jsonify(analysis_data)
-                    
-                except Exception as e:
-                    return jsonify({"error": f"Analysis failed: {str(e)}"}), 500
-                finally:
-                    # Ensure temp file is removed
-                    if os.path.exists(tmp_path):
-                        try:
-                            os.unlink(tmp_path)
-                        except:
-                            pass
-                        
+                analysis_data = chess_doctor.analyze_game(pgn_data)
+                return jsonify(analysis_data)
             except Exception as e:
-                return jsonify({"error": f"Failed to process PGN data: {str(e)}"}), 500
+                return jsonify({"error": f"Analysis failed: {str(e)}"}), 500
                 
         @app.route('/health', methods=['GET'])
         def health():
