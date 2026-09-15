@@ -308,12 +308,14 @@
                 let refSan = null;
                 let refFrom = null;
                 let refTo = null;
+                let refPv = [];
                 let refPvFormatted = '';
 
                 if (playedIsBest) {
                     playedScoreObj = bestScoreObj;
                     if (bestLine.pv && bestLine.pv.length > 1) {
                         refUci = bestLine.pv[1];
+                        refPv = bestLine.pv.slice(1);
                     }
                 } else {
                     // Check if played move was found in MultiPV 2 or 3
@@ -342,6 +344,7 @@
                         }
                     }
                     if (postBest.pv) {
+                        refPv = postBest.pv;
                         refPvFormatted = this._formatPv(boardAfter, postBest.pv);
                     }
                 }
@@ -372,27 +375,42 @@
 
                 if (typeof SituationRecognizer !== 'undefined') {
                     if (classification.uiQuality === 'blunder' || classification.uiQuality === 'mistake' || classification.uiQuality === 'inaccuracy') {
+                        let opViolation = null;
+                        if (typeof OpeningDetector !== 'undefined') {
+                            opViolation = OpeningDetector.detectOpeningPrincipleViolation(boardBefore, moveObj, ply + 1);
+                        }
+
                         const refMoveObj = (refFrom && refTo) ? { from: refFrom, to: refTo } : null;
                         const blunderExpl = SituationRecognizer.explainBlunderOrMistake({
                             boardBefore,
                             boardAfter,
                             playedMove: moveObj,
-                            bestMove: bestUci ? { from: bestUci.substring(0, 2), to: bestUci.substring(2, 4) } : null,
+                            bestMove: bestUci ? {
+                                from: bestUci.substring(0, 2),
+                                to: bestUci.substring(2, 4),
+                                promotion: bestUci.length > 4 ? bestUci[4] : undefined
+                            } : null,
                             refutationMove: refMoveObj,
                             sanPlayed: moveObj.san,
                             sanBest: bestSan,
-                            sanRef: refSan
+                            sanRef: refSan,
+                            bestScore: bestScoreObj,
+                            playedScore: playedScoreObj,
+                            bestPv: (bestLine && bestLine.pv) ? bestLine.pv : [],
+                            refPv: refPv,
+                            bestPvFormatted: bestPvFormatted,
+                            refPvFormatted: refPvFormatted,
+                            quality: classification.uiQuality,
+                            detailedQuality: classification.detailedQuality,
+                            wpLoss: classification.wpLoss,
+                            ply: ply + 1,
+                            openingPrincipleViolation: opViolation
                         });
                         explanation = blunderExpl.explanation;
                         tags = blunderExpl.tags;
 
-                        // Check opening principle violation
-                        if (typeof OpeningDetector !== 'undefined') {
-                            const opViolation = OpeningDetector.detectOpeningPrincipleViolation(boardBefore, moveObj, ply + 1);
-                            if (opViolation && !tags.includes('Development')) {
-                                explanation = `${moveObj.san} was a mistake: ${opViolation}. ${bestSan} was better.`;
-                                tags.push('Opening Principle');
-                            }
+                        if (opViolation && !tags.includes('Opening Principle')) {
+                            tags.push('Opening Principle');
                         }
                     } else {
                         const goodExpl = SituationRecognizer.explainGoodMove({

@@ -152,5 +152,96 @@ assert(e5Threat !== undefined && e5Threat.is_undefended, "e5 threat should be fo
 const outpostBoard = new Chess("4k3/4bppp/8/3N4/4P3/8/PPP2PPP/4K3 w - - 0 1");
 assert.strictEqual(SituationRecognizer.isTrueOutpost(outpostBoard, 'd5', 'w'), true);
 
+// Skewer detection: White Rook on a1 moves to e1, skewering Black King on e4 and Queen on e8
+const skewerBoard = new Chess("4q3/8/8/8/4k3/8/1K6/R7 w - - 0 1");
+const skewerMove = { from: 'a1', to: 'e1', piece: 'r' };
+skewerBoard.move(skewerMove);
+const skewerRes = SituationRecognizer.detectSkewer(skewerBoard, skewerMove);
+assert(skewerRes !== null, "Skewer should be detected");
+assert.strictEqual(skewerRes.type, 'skewer');
+assert.strictEqual(skewerRes.front, 'king');
+assert.strictEqual(skewerRes.back, 'queen');
+
+// Discovered check detection: White Queen on d1, White Knight on d4 moves to e6, revealing check from Queen to King on d8
+const discBefore = new Chess("3k4/8/8/8/3N4/8/8/3QK3 w - - 0 1");
+const discMove = { from: 'd4', to: 'e6', piece: 'n' };
+const discAfter = new Chess("3k4/8/4N3/8/8/8/8/3QK3 b - - 1 1");
+const discRes = SituationRecognizer.detectDiscoveredAttack(discBefore, discAfter, discMove);
+assert(discRes !== null, "Discovered attack should be detected");
+assert.strictEqual(discRes.type, 'discovered_check');
+
+// Center strike detection: White plays 2. d4 challenging e5 pawn
+const centerBoard = new Chess("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
+const centerMove = { from: 'd2', to: 'd4', piece: 'p' };
+const centerRes = SituationRecognizer.detectCenterStrike(centerBoard, centerMove);
+assert(centerRes !== null, "Center strike should be detected");
+assert(centerRes.description.includes("d4") && centerRes.description.includes("challenge"));
+
+// Minor development detection: Black plays Nc6 from b8
+const devBoard = new Chess("rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2");
+const devMove = { from: 'b8', to: 'c6', piece: 'n' };
+const devRes = SituationRecognizer.detectMinorDevelopment(devBoard, devMove);
+assert(devRes !== null, "Minor development should be detected");
+assert(devRes.includes("knight to an active square"));
+
+// USER SCENARIO TEST: Black played d6, White refutation d4, recommended Nc6
+// Must NOT say "maintains optimal piece activity and board control"
+console.log("Testing user scenario (d6 allows d4, better was Nc6)...");
+const userBefore = new Chess("rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2");
+const userAfter = new Chess("rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3");
+const userDiag = SituationRecognizer.explainBlunderOrMistake({
+    boardBefore: userBefore,
+    boardAfter: userAfter,
+    playedMove: { from: 'd7', to: 'd6' },
+    bestMove: { from: 'b8', to: 'c6' },
+    refutationMove: { from: 'd2', to: 'd4' },
+    sanPlayed: 'd6',
+    sanBest: 'Nc6',
+    sanRef: 'd4'
+});
+console.log("Generated diagnosis:", userDiag.explanation);
+assert(!userDiag.explanation.includes("maintains optimal piece activity and board control"), "Must not use old repetitive phrase");
+assert(userDiag.explanation.includes("d6"), "Must mention played move d6");
+assert(userDiag.explanation.includes("d4"), "Must mention refutation d4");
+assert(userDiag.explanation.includes("Nc6"), "Must mention better move Nc6");
+assert(userDiag.explanation.includes("center"), "Must mention central control / center");
+assert(userDiag.tags.includes("Center Control"), "Must have Center Control tag");
+assert(userDiag.tags.includes("Development"), "Must have Development tag");
+
+// Missed tactical fork test: White plays a3 instead of Nc7+ (forking King and Rook)
+console.log("Testing missed tactical fork diagnosis...");
+const missedForkBefore = new Chess("r3k3/8/8/3N4/8/8/PPPPPPPP/R3K3 w - - 0 1");
+const missedForkPlayed = new Chess("r3k3/8/8/3N4/8/P7/1PPPPPPP/R3K3 b - - 0 1");
+const missedForkDiag = SituationRecognizer.explainBlunderOrMistake({
+    boardBefore: missedForkBefore,
+    boardAfter: missedForkPlayed,
+    playedMove: { from: 'a2', to: 'a3' },
+    bestMove: { from: 'd5', to: 'c7' },
+    sanPlayed: 'a3',
+    sanBest: 'Nc7+'
+});
+console.log("Generated missed tactic diagnosis:", missedForkDiag.explanation);
+assert(missedForkDiag.tags.includes("Missed Tactic"), "Should tag Missed Tactic");
+assert(missedForkDiag.tags.includes("Tactical Fork"), "Should tag Tactical Fork");
+assert(missedForkDiag.explanation.includes("overlooks a tactical opportunity") || missedForkDiag.explanation.includes("forks"), "Should explain missed tactical opportunity");
+
+// Tactical blunder test: Player leaves bishop hanging on e6
+console.log("Testing hanging piece blunder diagnosis...");
+const hangBlunderBefore = new Chess("rnbqkbnr/pppp1ppp/8/8/8/8/PPPPBPPP/RNBQK1NR w KQkq - 0 1");
+const hangBlunderAfter = new Chess("rnbqkbnr/pppp1ppp/4B3/8/8/8/PPPP1PPP/RNBQK1NR b KQkq - 1 1");
+const hangBlunderDiag = SituationRecognizer.explainBlunderOrMistake({
+    boardBefore: hangBlunderBefore,
+    boardAfter: hangBlunderAfter,
+    playedMove: { from: 'e2', to: 'e6' },
+    bestMove: { from: 'e2', to: 'c4' },
+    refutationMove: { from: 'd7', to: 'e6' },
+    sanPlayed: 'Be6',
+    sanBest: 'Bc4',
+    sanRef: 'dxe6'
+});
+console.log("Generated hanging piece diagnosis:", hangBlunderDiag.explanation);
+assert(hangBlunderDiag.tags.includes("Hanging Piece"), "Should tag Hanging Piece");
+assert(hangBlunderDiag.explanation.includes("leaves the bishop hanging"), "Should explain hanging bishop");
+
 console.log("✓ SituationRecognizer passed!");
 console.log("ALL BROWSER MODULE TESTS PASSED SUCCESSFULLY! 🎉");
