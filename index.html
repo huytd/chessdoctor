@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WhyBlunder - Chess Analysis</title>
     
-    <!-- Fonts: Inter & JetBrains Mono -->
+    <!-- Fonts: Inter, JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,27 +19,49 @@
     
     <style>
         :root {
-            --bg-canvas: #0b0d11;
-            --bg-surface: #12151b;
-            --bg-surface-elevated: #1a1e27;
-            --bg-surface-hover: #222734;
-            --border-subtle: rgba(255, 255, 255, 0.08);
-            --border-medium: rgba(255, 255, 255, 0.14);
-            --text-primary: #f3f4f6;
-            --text-secondary: #9ca3af;
-            --text-muted: #6b7280;
-            --accent: #38bdf8;
-            --accent-dim: rgba(56, 189, 248, 0.15);
-            --accent-emerald: #10b981;
+            /* Lichess Dark Theme Design System */
+            --lic-bg-canvas: #161512;
+            --lic-bg-surface: #262421;
+            --lic-bg-surface-header: #1e1c18;
+            --lic-bg-surface-subtle: #21201d;
+            --lic-bg-surface-hover: #363431;
+            --lic-bg-input: #1b1916;
+            
+            --lic-border-subtle: #2e2c29;
+            --lic-border: #403d39;
+            --lic-border-strong: #54504a;
+            
+            --lic-text-primary: #bababa;
+            --lic-text-bright: #ffffff;
+            --lic-text-secondary: #8c8c8c;
+            --lic-text-muted: #62605d;
+            
+            /* Lichess Accents */
+            --lic-blue: #3692e7;
+            --lic-blue-hover: #4ea1f0;
+            --lic-blue-dim: rgba(54, 146, 231, 0.16);
+            --lic-green: #629924;
+            --lic-green-hover: #72b02a;
+            --lic-green-dim: rgba(98, 153, 36, 0.16);
+            --lic-red: #cc3333;
+            --lic-red-hover: #e04444;
+            --lic-red-dim: rgba(204, 51, 51, 0.16);
+            --lic-orange: #d97706;
+            --lic-yellow: #c9a000;
+            --lic-cyan: #00b5ad;
+            
+            /* Active Move Highlight */
+            --lic-active-move: #2a4b6c;
+            --lic-active-move-text: #ffffff;
             
             /* Move Quality Colors */
-            --q-brilliant: #38bdf8;
-            --q-great: #818cf8;
-            --q-good: #22c55e;
-            --q-book: #d97706;
-            --q-inaccuracy: #eab308;
-            --q-mistake: #f97316;
-            --q-blunder: #ef4444;
+            --q-brilliant: #00b5ad;
+            --q-great: #3692e7;
+            --q-good: #629924;
+            --q-book: #8b5cf6;
+            --q-inaccuracy: #c9a000;
+            --q-mistake: #d97706;
+            --q-blunder: #cc3333;
         }
 
         * {
@@ -47,20 +69,20 @@
         }
 
         body {
-            background-color: var(--bg-canvas);
-            color: var(--text-primary);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--lic-bg-canvas);
+            color: var(--lic-text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Slim Header */
-        .studio-header {
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border-subtle);
-            height: 48px;
+        /* Lichess Header */
+        .lic-header {
+            background: var(--lic-bg-surface-header);
+            border-bottom: 1px solid var(--lic-border-subtle);
+            height: 46px;
             padding: 0 1.25rem;
             display: flex;
             align-items: center;
@@ -70,102 +92,136 @@
             z-index: 1020;
         }
 
-        .brand-link {
+        .lic-brand {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 9px;
             text-decoration: none;
-            color: var(--text-primary);
+            color: var(--lic-text-bright);
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 1.05rem;
             letter-spacing: -0.01em;
         }
-        .brand-link:hover {
+        .lic-brand:hover {
+            color: #fff;
+        }
+        .lic-brand-icon {
+            color: var(--lic-red);
+            font-size: 1.15rem;
+        }
+
+        /* Lichess Flat Buttons */
+        .lic-btn {
+            background: var(--lic-bg-surface);
+            color: var(--lic-text-primary);
+            border: 1px solid var(--lic-border);
+            border-radius: 4px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 5px 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: background 0.12s, color 0.12s, border-color 0.12s;
+            text-decoration: none;
+        }
+        .lic-btn:hover {
+            background: var(--lic-bg-surface-hover);
+            color: var(--lic-text-bright);
+            border-color: var(--lic-border-strong);
+        }
+        .lic-btn:active {
+            background: #1e1c18;
+        }
+        .lic-btn-primary {
+            background: var(--lic-blue);
+            color: #fff;
+            border-color: #2779bd;
+        }
+        .lic-btn-primary:hover {
+            background: var(--lic-blue-hover);
+            color: #fff;
+            border-color: var(--lic-blue-hover);
+        }
+        .lic-btn-success {
+            background: var(--lic-green);
+            color: #fff;
+            border-color: #51821c;
+        }
+        .lic-btn-success:hover {
+            background: var(--lic-green-hover);
+            color: #fff;
+        }
+        .lic-btn-danger {
+            background: var(--lic-red);
+            color: #fff;
+            border-color: #a82323;
+        }
+        .lic-btn-danger:hover {
+            background: var(--lic-red-hover);
             color: #fff;
         }
 
-        .brand-icon {
-            color: #ef4444;
-            font-size: 1.05rem;
+        .lic-chip-btn {
+            background: var(--lic-bg-surface-subtle);
+            color: var(--lic-text-secondary);
+            border: 1px solid var(--lic-border-subtle);
+            border-radius: 3px;
+            font-size: 0.76rem;
+            font-weight: 500;
+            padding: 3px 8px;
+            cursor: pointer;
+            transition: all 0.12s;
+        }
+        .lic-chip-btn:hover {
+            background: var(--lic-bg-surface-hover);
+            color: var(--lic-text-bright);
+            border-color: var(--lic-border);
         }
 
+        /* Lichess PGN Dropdown Menu */
         .pgn-dropdown-menu {
-            background: #141822;
-            border: 1px solid var(--border-medium);
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            min-width: 220px;
+            background: var(--lic-bg-surface);
+            border: 1px solid var(--lic-border);
+            border-radius: 4px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            min-width: 230px;
             padding: 6px 0;
             z-index: 1050;
         }
         .pgn-dropdown-menu .dropdown-item {
-            color: #e2e8f0;
+            color: var(--lic-text-primary);
             font-size: 0.82rem;
             padding: 7px 14px;
             background: transparent;
             border: none;
             width: 100%;
             text-align: left;
-            transition: all 0.15s;
+            transition: all 0.12s;
         }
         .pgn-dropdown-menu .dropdown-item:hover {
-            background: rgba(56, 189, 248, 0.12);
-            color: var(--accent);
+            background: var(--lic-blue-dim);
+            color: var(--lic-text-bright);
         }
         .pgn-dropdown-menu .dropdown-divider {
-            border-color: var(--border-subtle);
+            border-color: var(--lic-border-subtle);
             margin: 4px 0;
-        }
-
-        .chip-btn {
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 3px 8px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .chip-btn:hover {
-            background: var(--bg-surface-elevated);
-            color: var(--text-primary);
-            border-color: var(--border-medium);
-        }
-
-        .btn-pgn-toggle {
-            background: var(--bg-surface-elevated);
-            color: var(--text-primary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 6px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            padding: 4px 10px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .btn-pgn-toggle:hover {
-            background: var(--bg-surface-hover);
-            border-color: var(--border-medium);
         }
 
         /* Collapsible PGN Drawer */
         .pgn-drawer {
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border-subtle);
+            background: var(--lic-bg-surface-header);
+            border-bottom: 1px solid var(--lic-border);
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .pgn-drawer.open {
             max-height: 480px;
         }
         .pgn-drawer-inner {
-            max-width: 1380px;
+            max-width: 1440px;
             margin: 0 auto;
             padding: 14px 1.25rem;
             display: flex;
@@ -175,82 +231,458 @@
 
         .pgn-textarea {
             width: 100%;
-            height: 160px;
-            min-height: 140px;
-            max-height: 360px;
-            background-color: #0b0d10;
-            color: #e5e7eb;
-            border: 1px solid var(--border-medium);
-            border-radius: 6px;
+            height: 150px;
+            min-height: 120px;
+            max-height: 340px;
+            background-color: var(--lic-bg-input);
+            color: #f1f1f1;
+            border: 1px solid var(--lic-border);
+            border-radius: 4px;
             padding: 10px 12px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.84rem;
+            font-size: 0.82rem;
             line-height: 1.5;
             resize: vertical;
             transition: border-color 0.15s;
         }
         .pgn-textarea:focus {
-            background-color: #0b0d10;
+            background-color: var(--lic-bg-input);
             color: #fff;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px var(--accent-dim);
+            border-color: var(--lic-blue);
+            box-shadow: 0 0 0 2px var(--lic-blue-dim);
+            outline: none;
         }
 
-        @media (max-width: 768px) {
-            .pgn-textarea {
-                font-size: 16px; /* Avoid iOS auto-zoom */
-                height: 140px;
-            }
+        /* Inline Progress Strip */
+        .progress-strip {
+            background: var(--lic-bg-surface-header);
+            border-bottom: 1px solid var(--lic-border-subtle);
+            padding: 8px 1.25rem;
+            display: none;
         }
-
-        /* Studio Main Layout */
-        .studio-container {
-            max-width: 1100px;
+        .progress-strip.show {
+            display: block;
+        }
+        .progress-strip-inner {
+            max-width: 1440px;
             margin: 0 auto;
-            padding: 12px 1.25rem 2rem 1.25rem;
+        }
+
+        /* 3-COLUMN MAIN LAYOUT */
+        .studio-container {
+            max-width: 1520px;
+            margin: 0 auto;
+            padding: 14px 1rem 2rem 1rem;
         }
 
         .studio-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 330px;
-            gap: 1.25rem;
+            grid-template-columns: minmax(310px, 360px) minmax(420px, 1fr) minmax(290px, 350px);
+            gap: 16px;
             align-items: start;
         }
 
-        /* Left Column: Board Studio & Move Explanation */
-        .board-column {
+        /* Panels / Cards */
+        .lic-panel {
+            background: var(--lic-bg-surface);
+            border: 1px solid var(--lic-border-subtle);
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            width: 100%;
-            max-width: 100%;
+            overflow: hidden;
         }
 
-        .game-info-strip {
+        .lic-panel-header {
+            background: var(--lic-bg-surface-header);
+            border-bottom: 1px solid var(--lic-border-subtle);
+            padding: 8px 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             font-size: 0.82rem;
-            padding: 4px 6px;
-            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--lic-text-secondary);
         }
 
-        .game-info-players {
+        .lic-panel-body {
+            padding: 12px;
+            overflow-y: auto;
+        }
+
+        /* COLUMN 1: MOVE ANALYSIS (LEFT) */
+        .col-analysis {
+            position: sticky;
+            top: 56px;
+            max-height: calc(100vh - 72px);
+            display: flex;
+            flex-direction: column;
+        }
+        .col-analysis .lic-panel-body {
+            max-height: calc(100vh - 120px);
+            padding: 12px 14px;
+        }
+        .col-analysis .lic-panel-body::-webkit-scrollbar {
+            width: 5px;
+        }
+        .col-analysis .lic-panel-body::-webkit-scrollbar-thumb {
+            background: var(--lic-border);
+            border-radius: 2px;
+        }
+
+        /* Move Diagnosis Card Elements */
+        .diagnosis-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 10px;
+            color: var(--lic-text-muted);
+            font-size: 0.86rem;
+            padding: 40px 10px;
+        }
+        .diagnosis-empty i {
+            font-size: 2rem;
+            opacity: 0.4;
+        }
+
+        .diagnosis-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--lic-border-subtle);
+        }
+
+        .move-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .player-badge.white {
+            background: #f0f0f0;
+            color: #161512;
+        }
+        .player-badge.black {
+            background: #141311;
+            color: #bababa;
+            border: 1px solid var(--lic-border);
+        }
+
+        .move-san {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--lic-text-bright);
+        }
+
+        .badge-q {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .badge-q.blunder { background: var(--lic-red-dim); color: #ff6b6b; border: 1px solid var(--lic-red); }
+        .badge-q.mistake { background: rgba(217, 119, 6, 0.2); color: #fba444; border: 1px solid var(--lic-orange); }
+        .badge-q.inaccuracy { background: rgba(201, 160, 0, 0.2); color: #ffd644; border: 1px solid var(--lic-yellow); }
+        .badge-q.good-move { background: var(--lic-green-dim); color: #86efac; border: 1px solid var(--lic-green); }
+        .badge-q.great { background: var(--lic-blue-dim); color: #93c5fd; border: 1px solid var(--lic-blue); }
+        .badge-q.brilliant { background: rgba(0, 181, 173, 0.2); color: #5eead4; border: 1px solid var(--lic-cyan); }
+        .badge-q.book { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid #8b5cf6; }
+
+        .eval-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 3px;
+            background: var(--lic-bg-surface-header);
+            border: 1px solid var(--lic-border);
+            color: var(--lic-text-bright);
+        }
+
+        .eval-best-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 2px 7px;
+            border-radius: 3px;
+            background: var(--lic-green-dim);
+            border: 1px solid rgba(98, 153, 36, 0.5);
+            color: #86efac;
+        }
+
+        .metric-chip {
+            font-size: 0.74rem;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: var(--lic-bg-surface-subtle);
+            border: 1px solid var(--lic-border-subtle);
+            color: #93c5fd;
+        }
+        .metric-chip.chip-loss {
+            background: var(--lic-red-dim);
+            border-color: rgba(204, 51, 51, 0.4);
+            color: #fca5a5;
+        }
+
+        /* Tags Cluster */
+        .tags-cluster {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .diag-tag {
+            font-size: 0.72rem;
+            background: var(--lic-bg-surface-header);
+            color: var(--lic-text-secondary);
+            border: 1px solid var(--lic-border-subtle);
+            border-radius: 3px;
+            padding: 2px 7px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* Better Move Callout */
+        .better-move-strip {
+            background: var(--lic-green-dim);
+            border: 1px solid rgba(98, 153, 36, 0.45);
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .badge-better {
+            background: var(--lic-green);
+            color: #fff;
+            padding: 2px 7px;
+            border-radius: 3px;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        /* Threats Alert Box */
+        .threat-alert-box {
+            background: var(--lic-red-dim);
+            border: 1px solid rgba(204, 51, 51, 0.4);
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 10px;
+        }
+        .threat-item {
+            font-size: 0.75rem;
+            background: rgba(204, 51, 51, 0.25);
+            color: #fca5a5;
+            border: 1px solid rgba(204, 51, 51, 0.4);
+            padding: 2px 7px;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .threat-refutation-badge {
+            background: var(--lic-red);
+            color: #fff;
+            padding: 2px 7px;
+            border-radius: 3px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        /* Diagnosis Text */
+        .diagnosis-text {
+            font-size: 0.84rem;
+            line-height: 1.55;
+            color: var(--lic-text-primary);
+            margin-bottom: 10px;
+            padding: 9px 12px;
+            background: var(--lic-bg-surface-subtle);
+            border-radius: 4px;
+            border: 1px solid var(--lic-border-subtle);
+        }
+
+        /* Variation Boxes */
+        .variation-box {
+            background: var(--lic-bg-surface-subtle);
+            border: 1px solid var(--lic-border-subtle);
+            border-radius: 4px;
+            padding: 9px 11px;
+            margin-bottom: 10px;
+        }
+        .variation-box.box-refutation {
+            background: rgba(204, 51, 51, 0.06);
+            border-color: rgba(204, 51, 51, 0.3);
+        }
+        .variation-box.box-better {
+            background: rgba(98, 153, 36, 0.06);
+            border-color: rgba(98, 153, 36, 0.3);
+        }
+
+        .principal-variation {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: #e5e5e5;
+            padding: 5px 7px;
+            border-radius: 3px;
+            background: var(--lic-bg-input);
+            word-break: break-word;
+        }
+        .principal-variation.clickable {
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+        .principal-variation.clickable:hover {
+            background: var(--lic-bg-surface-hover);
+        }
+
+        /* COLUMN 2: CHESS BOARD (CENTER) */
+        .col-board {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .board-container-card {
+            width: 100%;
+            max-width: 620px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        /* Player Strip (Lichess Style) */
+        .lic-player-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--lic-bg-surface);
+            border: 1px solid var(--lic-border-subtle);
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 0.84rem;
+            color: var(--lic-text-primary);
+        }
+        .player-info-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-weight: 600;
-            color: var(--text-primary);
+        }
+        .player-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+        .player-avatar.white-avatar {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        .player-avatar.black-avatar {
+            background: #1e222a;
+            color: #cbd5e1;
+            border: 1px solid var(--lic-border);
+        }
+        .player-name-text {
+            color: var(--lic-text-bright);
+        }
+        .player-turn-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: transparent;
+            display: inline-block;
+        }
+        .player-turn-dot.active {
+            background: var(--lic-green);
+            box-shadow: 0 0 6px var(--lic-green);
+        }
+
+        /* Board Row with Vertical Eval Bar */
+        .board-with-eval {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+            width: 100%;
+        }
+
+        /* Lichess Vertical Evaluation Gauge */
+        .eval-gauge {
+            width: 20px;
+            min-width: 20px;
+            background: #141311;
+            border: 1px solid var(--lic-border);
+            border-radius: 3px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            position: relative;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            user-select: none;
+        }
+        .eval-gauge-white {
+            width: 100%;
+            height: 50%;
+            background: #f0f0f0;
+            transition: height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .eval-gauge-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #888;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .eval-gauge-text.top-text {
+            top: 4px;
+            color: #cbd5e1;
+        }
+        .eval-gauge-text.bottom-text {
+            bottom: 4px;
+            color: #1e293b;
         }
 
         .board-wrapper {
             position: relative;
-            width: 100%;
-            background: #14171e;
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
+            flex: 1;
+            background: #1a1816;
+            border: 1px solid var(--lic-border);
+            border-radius: 4px;
             overflow: hidden;
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
 
-        /* Variation Mode - Visually lighter board */
         .board-container {
             position: relative;
             width: 100%;
@@ -258,7 +690,7 @@
         }
 
         .board-container.variation-mode #board {
-            filter: brightness(1.22) contrast(0.95);
+            filter: brightness(1.18) contrast(0.96);
             transition: filter 0.25s ease;
         }
 
@@ -272,66 +704,6 @@
             border: none !important;
         }
 
-        /* Variation Status Bar (Under the Board) */
-        .variation-under-board {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 6px;
-            padding: 8px 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            animation: fadeIn 0.2s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .var-type-badge {
-            font-size: 0.72rem;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-        }
-        .var-type-badge.refutation {
-            background: rgba(239, 68, 68, 0.25);
-            color: #fca5a5;
-            border: 1px solid rgba(239, 68, 68, 0.5);
-        }
-        .var-type-badge.better {
-            background: rgba(34, 197, 94, 0.25);
-            color: #86efac;
-            border: 1px solid rgba(34, 197, 94, 0.5);
-        }
-
-        .var-status-text {
-            font-size: 0.8rem;
-            color: #e2e8f0;
-        }
-
-        .btn-return-game {
-            background: var(--accent);
-            color: #041019;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 3px 9px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            transition: all 0.15s;
-            white-space: nowrap;
-        }
-        .btn-return-game:hover {
-            background: #7dd3fc;
-        }
-
         #arrow-svg {
             position: absolute;
             top: 0;
@@ -342,16 +714,16 @@
             z-index: 1000;
         }
 
-        /* Arrow SVG Styles */
-        .arrow-current { stroke: rgba(56, 189, 248, 0.9); stroke-width: 6.5px; }
-        .arrow-better { stroke: rgba(52, 211, 153, 0.9); stroke-width: 6.5px; }
-        .arrow-threat { stroke: rgba(248, 113, 113, 0.92); stroke-width: 5.5px; }
-        .arrow-opponent-threat { stroke: rgba(251, 113, 133, 0.92); stroke-width: 5.5px; stroke-dasharray: 5, 3.5; }
+        /* Lichess Crisp SVG Arrows */
+        .arrow-current { stroke: rgba(54, 146, 231, 0.92); stroke-width: 6.5px; }
+        .arrow-better { stroke: rgba(98, 153, 36, 0.95); stroke-width: 6.5px; }
+        .arrow-threat { stroke: rgba(204, 51, 51, 0.95); stroke-width: 5.5px; }
+        .arrow-opponent-threat { stroke: rgba(224, 68, 68, 0.95); stroke-width: 5.5px; stroke-dasharray: 5, 3.5; }
 
-        .arrow-head-current { fill: rgba(56, 189, 248, 0.9); }
-        .arrow-head-better { fill: rgba(52, 211, 153, 0.9); }
-        .arrow-head-threat { fill: rgba(248, 113, 113, 0.92); }
-        .arrow-head-opponent-threat { fill: rgba(251, 113, 133, 0.92); }
+        .arrow-head-current { fill: rgba(54, 146, 231, 0.92); }
+        .arrow-head-better { fill: rgba(98, 153, 36, 0.95); }
+        .arrow-head-threat { fill: rgba(204, 51, 51, 0.95); }
+        .arrow-head-opponent-threat { fill: rgba(224, 68, 68, 0.95); }
 
         /* Square Annotations */
         .square-annotation {
@@ -369,381 +741,120 @@
             right: 3px;
             color: white;
             font-weight: 800;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             text-align: center;
             font-family: 'JetBrains Mono', monospace;
             border-radius: 50%;
-            width: 1.3rem;
-            height: 1.3rem;
+            width: 1.35rem;
+            height: 1.35rem;
             display: flex;
             justify-content: center;
             align-items: center;
             line-height: 1;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
         }
         .annotation-blunder::before { background-color: var(--q-blunder); }
         .annotation-mistake::before { background-color: var(--q-mistake); }
         .annotation-inaccuracy::before { background-color: var(--q-inaccuracy); color: #111; }
 
-        /* Right Column: Move Notation Studio */
-        .studio-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            width: 330px;
-            min-width: 320px;
-        }
-
-        @media (min-width: 992px) {
-            .studio-panel {
-                position: sticky;
-                top: 56px;
-            }
-        }
-
-        /* Move Diagnosis Card */
-        .diagnosis-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            padding: 14px 16px;
-            min-height: 80px;
-            transition: all 0.2s;
-        }
-
-        .diagnosis-empty {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-muted);
-            font-size: 0.86rem;
-            padding: 14px 0;
-            justify-content: center;
-        }
-
-        .diagnosis-header {
+        /* Variation Status Bar (Under the Board) */
+        .variation-under-board {
+            background: var(--lic-bg-surface);
+            border: 1px solid var(--lic-border);
+            border-radius: 4px;
+            padding: 8px 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .move-title-wrap {
-            display: flex;
-            align-items: center;
             gap: 8px;
+            animation: fadeIn 0.2s ease-out;
+            width: 100%;
         }
 
-        .player-badge {
-            font-size: 0.72rem;
-            font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
-        .player-badge.white {
-            background: #e2e8f0;
-            color: #0f172a;
-        }
-        .player-badge.black {
-            background: #272c38;
-            color: #f1f5f9;
-            border: 1px solid var(--border-subtle);
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .move-san {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .badge-q {
+        .var-type-badge {
             font-size: 0.72rem;
             font-weight: 700;
             padding: 2px 7px;
-            border-radius: 4px;
+            border-radius: 3px;
             text-transform: uppercase;
-            letter-spacing: 0.02em;
+            letter-spacing: 0.03em;
         }
-        .badge-q.blunder { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
-        .badge-q.mistake { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4); }
-        .badge-q.inaccuracy { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
-        .badge-q.good-move { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }
-        .badge-q.great { background: rgba(129, 140, 248, 0.2); color: #a5b4fc; border: 1px solid rgba(129, 140, 248, 0.4); }
-        .badge-q.brilliant { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
-        .badge-q.book { background: rgba(217, 119, 6, 0.2); color: #fbbf24; border: 1px solid rgba(217, 119, 6, 0.4); }
-
-        .eval-tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.78rem;
-            font-weight: 600;
-            padding: 2px 7px;
-            border-radius: 4px;
-            background: #1e232d;
-            border: 1px solid var(--border-subtle);
-            color: #e5e7eb;
+        .var-type-badge.refutation {
+            background: var(--lic-red-dim);
+            color: #fca5a5;
+            border: 1px solid var(--lic-red);
         }
-
-        .eval-best-tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: rgba(34, 197, 94, 0.12);
-            border: 1px solid rgba(34, 197, 94, 0.3);
+        .var-type-badge.better {
+            background: var(--lic-green-dim);
             color: #86efac;
+            border: 1px solid var(--lic-green);
         }
 
-        .metric-chip {
-            font-size: 0.74rem;
-            font-family: 'JetBrains Mono', monospace;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-subtle);
-            color: #93c5fd;
-        }
-        .metric-chip.chip-loss {
-            background: rgba(239, 68, 68, 0.12);
-            border-color: rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
-        }
-
-        /* Tags Cluster */
-        .tags-cluster {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            margin-bottom: 8px;
-        }
-        .diag-tag {
-            font-size: 0.72rem;
-            background: var(--bg-surface-elevated);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 4px;
-            padding: 1px 6px;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        /* Better move callout */
-        .better-move-strip {
-            background: rgba(34, 197, 94, 0.08);
-            border: 1px solid rgba(34, 197, 94, 0.25);
-            border-radius: 6px;
-            padding: 6px 10px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-        .badge-better {
-            background: rgba(34, 197, 94, 0.2);
-            color: #4ade80;
-            border: 1px solid rgba(34, 197, 94, 0.4);
-            padding: 1px 6px;
-            border-radius: 3px;
-            font-size: 0.82rem;
-            font-weight: 700;
-        }
-
-        /* Threats Box */
-        .threat-alert-box {
-            background: rgba(239, 68, 68, 0.08);
-            border: 1px solid rgba(239, 68, 68, 0.25);
-            border-radius: 6px;
-            padding: 6px 10px;
-            margin-bottom: 8px;
-        }
-        .threat-item {
-            font-size: 0.74rem;
-            background: rgba(239, 68, 68, 0.15);
-            color: #fca5a5;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            padding: 1px 6px;
-            border-radius: 3px;
-            display: inline-flex;
-            align-items: center;
-        }
-        .threat-refutation-badge {
-            background: rgba(239, 68, 68, 0.25);
-            color: #f87171;
-            border: 1px solid rgba(239, 68, 68, 0.5);
-            padding: 1px 6px;
-            border-radius: 3px;
+        .var-status-text {
             font-size: 0.8rem;
-            font-weight: 700;
+            color: var(--lic-text-bright);
         }
 
-        /* Diagnosis Explanation */
-        .diagnosis-text {
-            font-size: 0.84rem;
-            line-height: 1.5;
-            color: #cbd5e1;
-            margin-bottom: 8px;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 6px;
-            border: 1px solid var(--border-subtle);
-        }
-
-        /* Variations: Full Untruncated Display */
-        .variation-box {
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid var(--border-subtle);
-            border-radius: 6px;
-            padding: 8px 10px;
-            margin-bottom: 8px;
-        }
-        .variation-box.box-refutation {
-            background: rgba(239, 68, 68, 0.04);
-        }
-        .variation-box.box-better {
-            background: rgba(34, 197, 94, 0.04);
-        }
-
-        .principal-variation {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            line-height: 1.5;
-            color: #e5e7eb;
-            padding: 4px 6px;
-            border-radius: 4px;
-            background: rgba(0, 0, 0, 0.2);
-            word-break: break-word;
-        }
-        .principal-variation.clickable {
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .principal-variation.clickable:hover {
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        .btn-play-refutation {
-            background: rgba(239, 68, 68, 0.15);
-            color: #fca5a5;
-            border: 1px solid rgba(239, 68, 68, 0.35);
-            border-radius: 4px;
-            font-size: 0.74rem;
-            font-weight: 600;
-            padding: 3px 8px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .btn-play-refutation:hover {
-            background: #ef4444;
-            color: #fff;
-        }
-
-        .btn-play-better {
-            background: rgba(34, 197, 94, 0.15);
-            color: #86efac;
-            border: 1px solid rgba(34, 197, 94, 0.35);
-            border-radius: 4px;
-            font-size: 0.74rem;
-            font-weight: 600;
-            padding: 3px 8px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .btn-play-better:hover {
-            background: #22c55e;
-            color: #000;
-        }
-
-        /* Move Notation Sheet & Docked Toolbar */
-        .sheet-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            overflow: hidden;
+        /* COLUMN 3: MOVE LIST (RIGHT) */
+        .col-moves {
+            position: sticky;
+            top: 56px;
+            max-height: calc(100vh - 72px);
             display: flex;
             flex-direction: column;
-        }
-
-        .sheet-header {
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.015);
-            border-bottom: 1px solid var(--border-subtle);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-        }
-
-        .sheet-title {
-            font-weight: 600;
-            color: var(--text-primary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-size: 0.76rem;
-        }
-
-        .btn-tool-sm {
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 4px;
-            padding: 2px 8px;
-            font-size: 0.78rem;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            transition: all 0.15s;
-        }
-        .btn-tool-sm:hover {
-            background: var(--bg-surface-elevated);
-            color: var(--text-primary);
         }
 
         .analysis-container {
-            max-height: min(550px, calc(100vh - 180px));
+            max-height: calc(100vh - 175px);
+            min-height: 280px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            padding: 0;
+            background: var(--lic-bg-surface);
         }
 
         .analysis-container::-webkit-scrollbar {
             width: 5px;
         }
-        .analysis-container::-webkit-scrollbar-track {
-            background: transparent;
-        }
         .analysis-container::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.12);
-            border-radius: 3px;
+            background: var(--lic-border);
+            border-radius: 2px;
         }
 
+        /* Lichess Move Pair Row */
         .move-pair {
             display: grid;
-            grid-template-columns: 38px 1fr 1fr;
+            grid-template-columns: 36px 1fr 1fr;
             align-items: center;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+            font-size: 0.84rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             padding: 2px 4px;
+        }
+        .move-pair:nth-child(even) {
+            background: rgba(255, 255, 255, 0.015);
         }
 
         .move-number {
-            color: var(--text-muted);
-            font-size: 0.8rem;
+            color: var(--lic-text-muted);
+            font-size: 0.78rem;
             padding-left: 4px;
+            user-select: none;
         }
 
         .white-move, .black-move {
             padding: 4px 8px;
-            border-radius: 4px;
+            border-radius: 3px;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 6px;
-            color: var(--text-secondary);
+            color: var(--lic-text-primary);
             transition: all 0.12s;
             user-select: none;
             font-size: 0.84rem;
@@ -751,17 +862,17 @@
         }
 
         .white-move:hover, .black-move:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-primary);
+            background: var(--lic-bg-surface-hover);
+            color: var(--lic-text-bright);
         }
 
         .white-move.active, .black-move.active {
-            background: rgba(56, 189, 248, 0.15) !important;
-            color: var(--accent) !important;
+            background: var(--lic-active-move) !important;
+            color: var(--lic-active-move-text) !important;
             font-weight: 700;
         }
 
-        /* Quality indicator dots */
+        /* Quality Dots */
         .move-quality-indicator {
             width: 6px;
             height: 6px;
@@ -769,143 +880,141 @@
             display: inline-block;
             flex-shrink: 0;
         }
-        .quality-blunder { background-color: var(--q-blunder); box-shadow: 0 0 6px var(--q-blunder); }
+        .quality-blunder { background-color: var(--q-blunder); box-shadow: 0 0 5px var(--q-blunder); }
         .quality-mistake { background-color: var(--q-mistake); }
         .quality-inaccuracy { background-color: var(--q-inaccuracy); }
-        .quality-good { background-color: var(--q-good); opacity: 0.6; }
+        .quality-good { background-color: var(--q-good); opacity: 0.5; }
         .quality-great { background-color: var(--q-great); }
-        .quality-brilliant { background-color: var(--q-brilliant); box-shadow: 0 0 6px var(--q-brilliant); }
+        .quality-brilliant { background-color: var(--q-brilliant); box-shadow: 0 0 5px var(--q-brilliant); }
         .quality-book { background-color: var(--q-book); }
 
-        /* Docked Move Navigation Toolbar directly in right sheet */
-        .sheet-toolbar {
+        /* Lichess Move Navigation Controller (Bottom Toolbar) */
+        .lic-nav-toolbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255, 255, 255, 0.02);
-            border-top: 1px solid var(--border-subtle);
+            background: var(--lic-bg-surface-header);
+            border-top: 1px solid var(--lic-border-subtle);
             padding: 6px 10px;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
         }
 
-        .btn-tool {
-            background: transparent;
-            color: var(--text-secondary);
-            border: none;
-            border-radius: 4px;
-            min-height: 34px;
-            min-width: 34px;
-            padding: 4px 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .btn-tool:hover {
-            background: var(--bg-surface-elevated);
-            color: var(--text-primary);
-        }
-        .btn-tool:active {
-            background: var(--bg-surface-hover);
-        }
-
-        .nav-cluster {
+        .nav-btn-group {
             display: flex;
             align-items: center;
             gap: 2px;
+        }
+
+        .btn-lic-tool {
+            background: transparent;
+            color: var(--lic-text-secondary);
+            border: none;
+            border-radius: 3px;
+            min-height: 32px;
+            min-width: 34px;
+            padding: 4px 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.12s;
+        }
+        .btn-lic-tool:hover {
+            background: var(--lic-bg-surface-hover);
+            color: var(--lic-text-bright);
+        }
+        .btn-lic-tool:active {
+            background: var(--lic-bg-input);
         }
 
         .threat-pill {
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             font-weight: 600;
             color: #f87171;
             cursor: pointer;
-            padding: 3px 6px;
-            border-radius: 4px;
+            padding: 2px 6px;
+            border-radius: 3px;
             user-select: none;
         }
         .threat-pill input {
             cursor: pointer;
-            accent-color: #ef4444;
+            accent-color: var(--lic-red);
         }
 
         .select-dark {
-            background: #0e1117;
-            color: #f3f4f6;
-            border-color: var(--border-subtle);
+            background: var(--lic-bg-input);
+            color: var(--lic-text-primary);
+            border-color: var(--lic-border);
+        }
+        .select-dark:focus {
+            background: var(--lic-bg-input);
+            color: #fff;
+            border-color: var(--lic-blue);
+            outline: none;
         }
 
-        .progress-strip {
-            background: #15181f;
-            border: 1px solid var(--border-subtle);
-            border-radius: 6px;
-            padding: 6px 10px;
-            margin-bottom: 8px;
-            display: none;
-        }
-        .progress-strip.show {
-            display: block;
+        /* RESPONSIVE LAYOUT */
+        @media (max-width: 1199px) {
+            .studio-grid {
+                grid-template-columns: 320px 1fr 280px;
+                gap: 12px;
+            }
         }
 
-        /* Mobile specific styling */
         @media (max-width: 991px) {
             .studio-grid {
                 display: flex;
                 flex-direction: column;
-                gap: 12px;
+                gap: 14px;
             }
-            .board-column {
-                max-width: 100%;
+            .col-board {
+                order: 1;
             }
-            .studio-panel {
-                width: 100%;
-                min-width: 0;
+            .col-analysis {
+                order: 2;
                 position: static;
+                max-height: none;
             }
-            .board-column .sheet-toolbar {
-                background: var(--bg-surface);
-                border: 1px solid var(--border-subtle);
-                border-radius: 8px;
-                padding: 6px 12px;
+            .col-moves {
+                order: 3;
+                position: static;
+                max-height: none;
             }
             .analysis-container {
                 max-height: 280px;
             }
-            .sheet-toolbar .btn-tool {
-                min-height: 42px;
-                min-width: 46px;
-                font-size: 1.05rem;
-            }
-            .white-move, .black-move {
-                padding: 8px 10px;
+            .col-analysis .lic-panel-body {
+                max-height: none;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Slim Header -->
-    <header class="studio-header">
+    <!-- Lichess Dark Header -->
+    <header class="lic-header">
         <div class="d-flex align-items-center gap-3">
-            <a href="#" class="brand-link">
-                <i class="bi bi-heart-pulse-fill brand-icon"></i>
+            <a href="#" class="lic-brand">
+                <i class="bi bi-heart-pulse-fill lic-brand-icon"></i>
                 <span>WhyBlunder</span>
             </a>
+            <span class="d-none d-md-inline badge bg-secondary bg-opacity-25 text-secondary fw-normal font-monospace" style="font-size:0.7rem;">ANALYSIS BOARD</span>
         </div>
         <div class="d-flex align-items-center gap-2">
             <div class="d-none d-lg-flex align-items-center text-muted small me-2">
                 <span class="me-1">Keys:</span>
-                <kbd style="background:#1e222b;color:#9ca3af;font-size:0.7rem;padding:1px 4px;border-radius:3px;">←</kbd>
-                <kbd style="background:#1e222b;color:#9ca3af;font-size:0.7rem;padding:1px 4px;border-radius:3px;" class="ms-1">→</kbd>
-                <kbd style="background:#1e222b;color:#9ca3af;font-size:0.7rem;padding:1px 4px;border-radius:3px;" class="ms-1">F</kbd>
+                <kbd style="background:#262421;color:#8c8c8c;border:1px solid #403d39;font-size:0.7rem;padding:1px 4px;border-radius:3px;">←</kbd>
+                <kbd style="background:#262421;color:#8c8c8c;border:1px solid #403d39;font-size:0.7rem;padding:1px 4px;border-radius:3px;" class="ms-1">→</kbd>
+                <kbd style="background:#262421;color:#8c8c8c;border:1px solid #403d39;font-size:0.7rem;padding:1px 4px;border-radius:3px;" class="ms-1">F</kbd>
+                <kbd style="background:#262421;color:#8c8c8c;border:1px solid #403d39;font-size:0.7rem;padding:1px 4px;border-radius:3px;" class="ms-1">Space</kbd>
             </div>
+            
             <div class="dropdown">
-                <button type="button" id="btnTogglePgn" class="btn-pgn-toggle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <button type="button" id="btnTogglePgn" class="lic-btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-file-earmark-text"></i>
                     <span>Load PGN</span>
                 </button>
@@ -917,7 +1026,7 @@
                         </button>
                     </li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><h6 class="dropdown-header text-uppercase" style="font-size:0.68rem; letter-spacing:0.06em; color:var(--text-muted);">Example Games</h6></li>
+                    <li><h6 class="dropdown-header text-uppercase" style="font-size:0.68rem; letter-spacing:0.06em; color:var(--lic-text-muted);">Sample Games</h6></li>
                     <li>
                         <button type="button" class="dropdown-item d-flex align-items-center justify-content-between" data-sample="opera">
                             <span>Morphy's Opera</span>
@@ -946,11 +1055,11 @@
         <div class="pgn-drawer-inner">
             <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <span class="small fw-semibold text-light">Paste PGN Notation</span>
+                    <span class="small fw-semibold text-light">Paste PGN Game Notation</span>
                     <span class="text-muted small ms-2">Examples:</span>
-                    <button type="button" class="chip-btn" data-sample="opera">Morphy's Opera</button>
-                    <button type="button" class="chip-btn" data-sample="kasparov">Kasparov</button>
-                    <button type="button" class="chip-btn" data-sample="scholar">Scholar's Mate</button>
+                    <button type="button" class="lic-chip-btn" data-sample="opera">Morphy's Opera</button>
+                    <button type="button" class="lic-chip-btn" data-sample="kasparov">Kasparov</button>
+                    <button type="button" class="lic-chip-btn" data-sample="scholar">Scholar's Mate</button>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <label for="analysisDepth" class="small text-muted mb-0">Depth:</label>
@@ -964,80 +1073,126 @@
                         <option value="22">Deep Analysis (22)</option>
                         <option value="24">Elite Search (24)</option>
                     </select>
-                    <button type="button" id="btnCloseDrawer" class="btn-tool" style="min-height:28px;min-width:28px;" title="Close Drawer"><i class="bi bi-x-lg"></i></button>
+                    <button type="button" id="btnCloseDrawer" class="btn-lic-tool" style="min-height:28px;min-width:28px;" title="Close Drawer"><i class="bi bi-x-lg"></i></button>
                 </div>
             </div>
             <textarea class="form-control pgn-textarea mb-2" id="pgnInput" placeholder="Paste standard PGN notation here..."></textarea>
             <div class="d-flex align-items-center gap-2">
-                <button id="analyzeBtn" class="btn btn-primary btn-sm px-3 fw-semibold" style="background:var(--accent); border:none; color:#000; height:32px;">
-                    <i class="bi bi-play-circle-fill me-1"></i> Analyze Game
+                <button id="analyzeBtn" class="lic-btn lic-btn-primary">
+                    <i class="bi bi-play-circle-fill"></i> Analyze Game
                 </button>
-                <button id="cancelAnalyzeBtn" class="btn btn-outline-danger btn-sm d-none" style="height:32px;">
-                    <i class="bi bi-x-circle me-1"></i> Cancel
+                <button id="cancelAnalyzeBtn" class="lic-btn lic-btn-danger d-none">
+                    <i class="bi bi-x-circle"></i> Cancel
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Main Studio Space -->
-    <main class="studio-container">
-        <!-- Inline Progress Strip -->
-        <div id="analysisProgressContainer" class="progress-strip">
+    <!-- Inline Progress Strip -->
+    <div id="analysisProgressContainer" class="progress-strip">
+        <div class="progress-strip-inner">
             <div class="d-flex justify-content-between align-items-center mb-1">
                 <span id="progressText" class="small fw-medium text-info">Initializing Stockfish WASM...</span>
                 <span id="progressPercent" class="badge bg-info text-dark font-monospace">0%</span>
             </div>
-            <div class="progress" style="height: 5px; background: #0d0f13;">
+            <div class="progress" style="height: 4px; background: #141311;">
                 <div id="progressBar" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
             </div>
         </div>
+    </div>
 
+    <!-- 3-COLUMN STUDIO LAYOUT -->
+    <main class="studio-container">
         <div class="studio-grid">
-            <!-- Left Column: Board Studio & Move Explanation -->
-            <div class="board-column">
-                <div class="game-info-strip" id="gameInfo">
-                    <span class="game-info-players">White vs Black</span>
-                    <span class="text-muted small">Ready</span>
-                </div>
-
-                <div class="board-wrapper">
-                    <div class="board-container">
-                        <div id="board"></div>
-                        <svg id="arrow-svg"></svg>
+            
+            <!-- COLUMN 1 (LEFT): MOVE ANALYSIS -->
+            <div class="col-analysis">
+                <div class="lic-panel">
+                    <div class="lic-panel-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-cpu text-info"></i>
+                            <span>Move Analysis</span>
+                        </div>
+                        <span id="analysisStatusBadge" class="badge bg-dark border border-secondary text-secondary" style="font-size:0.68rem;">READY</span>
                     </div>
-                </div>
-
-                <!-- Return to Game Box (shown under the board during/after alt line play) -->
-                <div id="variationBanner" class="variation-under-board d-none">
-                    <div class="d-flex align-items-center gap-2 text-truncate me-2">
-                        <span id="variationTypeBadge" class="var-type-badge refutation">Punishing Line</span>
-                        <span id="variationStatusText" class="var-status-text text-truncate">Playing variation...</span>
-                    </div>
-                    <button type="button" id="btnReturnMainLine" class="btn-return-game" title="Return to original position (Space)">
-                        <i class="bi bi-arrow-return-left me-1"></i> Return to Game
-                    </button>
-                </div>
-
-                <!-- Move Diagnosis Card (Positioned beneath the chessboard) -->
-                <div class="diagnosis-card" id="moveExplanation">
-                    <div class="diagnosis-empty">
-                        <i class="bi bi-cursor-fill opacity-50"></i>
-                        <span>Select a move to inspect engine analysis, threats, and variations</span>
+                    <div class="lic-panel-body" id="moveExplanation">
+                        <div class="diagnosis-empty">
+                            <i class="bi bi-search"></i>
+                            <span>Select any move in the list to view engine diagnosis, tactical tags, threats, and alternative variations.</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Move Notation Studio -->
-            <div class="studio-panel">
-                <!-- Move Notation Sheet with Integrated Move Navigation Toolbar -->
-                <div class="sheet-card">
-                    <div class="sheet-header">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="sheet-title">Moves</span>
-                            <span id="moveCountSummary" class="text-muted small">0 moves</span>
+            <!-- COLUMN 2 (CENTER): CHESS BOARD -->
+            <div class="col-board">
+                <div class="board-container-card">
+                    <!-- Top Player Strip (Black) -->
+                    <div class="lic-player-bar" id="playerBarTop">
+                        <div class="player-info-main">
+                            <span class="player-avatar black-avatar"><i class="bi bi-person-fill"></i></span>
+                            <span class="player-name-text" id="topPlayerName">Black</span>
+                            <span class="text-muted small" id="topPlayerMeta"></span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <button id="btnFlip" class="btn-tool-sm" title="Flip Board (F)"><i class="bi bi-arrow-left-right me-1"></i> Flip</button>
+                            <span class="player-turn-dot" id="topPlayerTurn"></span>
+                        </div>
+                    </div>
+
+                    <!-- Chessboard with Left Lichess Eval Bar -->
+                    <div class="board-with-eval">
+                        <!-- Lichess Vertical Eval Bar -->
+                        <div class="eval-gauge" id="evalGauge" title="Position Evaluation">
+                            <div class="eval-gauge-text top-text" id="evalGaugeTop"></div>
+                            <div class="eval-gauge-white" id="evalGaugeWhite" style="height: 50%;"></div>
+                            <div class="eval-gauge-text bottom-text" id="evalGaugeBottom"></div>
+                        </div>
+
+                        <!-- Chessboard Wrapper -->
+                        <div class="board-wrapper">
+                            <div class="board-container">
+                                <div id="board"></div>
+                                <svg id="arrow-svg"></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Return to Game Box (shown during/after alt line play) -->
+                    <div id="variationBanner" class="variation-under-board d-none">
+                        <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                            <span id="variationTypeBadge" class="var-type-badge refutation">Punishing Line</span>
+                            <span id="variationStatusText" class="var-status-text text-truncate">Playing variation...</span>
+                        </div>
+                        <button type="button" id="btnReturnMainLine" class="lic-btn lic-btn-primary py-1 px-2" title="Return to original position (Space)">
+                            <i class="bi bi-arrow-return-left"></i> Return to Game
+                        </button>
+                    </div>
+
+                    <!-- Bottom Player Strip (White) -->
+                    <div class="lic-player-bar" id="playerBarBottom">
+                        <div class="player-info-main">
+                            <span class="player-avatar white-avatar"><i class="bi bi-person-fill"></i></span>
+                            <span class="player-name-text" id="bottomPlayerName">White</span>
+                            <span class="text-muted small" id="bottomPlayerMeta"></span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="player-turn-dot" id="bottomPlayerTurn"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMN 3 (RIGHT): MOVE LIST & CONTROLS -->
+            <div class="col-moves">
+                <div class="lic-panel">
+                    <!-- Move List Header -->
+                    <div class="lic-panel-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <span>Moves</span>
+                            <span id="moveCountSummary" class="badge bg-secondary bg-opacity-25 text-light font-monospace" style="font-size:0.68rem;">0 moves</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button id="btnFlip" class="lic-chip-btn" title="Flip Board (F)"><i class="bi bi-arrow-left-right me-1"></i> Flip</button>
                             <label class="threat-pill mb-0" title="Toggle Threat Radar">
                                 <input type="checkbox" id="toggleThreats" checked>
                                 <span><i class="bi bi-bullseye"></i> Threats</span>
@@ -1045,26 +1200,27 @@
                         </div>
                     </div>
 
+                    <!-- Scrollable 2-Column Move Notation Sheet -->
                     <div class="analysis-container" id="analysisContainer">
-                        <div class="text-center text-muted py-4 small">
-                            <p class="mb-2">Load a game or select a sample above to begin analysis.</p>
-                            <button type="button" class="chip-btn px-3 py-1" onclick="document.getElementById('btnTogglePgn').click()">
-                                <i class="bi bi-file-earmark-plus me-1"></i> Open PGN Input
+                        <div class="text-center text-muted py-5 small px-3">
+                            <p class="mb-3">Load a game or select an example above to begin full analysis.</p>
+                            <button type="button" class="lic-btn lic-btn-primary" onclick="document.getElementById('btnTogglePgn').click()">
+                                <i class="bi bi-file-earmark-plus"></i> Open PGN Input
                             </button>
                         </div>
                     </div>
 
-                    <!-- Docked Move Navigation Toolbar directly at the bottom of the Moves sheet -->
-                    <div class="sheet-toolbar" id="boardToolbar">
-                        <div class="nav-cluster">
-                            <button id="btnFirst" class="btn-tool" title="First Move (Home)"><i class="bi bi-skip-start-fill"></i></button>
-                            <button id="btnPrev" class="btn-tool" title="Previous Move (←)"><i class="bi bi-chevron-left"></i></button>
-                            <button id="btnNext" class="btn-tool" title="Next Move (→)"><i class="bi bi-chevron-right"></i></button>
-                            <button id="btnLast" class="btn-tool" title="Last Move (End)"><i class="bi bi-skip-end-fill"></i></button>
+                    <!-- Docked Lichess Move Navigation Controller -->
+                    <div class="lic-nav-toolbar" id="boardToolbar">
+                        <div class="nav-btn-group">
+                            <button id="btnFirst" class="btn-lic-tool" title="First Move (Home)"><i class="bi bi-skip-start-fill"></i></button>
+                            <button id="btnPrev" class="btn-lic-tool" title="Previous Move (←)"><i class="bi bi-chevron-left"></i></button>
+                            <button id="btnNext" class="btn-lic-tool" title="Next Move (→)"><i class="bi bi-chevron-right"></i></button>
+                            <button id="btnLast" class="btn-lic-tool" title="Last Move (End)"><i class="bi bi-skip-end-fill"></i></button>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <span class="text-muted small d-none d-sm-inline">Speed:</span>
-                            <select id="speedControl" class="form-select form-select-sm py-0 px-2 select-dark" style="width:auto; height:30px; font-size:0.78rem;">
+                            <select id="speedControl" class="form-select form-select-sm py-0 px-2 select-dark" style="width:auto; height:28px; font-size:0.76rem;">
                                 <option value="2000">Slow</option>
                                 <option value="1000" selected>Normal</option>
                                 <option value="500">Fast</option>
@@ -1074,6 +1230,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </main>
 
@@ -1099,6 +1256,7 @@
             let animationSpeed = 1000;
             let animationTimeout = null;
             let browserDoctor = null;
+            let currentGameInfo = null;
 
             // DOM elements
             const pgnInput = document.getElementById('pgnInput');
@@ -1106,7 +1264,6 @@
             const cancelAnalyzeBtn = document.getElementById('cancelAnalyzeBtn');
             const analysisContainer = document.getElementById('analysisContainer');
             const moveExplanation = document.getElementById('moveExplanation');
-            const gameInfo = document.getElementById('gameInfo');
             const btnFirst = document.getElementById('btnFirst');
             const btnPrev = document.getElementById('btnPrev');
             const btnNext = document.getElementById('btnNext');
@@ -1128,6 +1285,20 @@
             const variationTypeBadge = document.getElementById('variationTypeBadge');
             const variationStatusText = document.getElementById('variationStatusText');
             const btnReturnMainLine = document.getElementById('btnReturnMainLine');
+            const analysisStatusBadge = document.getElementById('analysisStatusBadge');
+            
+            // Player Strip DOM elements
+            const topPlayerName = document.getElementById('topPlayerName');
+            const topPlayerMeta = document.getElementById('topPlayerMeta');
+            const topPlayerTurn = document.getElementById('topPlayerTurn');
+            const bottomPlayerName = document.getElementById('bottomPlayerName');
+            const bottomPlayerMeta = document.getElementById('bottomPlayerMeta');
+            const bottomPlayerTurn = document.getElementById('bottomPlayerTurn');
+
+            // Eval Gauge DOM elements
+            const evalGaugeWhite = document.getElementById('evalGaugeWhite');
+            const evalGaugeTop = document.getElementById('evalGaugeTop');
+            const evalGaugeBottom = document.getElementById('evalGaugeBottom');
 
             // Initialize Chessboard
             const boardConfig = {
@@ -1145,38 +1316,11 @@
                     arrowSvg.setAttribute('height', boardRect.width);
                 }
             }
-            function adaptToolbarPosition() {
-                const toolbar = document.getElementById('boardToolbar');
-                const boardCol = document.querySelector('.board-column');
-                const sheetCard = document.querySelector('.sheet-card');
-                const variationBanner = document.getElementById('variationBanner');
-                const boardWrapper = document.querySelector('.board-wrapper');
-                if (!toolbar || !boardCol || !sheetCard) return;
-
-                const isMobile = window.innerWidth < 992;
-                if (isMobile) {
-                    // Mobile: place right under the chessboard (after board-wrapper, before variationBanner)
-                    if (toolbar.parentElement !== boardCol) {
-                        if (variationBanner && variationBanner.parentElement === boardCol) {
-                            boardCol.insertBefore(toolbar, variationBanner);
-                        } else if (boardWrapper && boardWrapper.parentElement === boardCol) {
-                            boardCol.insertBefore(toolbar, boardWrapper.nextSibling);
-                        }
-                    }
-                } else {
-                    // Desktop: dock at the bottom of the move notation sheet card
-                    if (toolbar.parentElement !== sheetCard) {
-                        sheetCard.appendChild(toolbar);
-                    }
-                }
-            }
-            adaptToolbarPosition();
 
             setTimeout(updateSvgDimensions, 100);
             window.addEventListener('resize', function() {
                 if (board && board.resize) board.resize();
                 updateSvgDimensions();
-                adaptToolbarPosition();
                 if (currentMoveIndex >= 0 && !isPlayingVariation && !isInVariationMode) {
                     drawMoveArrows(currentMoveIndex);
                 }
@@ -1247,11 +1391,13 @@
             if (btnFlip) {
                 btnFlip.addEventListener('click', function() {
                     board.flip();
+                    updatePlayerStripsOrientation();
                     clearArrows();
                     clearSquareAnnotations();
                     if (currentMoveIndex >= 0 && !isPlayingVariation && !isInVariationMode) {
                         setTimeout(() => drawMoveArrows(currentMoveIndex), 50);
                     }
+                    updateEvalGauge(currentMoveIndex);
                 });
             }
 
@@ -1323,10 +1469,10 @@
                 const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
                 
                 const markers = [
-                    { id: 'arrowhead-current', color: 'rgba(56, 189, 248, 0.9)' },
-                    { id: 'arrowhead-better', color: 'rgba(52, 211, 153, 0.9)' },
-                    { id: 'arrowhead-threat', color: 'rgba(248, 113, 113, 0.92)' },
-                    { id: 'arrowhead-opponent-threat', color: 'rgba(251, 113, 133, 0.92)' }
+                    { id: 'arrowhead-current', color: 'rgba(54, 146, 231, 0.92)' },
+                    { id: 'arrowhead-better', color: 'rgba(98, 153, 36, 0.95)' },
+                    { id: 'arrowhead-threat', color: 'rgba(204, 51, 51, 0.95)' },
+                    { id: 'arrowhead-opponent-threat', color: 'rgba(224, 68, 68, 0.95)' }
                 ];
                 
                 markers.forEach(m => {
@@ -1370,8 +1516,12 @@
                 progressBar.style.width = '0%';
                 progressPercent.textContent = '0%';
                 progressText.textContent = 'Spinning up Stockfish WASM...';
+                if (analysisStatusBadge) {
+                    analysisStatusBadge.className = 'badge bg-info text-dark';
+                    analysisStatusBadge.textContent = 'ANALYZING...';
+                }
 
-                analysisContainer.innerHTML = '<div class="text-center text-muted py-4 small"><div class="spinner-border spinner-border-sm text-info me-2"></div>Analyzing moves in browser...</div>';
+                analysisContainer.innerHTML = '<div class="text-center text-muted py-5 small"><div class="spinner-border spinner-border-sm text-info me-2"></div>Analyzing moves with Stockfish...</div>';
 
                 try {
                     if (!browserDoctor) {
@@ -1392,9 +1542,10 @@
                         throw new Error(result.errors.join(', '));
                     }
                     moves = result.moves || [];
+                    currentGameInfo = result.game_info || {};
                     
                     if (moves.length === 0) {
-                        analysisContainer.innerHTML = '<div class="alert alert-warning m-2 p-2 small">No moves were analyzed. Please check PGN format.</div>';
+                        analysisContainer.innerHTML = '<div class="alert alert-warning m-3 p-2 small">No moves were analyzed. Please check PGN format.</div>';
                         return;
                     }
 
@@ -1402,12 +1553,20 @@
                     preprocessMoveData();
                     displayAnalysis(moves);
                     goToFirstMove();
+                    if (analysisStatusBadge) {
+                        analysisStatusBadge.className = 'badge bg-success text-light';
+                        analysisStatusBadge.textContent = 'COMPLETE';
+                    }
                 } catch (error) {
                     console.error("Game analysis error:", error);
+                    if (analysisStatusBadge) {
+                        analysisStatusBadge.className = 'badge bg-danger text-light';
+                        analysisStatusBadge.textContent = 'ERROR';
+                    }
                     if (error.message && error.message.includes('cancelled')) {
-                        analysisContainer.innerHTML = '<div class="text-center text-muted py-3 small">Analysis cancelled.</div>';
+                        analysisContainer.innerHTML = '<div class="text-center text-muted py-4 small">Analysis cancelled.</div>';
                     } else {
-                        analysisContainer.innerHTML = `<div class="alert alert-danger m-2 p-2 small">${error.message}</div>`;
+                        analysisContainer.innerHTML = `<div class="alert alert-danger m-3 p-2 small">${error.message}</div>`;
                     }
                 } finally {
                     analyzeBtn.disabled = false;
@@ -1484,15 +1643,109 @@
 
             function displayGameInfo(info) {
                 if (!info) return;
-                const white = info.white || 'White';
-                const black = info.black || 'Black';
-                const event = info.event || '';
-                const result = info.result ? `(${info.result})` : '';
+                updatePlayerStripsOrientation();
+            }
+
+            function updatePlayerStripsOrientation() {
+                const isFlipped = board.orientation() === 'black';
+                const whiteName = (currentGameInfo && currentGameInfo.white) ? currentGameInfo.white : 'White';
+                const blackName = (currentGameInfo && currentGameInfo.black) ? currentGameInfo.black : 'Black';
+                const result = (currentGameInfo && currentGameInfo.result) ? currentGameInfo.result : '';
+
+                if (isFlipped) {
+                    // White on top, Black on bottom
+                    if (topPlayerName) topPlayerName.textContent = whiteName;
+                    if (bottomPlayerName) bottomPlayerName.textContent = blackName;
+                    
+                    const topAvatar = document.querySelector('#playerBarTop .player-avatar');
+                    const bottomAvatar = document.querySelector('#playerBarBottom .player-avatar');
+                    if (topAvatar) topAvatar.className = 'player-avatar white-avatar';
+                    if (bottomAvatar) bottomAvatar.className = 'player-avatar black-avatar';
+                } else {
+                    // Black on top, White on bottom
+                    if (topPlayerName) topPlayerName.textContent = blackName;
+                    if (bottomPlayerName) bottomPlayerName.textContent = whiteName;
+
+                    const topAvatar = document.querySelector('#playerBarTop .player-avatar');
+                    const bottomAvatar = document.querySelector('#playerBarBottom .player-avatar');
+                    if (topAvatar) topAvatar.className = 'player-avatar black-avatar';
+                    if (bottomAvatar) bottomAvatar.className = 'player-avatar white-avatar';
+                }
+
+                if (topPlayerMeta) topPlayerMeta.textContent = '';
+                if (bottomPlayerMeta) bottomPlayerMeta.textContent = result ? `Result: ${result}` : '';
+            }
+
+            function updateEvalGauge(index) {
+                if (!evalGaugeWhite) return;
+
+                if (index < 0 || index >= moves.length) {
+                    evalGaugeWhite.style.height = '50%';
+                    if (evalGaugeTop) evalGaugeTop.textContent = '';
+                    if (evalGaugeBottom) evalGaugeBottom.textContent = '';
+                    return;
+                }
+
+                const move = moves[index];
+                const isFlipped = board.orientation() === 'black';
+                let evalText = (move.evaluation !== undefined && move.evaluation !== null) ? `${move.evaluation}` : '';
                 
-                gameInfo.innerHTML = `
-                    <span class="game-info-players">${white} vs ${black} ${result}</span>
-                    <span class="text-muted small text-truncate" style="max-width:240px;">${event || 'Ready'}</span>
-                `;
+                // Parse centipawns or win probability for height gauge
+                let whiteWp = 0.5;
+                if (move.win_probability !== undefined) {
+                    whiteWp = move.is_white ? move.win_probability : (1.0 - move.win_probability);
+                } else if (evalText.startsWith('M') || evalText.startsWith('+M')) {
+                    whiteWp = 1.0;
+                } else if (evalText.startsWith('-M')) {
+                    whiteWp = 0.0;
+                } else {
+                    const parsedNum = parseFloat(evalText);
+                    if (!isNaN(parsedNum)) {
+                        whiteWp = 1.0 / (1.0 + Math.pow(10.0, -parsedNum / 4.0));
+                    }
+                }
+
+                whiteWp = Math.max(0.04, Math.min(0.96, whiteWp));
+                const whitePct = Math.round(whiteWp * 100);
+
+                if (isFlipped) {
+                    evalGaugeWhite.style.height = `${100 - whitePct}%`;
+                } else {
+                    evalGaugeWhite.style.height = `${whitePct}%`;
+                }
+
+                if (evalText && !evalText.startsWith('+') && !evalText.startsWith('-') && !evalText.startsWith('M') && !evalText.startsWith('-M')) {
+                    evalText = '+' + evalText;
+                }
+
+                if (whiteWp >= 0.5) {
+                    if (evalGaugeBottom) evalGaugeBottom.textContent = evalText;
+                    if (evalGaugeTop) evalGaugeTop.textContent = '';
+                } else {
+                    if (evalGaugeTop) evalGaugeTop.textContent = evalText;
+                    if (evalGaugeBottom) evalGaugeBottom.textContent = '';
+                }
+            }
+
+            function updateTurnIndicators(index) {
+                if (!topPlayerTurn || !bottomPlayerTurn) return;
+                topPlayerTurn.classList.remove('active');
+                bottomPlayerTurn.classList.remove('active');
+
+                const isFlipped = board.orientation() === 'black';
+                let isWhiteTurn = true;
+                if (index >= 0 && index < moves.length) {
+                    // Turn to move next is opposite of played move
+                    isWhiteTurn = !moves[index].is_white;
+                }
+
+                if (isFlipped) {
+                    if (isWhiteTurn) topPlayerTurn.classList.add('active');
+                    else bottomPlayerTurn.classList.add('active');
+                } else {
+                    if (isWhiteTurn) bottomPlayerTurn.classList.add('active');
+                    else topPlayerTurn.classList.add('active');
+                }
             }
 
             function displayAnalysis(movesList) {
@@ -1566,13 +1819,13 @@
                 });
             }
 
-            // Show Comprehensive Move Explanation
+            // Show Comprehensive Move Explanation in Left Column
             function showMoveExplanation(index) {
                 if (index < 0 || index >= moves.length) {
                     moveExplanation.innerHTML = `
                         <div class="diagnosis-empty">
-                            <i class="bi bi-cursor-fill opacity-50"></i>
-                            <span>Select a move to inspect engine analysis, threats, and variations</span>
+                            <i class="bi bi-search"></i>
+                            <span>Select any move in the list to view engine diagnosis, tactical tags, threats, and alternative variations.</span>
                         </div>`;
                     return;
                 }
@@ -1585,7 +1838,7 @@
                 const qualityClass = getQualityClass(move.detailed_quality || move.quality);
                 
                 let evalText = (move.evaluation !== undefined && move.evaluation !== null) ? `${move.evaluation}` : '';
-                if (evalText && !evalText.startsWith('+') && !evalText.startsWith('-') && !evalText.startsWith('#')) {
+                if (evalText && !evalText.startsWith('+') && !evalText.startsWith('-') && !evalText.startsWith('#') && !evalText.startsWith('M')) {
                     evalText = '+' + evalText;
                 }
 
@@ -1618,7 +1871,7 @@
                     if (move.quality !== 'good move' && move.analysis.best_move) {
                         html += `
                             <div class="better-move-strip">
-                                <span class="text-success fw-semibold small me-1"><i class="bi bi-lightbulb me-1"></i>Better move:</span>
+                                <span class="text-success fw-semibold small me-1"><i class="bi bi-lightbulb me-1"></i>Better:</span>
                                 <span class="badge-better font-monospace">${move.analysis.best_move}</span>
                                 ${move.analysis.best_evaluation ? `<span class="text-muted small ms-1">(${move.analysis.best_evaluation})</span>` : ''}
                             </div>`;
@@ -1651,21 +1904,21 @@
                         html += `<div class="diagnosis-text"><i class="bi bi-info-circle me-1 text-info opacity-75"></i>${move.analysis.explanation}</div>`;
                     }
 
-                    // Variations: Punishing Line & Recommended Line (FULL UNTRUNCATED)
+                    // Variations: Punishing Line & Recommended Line
                     if (move.quality !== 'good move' && move.analysis.refutation_variation) {
                         html += `
                             <div class="variation-box box-refutation">
                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                     <span class="text-danger fw-semibold small">
-                                        <i class="bi bi-shield-slash me-1"></i>Punishing line (why this move is bad):
+                                        <i class="bi bi-shield-slash me-1"></i>Punishing line (why this is bad):
                                     </span>
                                 </div>
                                 <div class="principal-variation refutation-line clickable" data-index="${index}" data-type="refutation" title="Click to view variation on board">
                                     ${move.analysis.refutation_variation}
                                 </div>
                                 <div class="mt-2 d-flex align-items-center gap-2">
-                                    <button class="btn btn-sm btn-play-refutation play-refutation-button" data-index="${index}">
-                                        <i class="bi bi-play-fill me-1"></i>Play punishment line
+                                    <button class="lic-btn lic-btn-danger py-1 px-2 play-refutation-button" data-index="${index}">
+                                        <i class="bi bi-play-fill"></i> Play punishment line
                                     </button>
                                 </div>
                             </div>`;
@@ -1683,14 +1936,14 @@
                                     ${move.analysis.principal_variation}
                                 </div>
                                 <div class="mt-2 d-flex align-items-center gap-2">
-                                    <button class="btn btn-sm btn-play-better play-button" data-index="${index}">
-                                        <i class="bi bi-play-fill me-1"></i>Play better line
+                                    <button class="lic-btn lic-btn-success py-1 px-2 play-button" data-index="${index}">
+                                        <i class="bi bi-play-fill"></i> Play better line
                                     </button>
                                 </div>
                             </div>`;
                     }
                 } else {
-                    html += '<div class="diagnosis-text text-muted mb-0"><i class="bi bi-check2-circle text-success me-1"></i>This move is considered solid.</div>';
+                    html += '<div class="diagnosis-text text-muted mb-0"><i class="bi bi-check2-circle text-success me-1"></i>This move is considered solid by the engine.</div>';
                 }
                 
                 moveExplanation.innerHTML = html;
@@ -1847,12 +2100,14 @@
                 board.position('start');
                 currentMoveIndex = -1;
                 updateMoveHighlight();
+                updateTurnIndicators(-1);
+                updateEvalGauge(-1);
                 clearArrows();
                 clearSquareAnnotations();
                 moveExplanation.innerHTML = `
                     <div class="diagnosis-empty">
-                        <i class="bi bi-cursor-fill opacity-50"></i>
-                        <span>Select a move to inspect engine analysis, threats, and variations</span>
+                        <i class="bi bi-search"></i>
+                        <span>Select any move in the list to view engine diagnosis, tactical tags, threats, and alternative variations.</span>
                     </div>`;
             }
 
@@ -1898,13 +2153,15 @@
                 currentMoveIndex = index;
                 
                 updateMoveHighlight();
+                updateTurnIndicators(index);
+                updateEvalGauge(index);
                 showMoveExplanation(index);
                 
                 setTimeout(() => {
                     drawMoveArrows(index);
                 }, 80);
                 
-                // Auto-scroll move item into view on desktop only (disabled on mobile to keep chessboard and controls in view)
+                // Auto-scroll move item into view on desktop
                 if (window.innerWidth >= 992) {
                     const currentMove = document.getElementById(`move-${index}`);
                     if (currentMove) {
@@ -2013,7 +2270,7 @@
                 return threats;
             }
 
-            // Variation Playback with Lighter Board and Floating Banner
+            // Variation Playback
             function playVariation(moveIndex, lineType = 'better') {
                 stopVariationPlayback();
                 const move = moves[moveIndex];
@@ -2086,12 +2343,10 @@
                 chess.load(startingFen);
                 board.position(startingFen);
                 
-                // Make the board visually lighter during variation play
                 if (boardContainer) {
                     boardContainer.classList.add('variation-mode');
                 }
 
-                // Show on-board floating variation banner
                 if (variationBanner) {
                     variationBanner.classList.remove('d-none');
                     if (variationTypeBadge) {
@@ -2229,7 +2484,6 @@
 
             function onVariationComplete(move, isRefutation) {
                 isPlayingVariation = false;
-                // Keep isInVariationMode = true and boardContainer lighter so user can inspect final position without autoswitching!
                 if (variationStatusText) {
                     variationStatusText.innerHTML = `<span class="text-success fw-bold">Line completed.</span> Inspect board or return to game.`;
                 }
