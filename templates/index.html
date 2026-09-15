@@ -89,15 +89,32 @@
             font-size: 1.05rem;
         }
 
-        .wasm-pill {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--accent-emerald);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            font-size: 0.65rem;
-            font-weight: 700;
-            padding: 1px 6px;
-            border-radius: 4px;
-            letter-spacing: 0.04em;
+        .pgn-dropdown-menu {
+            background: #141822;
+            border: 1px solid var(--border-medium);
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            min-width: 220px;
+            padding: 6px 0;
+            z-index: 1050;
+        }
+        .pgn-dropdown-menu .dropdown-item {
+            color: #e2e8f0;
+            font-size: 0.82rem;
+            padding: 7px 14px;
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+            transition: all 0.15s;
+        }
+        .pgn-dropdown-menu .dropdown-item:hover {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent);
+        }
+        .pgn-dropdown-menu .dropdown-divider {
+            border-color: var(--border-subtle);
+            margin: 4px 0;
         }
 
         .chip-btn {
@@ -852,14 +869,7 @@
             <a href="#" class="brand-link">
                 <i class="bi bi-heart-pulse-fill brand-icon"></i>
                 <span>Chess Doctor</span>
-                <span class="wasm-pill">WASM</span>
             </a>
-            <div class="d-none d-md-flex align-items-center gap-1 ms-2">
-                <span class="text-muted small me-1">Sample:</span>
-                <button type="button" class="chip-btn" data-sample="opera">Morphy's Opera</button>
-                <button type="button" class="chip-btn" data-sample="kasparov">Kasparov Immortal</button>
-                <button type="button" class="chip-btn" data-sample="scholar">Scholar's Mate</button>
-            </div>
         </div>
         <div class="d-flex align-items-center gap-2">
             <div class="d-none d-lg-flex align-items-center text-muted small me-2">
@@ -868,11 +878,40 @@
                 <kbd style="background:#1e222b;color:#9ca3af;font-size:0.7rem;padding:1px 4px;border-radius:3px;" class="ms-1">→</kbd>
                 <kbd style="background:#1e222b;color:#9ca3af;font-size:0.7rem;padding:1px 4px;border-radius:3px;" class="ms-1">F</kbd>
             </div>
-            <button type="button" id="btnTogglePgn" class="btn-pgn-toggle">
-                <i class="bi bi-file-earmark-text"></i>
-                <span>Load PGN</span>
-                <i id="pgnCaret" class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
-            </button>
+            <div class="dropdown">
+                <button type="button" id="btnTogglePgn" class="btn-pgn-toggle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Load PGN</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark pgn-dropdown-menu">
+                    <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center gap-2" id="menuItemCustomPgn">
+                            <i class="bi bi-pencil-square text-info"></i>
+                            <span>Paste Custom PGN...</span>
+                        </button>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><h6 class="dropdown-header text-uppercase" style="font-size:0.68rem; letter-spacing:0.06em; color:var(--text-muted);">Example Games</h6></li>
+                    <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center justify-content-between" data-sample="opera">
+                            <span>Morphy's Opera</span>
+                            <span class="badge bg-secondary bg-opacity-50 text-light font-monospace" style="font-size:0.68rem;">1858</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center justify-content-between" data-sample="kasparov">
+                            <span>Kasparov Immortal</span>
+                            <span class="badge bg-secondary bg-opacity-50 text-light font-monospace" style="font-size:0.68rem;">1999</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center justify-content-between" data-sample="scholar">
+                            <span>Scholar's Mate</span>
+                            <span class="badge bg-secondary bg-opacity-50 text-light font-monospace" style="font-size:0.68rem;">Demo</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
         </div>
     </header>
 
@@ -880,12 +919,12 @@
     <div id="pgnDrawer" class="pgn-drawer">
         <div class="pgn-drawer-inner">
             <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="small fw-semibold text-light">Paste PGN Notation</span>
-                    <div class="d-flex d-md-none gap-1">
-                        <button type="button" class="chip-btn" data-sample="opera">Opera</button>
-                        <button type="button" class="chip-btn" data-sample="kasparov">Kasparov</button>
-                    </div>
+                    <span class="text-muted small ms-2">Examples:</span>
+                    <button type="button" class="chip-btn" data-sample="opera">Morphy's Opera</button>
+                    <button type="button" class="chip-btn" data-sample="kasparov">Kasparov</button>
+                    <button type="button" class="chip-btn" data-sample="scholar">Scholar's Mate</button>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <label for="analysisDepth" class="small text-muted mb-0">Depth:</label>
@@ -1050,7 +1089,6 @@
             const btnTogglePgn = document.getElementById('btnTogglePgn');
             const btnCloseDrawer = document.getElementById('btnCloseDrawer');
             const pgnDrawer = document.getElementById('pgnDrawer');
-            const pgnCaret = document.getElementById('pgnCaret');
             const analysisProgressContainer = document.getElementById('analysisProgressContainer');
             const progressBar = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
@@ -1093,14 +1131,20 @@
                 const shouldOpen = (open !== undefined) ? open : !pgnDrawer.classList.contains('open');
                 if (shouldOpen) {
                     pgnDrawer.classList.add('open');
-                    if (pgnCaret) pgnCaret.className = 'bi bi-chevron-up';
                 } else {
                     pgnDrawer.classList.remove('open');
-                    if (pgnCaret) pgnCaret.className = 'bi bi-chevron-down';
                 }
             }
 
-            if (btnTogglePgn) btnTogglePgn.addEventListener('click', () => toggleDrawer());
+            const menuItemCustomPgn = document.getElementById('menuItemCustomPgn');
+            if (menuItemCustomPgn) {
+                menuItemCustomPgn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleDrawer(true);
+                    setTimeout(() => pgnInput.focus(), 150);
+                });
+            }
+
             if (btnCloseDrawer) btnCloseDrawer.addEventListener('click', () => toggleDrawer(false));
 
             // Sample Games Presets
@@ -1130,12 +1174,13 @@
             };
 
             document.querySelectorAll('[data-sample]').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
                     const key = this.dataset.sample;
                     if (sampleGames[key]) {
                         pgnInput.value = sampleGames[key];
-                        toggleDrawer(true);
-                        pgnInput.focus();
+                        toggleDrawer(false);
+                        analyzeGame();
                     }
                 });
             });
