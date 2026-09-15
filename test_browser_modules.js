@@ -2,10 +2,10 @@
  * test_browser_modules.js - Unit tests for client-side JS analysis modules in Node.
  */
 const assert = require('assert');
-const Chess = require('./templates/js/chess.min.js').Chess || require('./templates/js/chess.min.js');
-const ChessEvaluator = require('./templates/js/chess-evaluator.js');
-const OpeningDetector = require('./templates/js/opening-detector.js');
-const SituationRecognizer = require('./templates/js/situation-recognizer.js');
+const Chess = require('./js/chess.min.js').Chess || require('./js/chess.min.js');
+const ChessEvaluator = require('./js/chess-evaluator.js');
+const OpeningDetector = require('./js/opening-detector.js');
+const SituationRecognizer = require('./js/situation-recognizer.js');
 
 console.log("Running browser module unit tests...");
 

@@ -1375,7 +1375,9 @@
 
                 try {
                     if (!browserDoctor) {
-                        browserDoctor = new BrowserChessDoctor();
+                        browserDoctor = typeof BrowserWhyBlunder !== 'undefined' 
+                            ? new BrowserWhyBlunder() 
+                            : new BrowserChessDoctor();
                     }
 
                     const onProgress = (prog) => {
@@ -1401,6 +1403,7 @@
                     displayAnalysis(moves);
                     goToFirstMove();
                 } catch (error) {
+                    console.error("Game analysis error:", error);
                     if (error.message && error.message.includes('cancelled')) {
                         analysisContainer.innerHTML = '<div class="text-center text-muted py-3 small">Analysis cancelled.</div>';
                     } else {

@@ -7,6 +7,7 @@
         module.exports = factory();
     } else {
         root.BrowserWhyBlunder = factory();
+        root.BrowserChessDoctor = root.BrowserWhyBlunder;
     }
 }(typeof self !== 'undefined' ? self : this, function() {
     'use strict';
