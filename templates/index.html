@@ -2,41 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Chess Doctor - Studio Game Analysis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chess Doctor - Studio Chess Analysis</title>
     
-    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <!-- Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-    <!-- CSS Dependencies -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/chessboard-1.0.0.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Chessboard.js CSS -->
+    <link rel="stylesheet" href="css/chessboard-1.0.0.min.css">
     
     <style>
         :root {
-            --bg-base: #101216;
-            --bg-surface: #171a21;
-            --bg-surface-elevated: #1e222b;
-            --bg-surface-hover: #262b37;
-            --border-subtle: rgba(255, 255, 255, 0.07);
-            --border-medium: rgba(255, 255, 255, 0.12);
+            --bg-canvas: #0b0d11;
+            --bg-surface: #12151b;
+            --bg-surface-elevated: #1a1e27;
+            --bg-surface-hover: #222734;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-medium: rgba(255, 255, 255, 0.14);
             --text-primary: #f3f4f6;
             --text-secondary: #9ca3af;
             --text-muted: #6b7280;
             --accent: #38bdf8;
             --accent-dim: rgba(56, 189, 248, 0.15);
+            --accent-emerald: #10b981;
             
-            /* Move quality colors */
-            --q-blunder: #ef4444;
-            --q-mistake: #f97316;
-            --q-inaccuracy: #eab308;
-            --q-good: #22c55e;
+            /* Move Quality Colors */
             --q-brilliant: #38bdf8;
             --q-great: #818cf8;
+            --q-good: #22c55e;
             --q-book: #d97706;
+            --q-inaccuracy: #eab308;
+            --q-mistake: #f97316;
+            --q-blunder: #ef4444;
         }
 
         * {
@@ -44,79 +47,72 @@
         }
 
         body {
-            background-color: var(--bg-base);
+            background-color: var(--bg-canvas);
             color: var(--text-primary);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
             padding: 0;
+            min-height: 100vh;
             -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
         }
 
-        /* Slim Studio Header (48px) */
+        /* Slim Header */
         .studio-header {
-            height: 48px;
-            background: #13161c;
+            background: var(--bg-surface);
             border-bottom: 1px solid var(--border-subtle);
-            padding: 0 1rem;
+            height: 48px;
+            padding: 0 1.25rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1020;
         }
 
         .brand-link {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: var(--text-primary);
             text-decoration: none;
-            font-weight: 600;
+            color: var(--text-primary);
+            font-weight: 700;
             font-size: 0.95rem;
             letter-spacing: -0.01em;
         }
+        .brand-link:hover {
+            color: #fff;
+        }
 
         .brand-icon {
-            color: #38bdf8;
-            font-size: 1.1rem;
+            color: #ef4444;
+            font-size: 1.05rem;
         }
 
         .wasm-pill {
-            background: rgba(34, 197, 94, 0.12);
-            color: #4ade80;
-            border: 1px solid rgba(34, 197, 94, 0.25);
-            font-size: 0.68rem;
-            font-weight: 600;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            font-size: 0.65rem;
+            font-weight: 700;
             padding: 1px 6px;
             border-radius: 4px;
-            text-transform: uppercase;
             letter-spacing: 0.04em;
         }
 
-        .chip-group {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
         .chip-btn {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border-subtle);
+            background: transparent;
             color: var(--text-secondary);
-            border-radius: 6px;
-            padding: 3px 8px;
-            font-size: 0.78rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
+            font-size: 0.75rem;
             font-weight: 500;
+            padding: 3px 8px;
             cursor: pointer;
-            transition: all 0.15s ease-in-out;
-            white-space: nowrap;
+            transition: all 0.15s;
         }
-
         .chip-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--bg-surface-elevated);
             color: var(--text-primary);
             border-color: var(--border-medium);
         }
@@ -124,62 +120,60 @@
         .btn-pgn-toggle {
             background: var(--bg-surface-elevated);
             color: var(--text-primary);
-            border: 1px solid var(--border-medium);
+            border: 1px solid var(--border-subtle);
             border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
             padding: 4px 10px;
-            font-size: 0.82rem;
-            font-weight: 500;
             display: inline-flex;
             align-items: center;
             gap: 6px;
             cursor: pointer;
             transition: all 0.15s;
         }
-
         .btn-pgn-toggle:hover {
             background: var(--bg-surface-hover);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .btn-pgn-toggle.active {
-            background: var(--accent-dim);
-            border-color: var(--accent);
-            color: var(--accent);
+            border-color: var(--border-medium);
         }
 
         /* Collapsible PGN Drawer */
         .pgn-drawer {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-subtle);
             max-height: 0;
             overflow: hidden;
-            background: #14171e;
-            border-bottom: 1px solid transparent;
-            transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s;
+            transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-
         .pgn-drawer.open {
-            max-height: 380px;
-            border-bottom-color: var(--border-subtle);
+            max-height: 480px;
         }
-
         .pgn-drawer-inner {
-            padding: 12px 1rem 14px 1rem;
-            max-width: 1200px;
+            max-width: 1380px;
             margin: 0 auto;
+            padding: 14px 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .pgn-textarea {
-            background-color: #0d0f13;
-            border: 1px solid var(--border-subtle);
-            color: #f1f5f9;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82rem;
-            line-height: 1.4;
+            width: 100%;
+            height: 160px;
+            min-height: 140px;
+            max-height: 360px;
+            background-color: #0b0d10;
+            color: #e5e7eb;
+            border: 1px solid var(--border-medium);
             border-radius: 6px;
+            padding: 10px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.84rem;
+            line-height: 1.5;
             resize: vertical;
+            transition: border-color 0.15s;
         }
         .pgn-textarea:focus {
-            background-color: #0d0f13;
+            background-color: #0b0d10;
             color: #fff;
             border-color: var(--accent);
             box-shadow: 0 0 0 2px var(--accent-dim);
@@ -188,20 +182,21 @@
         @media (max-width: 768px) {
             .pgn-textarea {
                 font-size: 16px; /* Avoid iOS auto-zoom */
+                height: 140px;
             }
         }
 
         /* Studio Main Layout */
         .studio-container {
-            max-width: 1200px;
+            max-width: 1380px;
             margin: 0 auto;
-            padding: 10px 1rem 1.5rem 1rem;
+            padding: 12px 1.25rem 2rem 1.25rem;
         }
 
         .studio-grid {
             display: grid;
-            grid-template-columns: minmax(320px, 460px) 1fr;
-            gap: 1rem;
+            grid-template-columns: minmax(360px, 560px) 1fr;
+            gap: 1.25rem;
             align-items: start;
         }
 
@@ -210,6 +205,8 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            width: 100%;
+            max-width: 560px;
         }
 
         .game-info-strip {
@@ -229,25 +226,99 @@
         .board-wrapper {
             position: relative;
             width: 100%;
-            background: #15181f;
+            background: #14171e;
             border: 1px solid var(--border-subtle);
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
         }
 
+        /* Variation Mode - Visually lighter board */
         .board-container {
             position: relative;
             width: 100%;
+            transition: all 0.25s ease;
+        }
+
+        .board-container.variation-mode #board {
+            filter: brightness(1.28) contrast(0.92) saturate(0.85);
+            box-shadow: inset 0 0 0 3px #38bdf8, 0 0 24px rgba(56, 189, 248, 0.25);
+            transition: filter 0.25s ease, box-shadow 0.25s ease;
         }
 
         #board {
             width: 100%;
             aspect-ratio: 1 / 1;
+            transition: filter 0.25s ease;
         }
 
         .board-b72b1 {
             border: none !important;
+        }
+
+        /* Variation Floating Status Banner */
+        .variation-banner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1005;
+            background: rgba(13, 16, 23, 0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.35);
+            padding: 7px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .var-type-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .var-type-badge.refutation {
+            background: rgba(239, 68, 68, 0.25);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+        .var-type-badge.better {
+            background: rgba(34, 197, 94, 0.25);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.5);
+        }
+
+        .var-status-text {
+            font-size: 0.8rem;
+            color: #e2e8f0;
+        }
+
+        .btn-return-game {
+            background: var(--accent);
+            color: #041019;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .btn-return-game:hover {
+            background: #7dd3fc;
         }
 
         #arrow-svg {
@@ -276,7 +347,7 @@
             position: absolute;
             width: 12.5%;
             height: 12.5%;
-            z-index: 9999;
+            z-index: 999;
             pointer-events: none;
             box-sizing: border-box;
         }
@@ -303,77 +374,19 @@
         .annotation-mistake::before { background-color: var(--q-mistake); }
         .annotation-inaccuracy::before { background-color: var(--q-inaccuracy); color: #111; }
 
-        /* Board Toolbar (Docked) */
-        .board-toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 6px;
-            padding: 4px 6px;
-            gap: 6px;
-        }
-
-        .btn-tool {
-            background: transparent;
-            color: var(--text-secondary);
-            border: none;
-            border-radius: 4px;
-            min-height: 36px;
-            min-width: 36px;
-            padding: 4px 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .btn-tool:hover {
-            background: var(--bg-surface-elevated);
-            color: var(--text-primary);
-        }
-        .btn-tool:active {
-            background: var(--bg-surface-hover);
-        }
-
-        .nav-cluster {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-        }
-
-        .threat-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: #f87171;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            user-select: none;
-        }
-        .threat-pill input {
-            cursor: pointer;
-            accent-color: #ef4444;
-        }
-
         /* Right Column: Unified Analysis Studio */
         .studio-panel {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
-        /* Move Diagnosis Banner */
+        /* Move Diagnosis Card */
         .diagnosis-card {
             background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
             border-radius: 8px;
-            padding: 12px 14px;
+            padding: 14px 16px;
             min-height: 80px;
             transition: all 0.2s;
         }
@@ -392,9 +405,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             flex-wrap: wrap;
-            gap: 4px;
+            gap: 6px;
         }
 
         .move-title-wrap {
@@ -422,122 +435,211 @@
 
         .move-san {
             font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
             font-size: 1.05rem;
-            color: var(--text-primary);
+            font-weight: 700;
+            color: #fff;
         }
 
         .badge-q {
             font-size: 0.72rem;
             font-weight: 700;
-            padding: 2px 6px;
+            padding: 2px 7px;
             border-radius: 4px;
-            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
         }
-        .badge-q.blunder { background: rgba(239, 68, 68, 0.2); color: #f87171; }
-        .badge-q.mistake { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
-        .badge-q.inaccuracy { background: rgba(234, 179, 8, 0.2); color: #facc15; }
-        .badge-q.good-move { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
-        .badge-q.brilliant { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
-        .badge-q.great { background: rgba(129, 140, 248, 0.2); color: #a5b4fc; }
-        .badge-q.book { background: rgba(217, 119, 6, 0.2); color: #fbbf24; }
+        .badge-q.blunder { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .badge-q.mistake { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4); }
+        .badge-q.inaccuracy { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
+        .badge-q.good-move { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }
+        .badge-q.great { background: rgba(129, 140, 248, 0.2); color: #a5b4fc; border: 1px solid rgba(129, 140, 248, 0.4); }
+        .badge-q.brilliant { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
+        .badge-q.book { background: rgba(217, 119, 6, 0.2); color: #fbbf24; border: 1px solid rgba(217, 119, 6, 0.4); }
 
         .eval-tag {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
+            font-size: 0.78rem;
             font-weight: 600;
-            background: #111317;
-            padding: 2px 8px;
+            padding: 2px 7px;
             border-radius: 4px;
+            background: #1e232d;
             border: 1px solid var(--border-subtle);
+            color: #e5e7eb;
         }
 
-        .diagnosis-text {
-            font-size: 0.88rem;
-            line-height: 1.45;
-            color: #d1d5db;
-            margin-bottom: 8px;
+        .eval-best-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
         }
 
+        .metric-chip {
+            font-size: 0.74rem;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            color: #93c5fd;
+        }
+        .metric-chip.chip-loss {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        /* Tags Cluster */
         .tags-cluster {
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
             margin-bottom: 8px;
         }
-
         .diag-tag {
-            background: rgba(255, 255, 255, 0.04);
+            font-size: 0.72rem;
+            background: var(--bg-surface-elevated);
             color: var(--text-secondary);
             border: 1px solid var(--border-subtle);
-            font-size: 0.72rem;
-            padding: 1px 6px;
             border-radius: 4px;
+            padding: 1px 6px;
+            display: inline-flex;
+            align-items: center;
         }
 
-        .threat-alert-box {
+        /* Better move callout */
+        .better-move-strip {
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.25);
+            border-radius: 6px;
+            padding: 6px 10px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.8rem;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .badge-better {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        /* Threats Box */
+        .threat-alert-box {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 6px;
+            padding: 6px 10px;
+            margin-bottom: 8px;
+        }
+        .threat-item {
+            font-size: 0.74rem;
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 1px 6px;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .threat-refutation-badge {
+            background: rgba(239, 68, 68, 0.25);
             color: #f87171;
-            margin-bottom: 6px;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 700;
         }
 
-        /* Variation interactive pills */
-        .var-row {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-top: 6px;
+        /* Diagnosis Explanation */
+        .diagnosis-text {
+            font-size: 0.84rem;
+            line-height: 1.5;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+            border-left: 2px solid var(--accent);
         }
 
-        .var-pill {
+        /* Variations: Full Untruncated Display */
+        .variation-box {
             background: rgba(0, 0, 0, 0.25);
             border: 1px solid var(--border-subtle);
             border-radius: 6px;
-            padding: 6px 10px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+        }
+        .variation-box.box-refutation {
+            border-left: 3px solid var(--q-blunder);
+            background: rgba(239, 68, 68, 0.04);
+        }
+        .variation-box.box-better {
+            border-left: 3px solid var(--q-good);
+            background: rgba(34, 197, 94, 0.04);
+        }
+
+        .principal-variation {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
+            line-height: 1.5;
+            color: #e5e7eb;
+            padding: 4px 6px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            word-break: break-word;
+        }
+        .principal-variation.clickable {
             cursor: pointer;
-            transition: all 0.15s;
+            transition: background 0.15s;
         }
-        .var-pill:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: var(--border-medium);
+        .principal-variation.clickable:hover {
+            background: rgba(255, 255, 255, 0.06);
         }
 
-        .var-refutation {
-            border-left: 3px solid var(--q-blunder);
+        .btn-play-refutation {
+            background: rgba(239, 68, 68, 0.15);
             color: #fca5a5;
-        }
-        .var-better {
-            border-left: 3px solid var(--q-good);
-            color: #86efac;
-        }
-
-        .btn-var-play {
-            background: var(--bg-surface-elevated);
-            color: var(--text-primary);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid rgba(239, 68, 68, 0.35);
             border-radius: 4px;
             font-size: 0.74rem;
             font-weight: 600;
-            padding: 2px 8px;
+            padding: 3px 8px;
             cursor: pointer;
             transition: all 0.15s;
-            white-space: nowrap;
         }
-        .btn-var-play:hover {
-            background: var(--accent);
+        .btn-play-refutation:hover {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .btn-play-better {
+            background: rgba(34, 197, 94, 0.15);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.35);
+            border-radius: 4px;
+            font-size: 0.74rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-play-better:hover {
+            background: #22c55e;
             color: #000;
         }
 
-        /* Move Notation Sheet */
+        /* Move Notation Sheet & Docked Toolbar */
         .sheet-card {
             background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
@@ -564,6 +666,23 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             font-size: 0.76rem;
+        }
+
+        .btn-tool-sm {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.15s;
+        }
+        .btn-tool-sm:hover {
+            background: var(--bg-surface-elevated);
+            color: var(--text-primary);
         }
 
         .analysis-container {
@@ -606,37 +725,102 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            color: #d1d5db;
+            color: var(--text-secondary);
             transition: all 0.12s;
+            user-select: none;
         }
 
         .white-move:hover, .black-move:hover {
             background: rgba(255, 255, 255, 0.05);
-            color: #fff;
+            color: var(--text-primary);
         }
 
         .white-move.active, .black-move.active {
-            background: var(--accent-dim);
-            color: var(--accent);
+            background: rgba(56, 189, 248, 0.15) !important;
+            color: var(--accent) !important;
             font-weight: 700;
         }
 
-        .dot-q {
+        /* Quality indicator dots */
+        .move-quality-indicator {
             width: 6px;
             height: 6px;
             border-radius: 50%;
             display: inline-block;
             flex-shrink: 0;
         }
-        .dot-blunder { background-color: var(--q-blunder); }
-        .dot-mistake { background-color: var(--q-mistake); }
-        .dot-inaccuracy { background-color: var(--q-inaccuracy); }
-        .dot-good { background-color: var(--q-good); }
-        .dot-brilliant { background-color: var(--q-brilliant); }
-        .dot-great { background-color: var(--q-great); }
-        .dot-book { background-color: var(--q-book); }
+        .quality-blunder { background-color: var(--q-blunder); box-shadow: 0 0 6px var(--q-blunder); }
+        .quality-mistake { background-color: var(--q-mistake); }
+        .quality-inaccuracy { background-color: var(--q-inaccuracy); }
+        .quality-good { background-color: var(--q-good); opacity: 0.6; }
+        .quality-great { background-color: var(--q-great); }
+        .quality-brilliant { background-color: var(--q-brilliant); box-shadow: 0 0 6px var(--q-brilliant); }
+        .quality-book { background-color: var(--q-book); }
 
-        /* Inline Progress Strip */
+        /* Docked Move Navigation Toolbar directly in right sheet */
+        .sheet-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid var(--border-subtle);
+            padding: 6px 10px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-tool {
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            border-radius: 4px;
+            min-height: 34px;
+            min-width: 34px;
+            padding: 4px 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-tool:hover {
+            background: var(--bg-surface-elevated);
+            color: var(--text-primary);
+        }
+        .btn-tool:active {
+            background: var(--bg-surface-hover);
+        }
+
+        .nav-cluster {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .threat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #f87171;
+            cursor: pointer;
+            padding: 3px 6px;
+            border-radius: 4px;
+            user-select: none;
+        }
+        .threat-pill input {
+            cursor: pointer;
+            accent-color: #ef4444;
+        }
+
+        .select-dark {
+            background: #0e1117;
+            color: #f3f4f6;
+            border-color: var(--border-subtle);
+        }
+
         .progress-strip {
             background: #15181f;
             border: 1px solid var(--border-subtle);
@@ -654,9 +838,12 @@
             .studio-grid {
                 display: flex;
                 flex-direction: column;
-                gap: 8px;
+                gap: 10px;
             }
-            .board-toolbar .btn-tool {
+            .board-column {
+                max-width: 100%;
+            }
+            .sheet-toolbar .btn-tool {
                 min-height: 42px;
                 min-width: 42px;
             }
@@ -700,7 +887,7 @@
     <!-- Collapsible PGN Drawer -->
     <div id="pgnDrawer" class="pgn-drawer">
         <div class="pgn-drawer-inner">
-            <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+            <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2">
                     <span class="small fw-semibold text-light">Paste PGN Notation</span>
                     <div class="d-flex d-md-none gap-1">
@@ -710,7 +897,7 @@
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <label for="analysisDepth" class="small text-muted mb-0">Depth:</label>
-                    <select id="analysisDepth" class="form-select form-select-sm py-0 px-2" style="width:auto; height:28px; background:#0d0f13; color:#f3f4f6; border-color:var(--border-subtle); font-size:0.78rem;">
+                    <select id="analysisDepth" class="form-select form-select-sm py-0 px-2 select-dark" style="width:auto; height:28px; font-size:0.78rem;">
                         <option value="10">Fast (10)</option>
                         <option value="12" selected>Standard (12)</option>
                         <option value="14">Deep (14)</option>
@@ -719,7 +906,7 @@
                     <button type="button" id="btnCloseDrawer" class="btn-tool" style="min-height:28px;min-width:28px;" title="Close Drawer"><i class="bi bi-x-lg"></i></button>
                 </div>
             </div>
-            <textarea class="form-control pgn-textarea mb-2" id="pgnInput" rows="3" placeholder="Paste standard PGN notation here..."></textarea>
+            <textarea class="form-control pgn-textarea mb-2" id="pgnInput" placeholder="Paste standard PGN notation here..."></textarea>
             <div class="d-flex align-items-center gap-2">
                 <button id="analyzeBtn" class="btn btn-primary btn-sm px-3 fw-semibold" style="background:var(--accent); border:none; color:#000; height:32px;">
                     <i class="bi bi-play-circle-fill me-1"></i> Analyze Game
@@ -745,7 +932,7 @@
         </div>
 
         <div class="studio-grid">
-            <!-- Left Column: Board -->
+            <!-- Left Column: Board Studio -->
             <div class="board-column">
                 <div class="game-info-strip" id="gameInfo">
                     <span class="game-info-players">White vs Black</span>
@@ -753,31 +940,27 @@
                 </div>
 
                 <div class="board-wrapper">
+                    <!-- Variation Mode Banner (Overlay) -->
+                    <div id="variationBanner" class="variation-banner d-none">
+                        <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                            <span id="variationTypeBadge" class="var-type-badge refutation">Punishing Line</span>
+                            <span id="variationStatusText" class="var-status-text text-truncate">Playing variation...</span>
+                        </div>
+                        <button type="button" id="btnReturnMainLine" class="btn-return-game" title="Return to original position (Space)">
+                            <i class="bi bi-arrow-return-left me-1"></i> Return to Game
+                        </button>
+                    </div>
+
                     <div class="board-container">
                         <div id="board"></div>
                         <svg id="arrow-svg"></svg>
                     </div>
                 </div>
-
-                <!-- Docked Board Toolbar -->
-                <div class="board-toolbar">
-                    <div class="nav-cluster">
-                        <button id="btnFirst" class="btn-tool" title="First Move (Home)"><i class="bi bi-skip-start-fill"></i></button>
-                        <button id="btnPrev" class="btn-tool" title="Previous Move (←)"><i class="bi bi-chevron-left"></i></button>
-                        <button id="btnNext" class="btn-tool" title="Next Move (→)"><i class="bi bi-chevron-right"></i></button>
-                        <button id="btnLast" class="btn-tool" title="Last Move (End)"><i class="bi bi-skip-end-fill"></i></button>
-                    </div>
-                    <button id="btnFlip" class="btn-tool" title="Flip Board (F)"><i class="bi bi-arrow-left-right me-1"></i> Flip</button>
-                    <label class="threat-pill mb-0" title="Toggle Threat Radar">
-                        <input type="checkbox" id="toggleThreats" checked>
-                        <span><i class="bi bi-bullseye"></i> Threats</span>
-                    </label>
-                </div>
             </div>
 
             <!-- Right Column: Studio Panel -->
             <div class="studio-panel">
-                <!-- Move Diagnosis Banner -->
+                <!-- Move Diagnosis Card -->
                 <div class="diagnosis-card" id="moveExplanation">
                     <div class="diagnosis-empty">
                         <i class="bi bi-cursor-fill opacity-50"></i>
@@ -785,12 +968,22 @@
                     </div>
                 </div>
 
-                <!-- Move Notation Sheet -->
+                <!-- Move Notation Sheet with Integrated Move Navigation Toolbar -->
                 <div class="sheet-card">
                     <div class="sheet-header">
-                        <span class="sheet-title">Moves</span>
-                        <span id="moveCountSummary" class="text-muted small">0 moves</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="sheet-title">Moves</span>
+                            <span id="moveCountSummary" class="text-muted small">0 moves</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button id="btnFlip" class="btn-tool-sm" title="Flip Board (F)"><i class="bi bi-arrow-left-right me-1"></i> Flip</button>
+                            <label class="threat-pill mb-0" title="Toggle Threat Radar">
+                                <input type="checkbox" id="toggleThreats" checked>
+                                <span><i class="bi bi-bullseye"></i> Threats</span>
+                            </label>
+                        </div>
                     </div>
+
                     <div class="analysis-container" id="analysisContainer">
                         <div class="text-center text-muted py-4 small">
                             <p class="mb-2">Load a game or select a sample above to begin analysis.</p>
@@ -799,41 +992,52 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Docked Move Navigation Toolbar directly at the bottom of the Moves sheet -->
+                    <div class="sheet-toolbar" id="boardToolbar">
+                        <div class="nav-cluster">
+                            <button id="btnFirst" class="btn-tool" title="First Move (Home)"><i class="bi bi-skip-start-fill"></i></button>
+                            <button id="btnPrev" class="btn-tool" title="Previous Move (←)"><i class="bi bi-chevron-left"></i></button>
+                            <button id="btnNext" class="btn-tool" title="Next Move (→)"><i class="bi bi-chevron-right"></i></button>
+                            <button id="btnLast" class="btn-tool" title="Last Move (End)"><i class="bi bi-skip-end-fill"></i></button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small d-none d-sm-inline">Speed:</span>
+                            <select id="speedControl" class="form-select form-select-sm py-0 px-2 select-dark" style="width:auto; height:30px; font-size:0.78rem;">
+                                <option value="2000">Slow</option>
+                                <option value="1000" selected>Normal</option>
+                                <option value="500">Fast</option>
+                                <option value="200">Very Fast</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- JS Dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <!-- Dependencies -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/chess.min.js"></script>
-    <script src="js/chessboard-1.0.0.js"></script>
+    <script src="js/chessboard-1.0.0.min.js"></script>
     <script src="js/chess-evaluator.js"></script>
     <script src="js/opening-detector.js"></script>
     <script src="js/situation-recognizer.js"></script>
     <script src="js/browser-analyzer.js"></script>
+    
     <script>
-        $(document).ready(function() {
-            const board = Chessboard('board', {
-                position: 'start',
-                pieceTheme: 'img/chesspieces/wikipedia/{piece}.png'
-            });
+        document.addEventListener('DOMContentLoaded', function() {
+            // App state
             const chess = new Chess();
-            let analysisData = null;
             let currentMoveIndex = -1;
             let moves = [];
             let moveHistory = [];
             let isPlayingVariation = false;
+            let isInVariationMode = false;
             let animationSpeed = 1000;
             let animationTimeout = null;
             let browserDoctor = null;
-
-            const SAMPLE_GAMES = {
-                opera: `[Event "Paris"]\n[Site "Paris FRA"]\n[Date "1858.??.??"]\n[White "Paul Morphy"]\n[Black "Duke Karl / Count Isouard"]\n[Result "1-0"]\n\n1. e4 e5 2. Nf3 d6 3. d4 Bg4 4. dxe5 Bxf3 5. Qxf3 dxe5 6. Bc4 Nf6 7. Qb3 Qe7 8. Nc3 c6 9. Bg5 b5 10. Nxb5 cxb5 11. Bxb5+ Nbd7 12. O-O-O Rd8 13. Rxd7 Rxd7 14. Rd1 Qe6 15. Bxd7+ Nxd7 16. Qb8+ Nxb8 17. Rd8# 1-0`,
-                scholar: `[Event "Casual Game"]\n[Site "Chess Doctor"]\n[Date "2024.??.??"]\n[White "Scholar's Attacker"]\n[Black "Defender"]\n[Result "1-0"]\n\n1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6 4. Qxf7# 1-0`,
-                kasparov: `[Event "Hoogovens"]\n[Site "Wijk aan Zee NED"]\n[Date "1999.01.20"]\n[White "Garry Kasparov"]\n[Black "Veselin Topalov"]\n[Result "1-0"]\n\n1. e4 d6 2. d4 Nf6 3. Nc3 g6 4. Be3 Bg7 5. Qd2 c6 6. f3 b5 7. Nge2 Nbd7 8. Bh6 Bxh6 9. Qxh6 Bb7 10. a3 e5 11. O-O-O Qe7 12. Kb1 a6 13. Nc1 O-O-O 14. Nb3 exd4 15. Rxd4 c5 16. Rd1 Nb6 17. g3 Kb8 18. Na5 Ba8 19. Bh3 d5 20. Qf4+ Ka7 21. Rhe1 d4 22. Nd5 Nbxd5 23. exd5 Qd6 24. Rxd4 cxd4 25. Re7+ Kb6 26. Qxd4+ Kxa5 27. b4+ Ka4 28. Qc3 Qxd5 29. Ra7 Bb7 30. Rxb7 Qc4 31. Qxf6 Kxa3 32. Qxa6+ Kxb4 33. c3+ Kxc3 34. Qa1+ Kd2 35. Qb2+ Kd1 36. Bf1 Rd2 37. Rd7 Rxd7 38. Bxc4 bxc4 39. Qxh8 Rd3 40. Qa8 c3 41. Qa4+ Ke1 42. f4 f5 43. Kc1 Rd2 44. Qa7 1-0`
-            };
 
             // DOM elements
             const pgnInput = document.getElementById('pgnInput');
@@ -847,34 +1051,32 @@
             const btnNext = document.getElementById('btnNext');
             const btnLast = document.getElementById('btnLast');
             const btnFlip = document.getElementById('btnFlip');
+            const toggleThreats = document.getElementById('toggleThreats');
+            const speedControl = document.getElementById('speedControl');
             const arrowSvg = document.getElementById('arrow-svg');
             const boardContainer = document.querySelector('.board-container');
-            const toggleThreats = document.getElementById('toggleThreats');
-            const pgnDrawer = document.getElementById('pgnDrawer');
             const btnTogglePgn = document.getElementById('btnTogglePgn');
             const btnCloseDrawer = document.getElementById('btnCloseDrawer');
+            const pgnDrawer = document.getElementById('pgnDrawer');
             const pgnCaret = document.getElementById('pgnCaret');
+            const analysisProgressContainer = document.getElementById('analysisProgressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            const moveCountSummary = document.getElementById('moveCountSummary');
+            const variationBanner = document.getElementById('variationBanner');
+            const variationTypeBadge = document.getElementById('variationTypeBadge');
+            const variationStatusText = document.getElementById('variationStatusText');
+            const btnReturnMainLine = document.getElementById('btnReturnMainLine');
 
-            // Drawer Toggle
-            function toggleDrawer(open) {
-                if (open === undefined) {
-                    open = !pgnDrawer.classList.contains('open');
-                }
-                if (open) {
-                    pgnDrawer.classList.add('open');
-                    btnTogglePgn.classList.add('active');
-                    if (pgnCaret) pgnCaret.className = 'bi bi-chevron-up';
-                } else {
-                    pgnDrawer.classList.remove('open');
-                    btnTogglePgn.classList.remove('active');
-                    if (pgnCaret) pgnCaret.className = 'bi bi-chevron-down';
-                }
-            }
+            // Initialize Chessboard
+            const boardConfig = {
+                draggable: false,
+                position: 'start',
+                pieceTheme: 'img/chesspieces/wikipedia/{piece}.png'
+            };
+            const board = Chessboard('board', boardConfig);
 
-            btnTogglePgn.addEventListener('click', () => toggleDrawer());
-            if (btnCloseDrawer) btnCloseDrawer.addEventListener('click', () => toggleDrawer(false));
-
-            // Ensure SVG dimensions match board exactly
             function updateSvgDimensions() {
                 const boardEl = document.getElementById('board');
                 if (boardEl && arrowSvg) {
@@ -884,54 +1086,118 @@
                 }
             }
             setTimeout(updateSvgDimensions, 100);
+            window.addEventListener('resize', function() {
+                if (board && board.resize) board.resize();
+                updateSvgDimensions();
+                if (currentMoveIndex >= 0 && !isPlayingVariation && !isInVariationMode) {
+                    drawMoveArrows(currentMoveIndex);
+                }
+            });
 
             setupArrowMarkers();
 
+            // PGN Drawer toggle
+            function toggleDrawer(open) {
+                const shouldOpen = (open !== undefined) ? open : !pgnDrawer.classList.contains('open');
+                if (shouldOpen) {
+                    pgnDrawer.classList.add('open');
+                    if (pgnCaret) pgnCaret.className = 'bi bi-chevron-up';
+                } else {
+                    pgnDrawer.classList.remove('open');
+                    if (pgnCaret) pgnCaret.className = 'bi bi-chevron-down';
+                }
+            }
+
+            if (btnTogglePgn) btnTogglePgn.addEventListener('click', () => toggleDrawer());
+            if (btnCloseDrawer) btnCloseDrawer.addEventListener('click', () => toggleDrawer(false));
+
+            // Sample Games Presets
+            const sampleGames = {
+                opera: `[Event "Paris"]
+[Site "Paris"]
+[Date "1858.??.??"]
+[White "Morphy, Paul"]
+[Black "Duke of Brunswick and Count Isouard"]
+[Result "1-0"]
+
+1. e4 e5 2. Nf3 d6 3. d4 Bg4 4. dxe5 Bxf3 5. Qxf3 dxe5 6. Bc4 Nf6 7. Qb3 Qe7 8. Nc3 c6 9. Bg5 b5 10. Nxb5 cxb5 11. Bxb5+ Nbd7 12. O-O-O Rd8 13. Rxd7 Rxd7 14. Rd1 Qe6 15. Bxd7+ Nxd7 16. Qb8+ Nxb8 17. Rd8# 1-0`,
+                kasparov: `[Event "Hoogovens Group A"]
+[Site "Wijk aan Zee NED"]
+[Date "1999.01.20"]
+[White "Kasparov, Garry"]
+[Black "Topalov, Veselin"]
+[Result "1-0"]
+
+1. e4 d6 2. d4 Nf6 3. Nc3 g6 4. Be3 Bg7 5. Qd2 c6 6. f3 b5 7. Nge2 Nbd7 8. Bh6 Bxh6 9. Qxh6 Bb7 10. a3 e5 11. O-O-O Qe7 12. Kb1 a6 13. Nc1 O-O-O 14. Nb3 exd4 15. Rxd4 c5 16. Rd1 Nb6 17. g3 Kb8 18. Na5 Ba8 19. Bh3 d5 20. Qf4+ Ka7 21. Rhe1 d4 22. Nd5 Nbxd5 23. exd5 Qd6 24. Rxd4 cxd4 25. Re7+ Kb6 26. Qxd4+ Kxa5 27. b4+ Ka4 28. Qc3 Qxd5 29. Ra7 Bb7 30. Rxb7 Qc4 31. Qxf6 Kxa3 32. Qxa6+ Kxb4 33. c3+ Kxc3 34. Qa1+ Kd2 35. Qb2+ Kd1 36. Bf1 Rd2 37. Rd7 Rxd7 38. Bxc4 bxc4 39. Qxh8 Rd3 40. Qa8 c3 41. Qa4+ Ke1 42. f4 f5 43. Kc1 Rd2 44. Qa7 1-0`,
+                scholar: `[Event "Demonstration"]
+[White "Scholar's Mate Demo"]
+[Black "Amateur"]
+[Result "1-0"]
+
+1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0`
+            };
+
+            document.querySelectorAll('[data-sample]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const key = this.dataset.sample;
+                    if (sampleGames[key]) {
+                        pgnInput.value = sampleGames[key];
+                        toggleDrawer(true);
+                        pgnInput.focus();
+                    }
+                });
+            });
+
+            // Flip Board
+            if (btnFlip) {
+                btnFlip.addEventListener('click', function() {
+                    board.flip();
+                    clearArrows();
+                    clearSquareAnnotations();
+                    if (currentMoveIndex >= 0 && !isPlayingVariation && !isInVariationMode) {
+                        setTimeout(() => drawMoveArrows(currentMoveIndex), 50);
+                    }
+                });
+            }
+
+            // Toggle Threats
+            if (toggleThreats) {
+                toggleThreats.addEventListener('change', function() {
+                    if (currentMoveIndex >= 0 && !isPlayingVariation && !isInVariationMode) {
+                        drawMoveArrows(currentMoveIndex);
+                    }
+                });
+            }
+
+            // Speed Control
+            if (speedControl) {
+                speedControl.addEventListener('change', function() {
+                    animationSpeed = parseInt(this.value) || 1000;
+                });
+            }
+
+            // Board navigation buttons
+            btnFirst.addEventListener('click', goToFirstMove);
+            btnPrev.addEventListener('click', goToPrevMove);
+            btnNext.addEventListener('click', goToNextMove);
+            btnLast.addEventListener('click', goToLastMove);
             analyzeBtn.addEventListener('click', analyzeGame);
+            
             if (cancelAnalyzeBtn) {
                 cancelAnalyzeBtn.addEventListener('click', function() {
                     if (browserDoctor) browserDoctor.cancel();
                 });
             }
 
-            btnFirst.addEventListener('click', goToFirstMove);
-            btnPrev.addEventListener('click', goToPrevMove);
-            btnNext.addEventListener('click', goToNextMove);
-            btnLast.addEventListener('click', goToLastMove);
-            
-            function flipBoard() {
-                board.flip();
-                updateSvgDimensions();
-                if (currentMoveIndex >= 0) drawMoveArrows(currentMoveIndex);
-            }
-            if (btnFlip) btnFlip.addEventListener('click', flipBoard);
-
-            if (toggleThreats) {
-                toggleThreats.addEventListener('change', function() {
-                    if (currentMoveIndex >= 0) drawMoveArrows(currentMoveIndex);
-                });
+            if (btnReturnMainLine) {
+                btnReturnMainLine.addEventListener('click', returnToGamePosition);
             }
 
-            // Sample games click handlers
-            document.querySelectorAll('.chip-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const sampleKey = this.dataset.sample;
-                    if (SAMPLE_GAMES[sampleKey]) {
-                        pgnInput.value = SAMPLE_GAMES[sampleKey];
-                        toggleDrawer(true);
-                        if (sampleKey === 'kasparov') {
-                            const depthEl = document.getElementById('analysisDepth');
-                            if (depthEl) depthEl.value = '10';
-                        }
-                    }
-                });
-            });
-
-            // Keyboard navigation listener (←, →, Home, End, F, Space)
+            // Keyboard navigation
             document.addEventListener('keydown', function(e) {
-                const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-                if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
-
+                if (['input', 'textarea', 'select'].includes(document.activeElement.tagName.toLowerCase())) {
+                    return;
+                }
                 if (e.key === 'ArrowLeft') {
                     e.preventDefault();
                     goToPrevMove();
@@ -946,10 +1212,10 @@
                     goToLastMove();
                 } else if (e.key === 'f' || e.key === 'F') {
                     e.preventDefault();
-                    flipBoard();
-                } else if (e.key === ' ' || e.code === 'Space') {
+                    if (btnFlip) btnFlip.click();
+                } else if (e.key === ' ' || e.key === 'Escape') {
                     e.preventDefault();
-                    if (isPlayingVariation) {
+                    if (isInVariationMode || isPlayingVariation) {
                         returnToGamePosition();
                     } else {
                         goToNextMove();
@@ -957,114 +1223,106 @@
                 }
             });
 
+            // Arrow markers definition
             function setupArrowMarkers() {
                 const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                const createMarker = (id, className) => {
+                
+                const markers = [
+                    { id: 'arrowhead-current', color: 'rgba(56, 189, 248, 0.9)' },
+                    { id: 'arrowhead-better', color: 'rgba(52, 211, 153, 0.9)' },
+                    { id: 'arrowhead-threat', color: 'rgba(248, 113, 113, 0.92)' },
+                    { id: 'arrowhead-opponent-threat', color: 'rgba(251, 113, 133, 0.92)' }
+                ];
+                
+                markers.forEach(m => {
                     const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-                    marker.setAttribute('id', id);
+                    marker.setAttribute('id', m.id);
+                    marker.setAttribute('viewBox', '0 0 10 10');
+                    marker.setAttribute('refX', '6');
+                    marker.setAttribute('refY', '5');
                     marker.setAttribute('markerWidth', '6');
-                    marker.setAttribute('markerHeight', '4');
-                    marker.setAttribute('refX', '4');
-                    marker.setAttribute('refY', '2');
-                    marker.setAttribute('orient', 'auto');
-                    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                    polygon.setAttribute('points', '0 0, 6 2, 0 4');
-                    polygon.setAttribute('class', className);
-                    marker.appendChild(polygon);
-                    return marker;
-                };
-                defs.appendChild(createMarker('arrowhead-current', 'arrow-head-current'));
-                defs.appendChild(createMarker('arrowhead-better', 'arrow-head-better'));
-                defs.appendChild(createMarker('arrowhead-threat', 'arrow-head-threat'));
-                defs.appendChild(createMarker('arrowhead-opponent-threat', 'arrow-head-opponent-threat'));
+                    marker.setAttribute('markerHeight', '6');
+                    marker.setAttribute('orient', 'auto-start-reverse');
+                    
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', 'M 0 1 L 10 5 L 0 9 z');
+                    path.setAttribute('fill', m.color);
+                    marker.appendChild(path);
+                    defs.appendChild(marker);
+                });
+                
                 arrowSvg.appendChild(defs);
             }
 
-            function handleAnalysisResult(data) {
-                if (!data) return;
-                analysisData = data;
-                displayGameInfo(data.game_info || {});
-                moves = data.moves || [];
-                
-                if (moves.length === 0) {
-                    analysisContainer.innerHTML = '<div class="alert alert-warning m-2 py-2 small">No moves analyzed. Please check PGN format.</div>';
-                    return;
-                }
-
-                preprocessMoves();
-                displayAnalysis(moves);
-                goToFirstMove();
-                toggleDrawer(false); // Collapse drawer on completion to maximize board space
-            }
-
+            // Analyze Game with In-Browser WASM
             async function analyzeGame() {
                 const pgn = pgnInput.value.trim();
                 if (!pgn) {
-                    alert('Please paste a PGN or choose a sample game.');
+                    alert('Please enter a PGN first or select one of the sample games.');
+                    toggleDrawer(true);
                     return;
                 }
                 
-                const analysisDepth = parseInt(document.getElementById('analysisDepth')?.value || '12', 10);
+                toggleDrawer(false);
+                
+                const depthSelect = document.getElementById('analysisDepth');
+                const analysisDepth = depthSelect ? parseInt(depthSelect.value) : 12;
 
-                chess.reset();
-                board.position('start');
-                clearArrows();
-                clearSquareAnnotations();
-                analysisContainer.innerHTML = '<div class="text-center text-muted py-4 small">Analyzing game moves with Stockfish WASM...</div>';
-                moveExplanation.innerHTML = `
-                    <div class="d-flex align-items-center gap-2 py-2 text-info small">
-                        <div class="spinner-border spinner-border-sm" role="status"></div>
-                        <span>Stockfish WASM analyzing moves at depth ${analysisDepth}...</span>
-                    </div>`;
-                currentMoveIndex = -1;
-                moveHistory = [];
-
-                const progressContainer = document.getElementById('analysisProgressContainer');
-                const progressBar = document.getElementById('progressBar');
-                const progressText = document.getElementById('progressText');
-                const progressPercent = document.getElementById('progressPercent');
-                const cancelBtn = document.getElementById('cancelAnalyzeBtn');
-
-                if (progressContainer) progressContainer.classList.add('show');
-                if (cancelBtn) cancelBtn.classList.remove('d-none');
                 analyzeBtn.disabled = true;
-                if (progressBar) progressBar.style.width = '0%';
-                if (progressPercent) progressPercent.textContent = '0%';
-                if (progressText) progressText.textContent = `Initializing Stockfish WASM (Depth ${analysisDepth})...`;
+                if (cancelAnalyzeBtn) cancelAnalyzeBtn.classList.remove('d-none');
+                
+                analysisProgressContainer.classList.add('show');
+                progressBar.style.width = '0%';
+                progressPercent.textContent = '0%';
+                progressText.textContent = 'Spinning up Stockfish WASM...';
 
-                toggleDrawer(false); // Automatically collapse drawer
-
-                if (!browserDoctor) {
-                    browserDoctor = new BrowserChessDoctor();
-                }
-
-                const onProgress = (prog) => {
-                    if (progressBar) progressBar.style.width = `${prog.percentage}%`;
-                    if (progressPercent) progressPercent.textContent = `${prog.percentage}%`;
-                    if (progressText) {
-                        progressText.textContent = `Analyzing ${prog.ply} of ${prog.totalPlies} (${prog.move}) • Depth ${prog.depth || analysisDepth}`;
-                    }
-                };
+                analysisContainer.innerHTML = '<div class="text-center text-muted py-4 small"><div class="spinner-border spinner-border-sm text-info me-2"></div>Analyzing moves in browser...</div>';
 
                 try {
-                    const data = await browserDoctor.analyzeGame(pgn, onProgress, analysisDepth);
-                    if (data.errors && data.errors.length > 0 && (!data.moves || data.moves.length === 0)) {
-                        throw new Error(data.errors.join(', '));
+                    if (!browserDoctor) {
+                        browserDoctor = new BrowserChessDoctor();
                     }
-                    handleAnalysisResult(data);
+
+                    const onProgress = (prog) => {
+                        const pct = Math.round(prog.percentage || 0);
+                        progressBar.style.width = `${pct}%`;
+                        progressPercent.textContent = `${pct}%`;
+                        progressText.textContent = `Analyzing move ${prog.ply} of ${prog.totalPlies} (${prog.move}) • Depth ${prog.depth || analysisDepth}...`;
+                    };
+
+                    const result = await browserDoctor.analyzeGame(pgn, onProgress, analysisDepth);
+                    if (result.errors && result.errors.length > 0 && (!result.moves || result.moves.length === 0)) {
+                        throw new Error(result.errors.join(', '));
+                    }
+                    moves = result.moves || [];
+                    
+                    if (moves.length === 0) {
+                        analysisContainer.innerHTML = '<div class="alert alert-warning m-2 p-2 small">No moves were analyzed. Please check PGN format.</div>';
+                        return;
+                    }
+
+                    displayGameInfo(result.game_info);
+                    preprocessMoveData();
+                    displayAnalysis(moves);
+                    goToFirstMove();
                 } catch (error) {
-                    analysisContainer.innerHTML = `<div class="alert alert-danger m-2 py-2 small">${error.message}</div>`;
-                    console.error('Browser analysis error:', error);
+                    if (error.message && error.message.includes('cancelled')) {
+                        analysisContainer.innerHTML = '<div class="text-center text-muted py-3 small">Analysis cancelled.</div>';
+                    } else {
+                        analysisContainer.innerHTML = `<div class="alert alert-danger m-2 p-2 small">${error.message}</div>`;
+                    }
                 } finally {
-                    if (progressContainer) progressContainer.classList.remove('show');
-                    if (cancelBtn) cancelBtn.classList.add('d-none');
                     analyzeBtn.disabled = false;
+                    if (cancelAnalyzeBtn) cancelAnalyzeBtn.classList.add('d-none');
+                    setTimeout(() => {
+                        analysisProgressContainer.classList.remove('show');
+                    }, 1200);
                 }
             }
 
-            function preprocessMoves() {
-                chess.reset();
+            function preprocessMoveData() {
                 moveHistory = [];
+                chess.reset();
                 
                 moves.forEach((move, index) => {
                     try {
@@ -1080,44 +1338,41 @@
                             
                             if (move.quality !== 'good move' && move.analysis && move.analysis.best_move) {
                                 const tempChess = new Chess(currentFen);
+                                let betterMove = null;
+                                
                                 try {
-                                    let betterMove = null;
-                                    try {
-                                        betterMove = tempChess.move(move.analysis.best_move);
-                                    } catch (e) {
-                                        if (move.analysis.best_move.length >= 4) {
-                                            try {
-                                                betterMove = tempChess.move({
-                                                    from: move.analysis.best_move.substring(0, 2),
-                                                    to: move.analysis.best_move.substring(2, 4),
-                                                    promotion: move.analysis.best_move.length > 4 ? move.analysis.best_move[4] : undefined
-                                                });
-                                            } catch (e2) {}
-                                        }
+                                    betterMove = tempChess.move(move.analysis.best_move);
+                                } catch (e) {
+                                    if (move.analysis.best_move.length >= 4) {
+                                        try {
+                                            betterMove = tempChess.move({
+                                                from: move.analysis.best_move.substring(0, 2),
+                                                to: move.analysis.best_move.substring(2, 4),
+                                                promotion: move.analysis.best_move.length > 4 ? move.analysis.best_move[4] : undefined
+                                            });
+                                        } catch (e2) {}
                                     }
-                                    
-                                    if (!betterMove && move.analysis.principal_variation) {
-                                        const pvMoves = parsePrincipalVariation(move.analysis.principal_variation, currentFen);
-                                        if (pvMoves.length > 0) {
-                                            betterMove = {
-                                                from: pvMoves[0].from,
-                                                to: pvMoves[0].to,
-                                                san: pvMoves[0].san,
-                                                promotion: pvMoves[0].promotion
-                                            };
-                                        }
-                                    }
-                                    
-                                    if (betterMove) {
-                                        moves[index].betterMoveData = {
-                                            from: betterMove.from,
-                                            to: betterMove.to,
-                                            san: betterMove.san,
-                                            promotion: betterMove.promotion
+                                }
+                                
+                                if (!betterMove && move.analysis.principal_variation) {
+                                    const pvMoves = parsePrincipalVariation(move.analysis.principal_variation, currentFen);
+                                    if (pvMoves.length > 0) {
+                                        betterMove = {
+                                            from: pvMoves[0].from,
+                                            to: pvMoves[0].to,
+                                            san: pvMoves[0].san,
+                                            promotion: pvMoves[0].promotion
                                         };
                                     }
-                                } catch (e) {
-                                    console.error('Error parsing better move:', move.analysis.best_move, e);
+                                }
+                                
+                                if (betterMove) {
+                                    moves[index].betterMoveData = {
+                                        from: betterMove.from,
+                                        to: betterMove.to,
+                                        san: betterMove.san,
+                                        promotion: betterMove.promotion
+                                    };
                                 }
                             }
                         }
@@ -1125,31 +1380,31 @@
                         console.error('Error preprocessing move:', move.move, e);
                     }
                 });
+                
                 chess.reset();
             }
 
             function displayGameInfo(info) {
                 if (!info) return;
-                const whitePlayer = info.white || 'White';
-                const blackPlayer = info.black || 'Black';
+                const white = info.white || 'White';
+                const black = info.black || 'Black';
                 const event = info.event || '';
-                const date = info.date || '';
-                const result = info.result || '';
+                const result = info.result ? `(${info.result})` : '';
                 
                 gameInfo.innerHTML = `
-                    <span class="game-info-players">${whitePlayer} vs ${blackPlayer}</span>
-                    <span class="text-muted small">${result ? result + ' • ' : ''}${event || date || 'Analyzed'}</span>
+                    <span class="game-info-players">${white} vs ${black} ${result}</span>
+                    <span class="text-muted small text-truncate" style="max-width:240px;">${event || 'Ready'}</span>
                 `;
             }
 
-            function displayAnalysis(moves) {
-                if (!moves || moves.length === 0) {
-                    analysisContainer.innerHTML = '<div class="text-center text-muted py-4 small">No moves to display.</div>';
+            function displayAnalysis(movesList) {
+                if (!movesList || movesList.length === 0) {
+                    analysisContainer.innerHTML = '<div class="text-center text-muted py-4 small">No moves to analyze.</div>';
                     return;
                 }
                 
                 const movesByNumber = {};
-                moves.forEach(move => {
+                movesList.forEach(move => {
                     if (!movesByNumber[move.move_number]) {
                         movesByNumber[move.move_number] = { white: null, black: null };
                     }
@@ -1160,37 +1415,39 @@
                     }
                 });
                 
-                let html = '<div class="move-sheet-rows">';
+                let html = '<div class="move-list-table">';
                 
                 Object.keys(movesByNumber).sort((a, b) => parseInt(a) - parseInt(b)).forEach(moveNumber => {
                     const movePair = movesByNumber[moveNumber];
                     html += `<div class="move-pair">`;
                     html += `<div class="move-number">${moveNumber}.</div>`;
                     
-                    // White
+                    // White move
                     if (movePair.white) {
-                        const whiteIndex = moves.findIndex(m => m.move_number === parseInt(moveNumber) && m.is_white);
+                        const whiteIndex = movesList.findIndex(m => m.move_number === parseInt(moveNumber) && m.is_white);
                         const whiteQuality = getQualityClass(movePair.white.detailed_quality || movePair.white.quality);
-                        const dotClass = whiteQuality === 'good-move' ? 'good' : whiteQuality;
-                        html += `<div class="white-move" data-index="${whiteIndex}" id="move-${whiteIndex}">`;
-                        html += `<span class="dot-q dot-${dotClass}"></span>`;
-                        html += `<span>${movePair.white.move}</span>`;
-                        html += `</div>`;
+                        const dotClass = (whiteQuality === 'good-move' || whiteQuality === '') ? 'good' : whiteQuality;
+                        html += `
+                            <div class="white-move" data-index="${whiteIndex}" id="move-${whiteIndex}">
+                                <span class="move-quality-indicator quality-${dotClass}"></span>
+                                <span>${movePair.white.move}</span>
+                            </div>`;
                     } else {
-                        html += `<div></div>`;
+                        html += `<div class="white-move"></div>`;
                     }
                     
-                    // Black
+                    // Black move
                     if (movePair.black) {
-                        const blackIndex = moves.findIndex(m => m.move_number === parseInt(moveNumber) && !m.is_white);
+                        const blackIndex = movesList.findIndex(m => m.move_number === parseInt(moveNumber) && !m.is_white);
                         const blackQuality = getQualityClass(movePair.black.detailed_quality || movePair.black.quality);
-                        const dotClass = blackQuality === 'good-move' ? 'good' : blackQuality;
-                        html += `<div class="black-move" data-index="${blackIndex}" id="move-${blackIndex}">`;
-                        html += `<span class="dot-q dot-${dotClass}"></span>`;
-                        html += `<span>${movePair.black.move}</span>`;
-                        html += `</div>`;
+                        const dotClass = (blackQuality === 'good-move' || blackQuality === '') ? 'good' : blackQuality;
+                        html += `
+                            <div class="black-move" data-index="${blackIndex}" id="move-${blackIndex}">
+                                <span class="move-quality-indicator quality-${dotClass}"></span>
+                                <span>${movePair.black.move}</span>
+                            </div>`;
                     } else {
-                        html += `<div></div>`;
+                        html += `<div class="black-move"></div>`;
                     }
                     
                     html += `</div>`;
@@ -1199,8 +1456,7 @@
                 html += '</div>';
                 analysisContainer.innerHTML = html;
                 
-                const moveCountSummary = document.getElementById('moveCountSummary');
-                if (moveCountSummary) moveCountSummary.textContent = `${moves.length} moves`;
+                if (moveCountSummary) moveCountSummary.textContent = `${movesList.length} moves`;
 
                 document.querySelectorAll('.white-move, .black-move').forEach(item => {
                     if (item.dataset.index) {
@@ -1212,6 +1468,7 @@
                 });
             }
 
+            // Show Comprehensive Move Explanation
             function showMoveExplanation(index) {
                 if (index < 0 || index >= moves.length) {
                     moveExplanation.innerHTML = `
@@ -1241,71 +1498,107 @@
                             <span class="move-san">${move.move}</span>
                             <span class="badge-q ${qualityClass}">${qualityTitle}</span>
                         </div>
-                        ${evalText ? `<span class="eval-tag">${evalText}</span>` : ''}
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            ${evalText ? `<span class="eval-tag" title="Position Evaluation">${evalText}</span>` : ''}
+                            ${(move.quality !== 'good move' && move.analysis && move.analysis.best_evaluation) ? `<span class="eval-best-tag" title="Best line evaluation">Best: ${move.analysis.best_evaluation}</span>` : ''}
+                            ${(move.win_probability !== undefined) ? `<span class="metric-chip" title="Win Probability for ${playerName}"><i class="bi bi-pie-chart-fill me-1"></i>Win: ${(move.win_probability * 100).toFixed(1)}%</span>` : ''}
+                            ${(move.win_prob_loss && move.win_prob_loss > 0.02) ? `<span class="metric-chip chip-loss" title="Win chance dropped by ${(move.win_prob_loss * 100).toFixed(1)}%"><i class="bi bi-graph-down-arrow me-1"></i>-${(move.win_prob_loss * 100).toFixed(1)}%</span>` : ''}
+                        </div>
                     </div>`;
                 
+                // Tactical, positional, or opening tags
                 if (move.tags && move.tags.length > 0) {
                     html += `<div class="tags-cluster">`;
                     move.tags.forEach(tag => {
-                        html += `<span class="diag-tag">${tag}</span>`;
+                        html += `<span class="diag-tag"><i class="bi bi-tag-fill me-1 opacity-50"></i>${tag}</span>`;
                     });
                     html += `</div>`;
                 }
 
                 if (move.analysis) {
-                    if (move.analysis.threats_created && move.analysis.threats_created.length > 0) {
-                        const threatNames = move.analysis.threats_created.map(t => t.description || t).join(', ');
+                    // Better move callout (if not a good move)
+                    if (move.quality !== 'good move' && move.analysis.best_move) {
                         html += `
-                            <div class="threat-alert-box">
-                                <i class="bi bi-bullseye"></i>
-                                <span>Threat:</span>
-                                <strong>${threatNames}</strong>
+                            <div class="better-move-strip">
+                                <span class="text-success fw-semibold small me-1"><i class="bi bi-lightbulb me-1"></i>Better move:</span>
+                                <span class="badge-better font-monospace">${move.analysis.best_move}</span>
+                                ${move.analysis.best_evaluation ? `<span class="text-muted small ms-1">(${move.analysis.best_evaluation})</span>` : ''}
                             </div>`;
                     }
 
+                    // Threats created by the played move
+                    if (move.analysis.threats_created && move.analysis.threats_created.length > 0) {
+                        html += `
+                            <div class="threat-alert-box created-threat">
+                                <div class="d-flex align-items-center gap-1 text-danger fw-semibold small mb-1">
+                                    <i class="bi bi-bullseye"></i> <span>Threat created by ${move.move}:</span>
+                                </div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    ${move.analysis.threats_created.map(t => `<span class="threat-item"><i class="bi bi-arrow-right-short"></i>${t.description || t}</span>`).join('')}
+                                </div>
+                            </div>`;
+                    }
+
+                    // Opponent's counter-threat / refutation
                     if (move.analysis.refutation) {
                         html += `
-                            <div class="threat-alert-box">
-                                <i class="bi bi-exclamation-triangle"></i>
-                                <span>Opponent threat:</span>
-                                <strong>${move.analysis.refutation}</strong>
+                            <div class="threat-alert-box opponent-threat d-flex align-items-center flex-wrap gap-2">
+                                <span class="text-danger fw-semibold small"><i class="bi bi-exclamation-triangle-fill me-1"></i>Opponent's threat:</span>
+                                <span class="threat-refutation-badge font-monospace">${move.analysis.refutation}</span>
                             </div>`;
                     }
 
+                    // Explanation / Why
                     if (move.analysis.explanation) {
-                        html += `<div class="diagnosis-text">${move.analysis.explanation}</div>`;
+                        html += `<div class="diagnosis-text"><i class="bi bi-info-circle me-1 text-info opacity-75"></i>${move.analysis.explanation}</div>`;
                     }
 
-                    html += `<div class="var-row">`;
-
-                    // Punishment line
+                    // Variations: Punishing Line & Recommended Line (FULL UNTRUNCATED)
                     if (move.quality !== 'good move' && move.analysis.refutation_variation) {
                         html += `
-                            <div class="var-pill var-refutation clickable" data-index="${index}" data-type="refutation">
-                                <div class="text-truncate"><span class="text-danger fw-semibold me-1"><i class="bi bi-shield-slash"></i> Punishment:</span>${move.analysis.refutation_variation}</div>
-                                <button class="btn-var-play play-refutation-button" data-index="${index}">Play</button>
+                            <div class="variation-box box-refutation">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <span class="text-danger fw-semibold small">
+                                        <i class="bi bi-shield-slash me-1"></i>Punishing line (why this move is bad):
+                                    </span>
+                                </div>
+                                <div class="principal-variation refutation-line clickable" data-index="${index}" data-type="refutation" title="Click to view variation on board">
+                                    ${move.analysis.refutation_variation}
+                                </div>
+                                <div class="mt-2 d-flex align-items-center gap-2">
+                                    <button class="btn btn-sm btn-play-refutation play-refutation-button" data-index="${index}">
+                                        <i class="bi bi-play-fill me-1"></i>Play punishment line
+                                    </button>
+                                </div>
                             </div>`;
                     }
 
-                    // Recommended line
                     if (move.analysis.principal_variation) {
                         html += `
-                            <div class="var-pill var-better clickable" data-index="${index}" data-type="better">
-                                <div class="text-truncate"><span class="text-success fw-semibold me-1"><i class="bi bi-check2"></i> Recommended:</span>${move.analysis.principal_variation}</div>
-                                <button class="btn-var-play play-button" data-index="${index}">Play</button>
+                            <div class="variation-box box-better">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <span class="text-success fw-semibold small">
+                                        <i class="bi bi-check-circle me-1"></i>Recommended line:
+                                    </span>
+                                </div>
+                                <div class="principal-variation clickable" data-index="${index}" data-type="better" title="Click to view variation on board">
+                                    ${move.analysis.principal_variation}
+                                </div>
+                                <div class="mt-2 d-flex align-items-center gap-2">
+                                    <button class="btn btn-sm btn-play-better play-button" data-index="${index}">
+                                        <i class="bi bi-play-fill me-1"></i>Play better line
+                                    </button>
+                                </div>
                             </div>`;
                     }
-
-                    html += `</div>`;
                 } else {
-                    html += '<div class="diagnosis-text text-muted mb-0">This move is considered solid.</div>';
+                    html += '<div class="diagnosis-text text-muted mb-0"><i class="bi bi-check2-circle text-success me-1"></i>This move is considered solid.</div>';
                 }
                 
                 moveExplanation.innerHTML = html;
                 
-                moveExplanation.querySelectorAll('.var-pill.clickable').forEach(el => {
-                    el.addEventListener('click', function(e) {
-                        if (e.target.closest('button')) return;
+                moveExplanation.querySelectorAll('.principal-variation.clickable').forEach(el => {
+                    el.addEventListener('click', function() {
                         const idx = parseInt(this.dataset.index);
                         const type = this.dataset.type || 'better';
                         playVariation(idx, type);
@@ -1529,14 +1822,6 @@
                 }
             }
 
-            window.addEventListener('resize', function() {
-                if (board && board.resize) board.resize();
-                updateSvgDimensions();
-                if (currentMoveIndex >= 0) {
-                    drawMoveArrows(currentMoveIndex);
-                }
-            });
-
             function parsePrincipalVariation(pvString, startingFen) {
                 if (!pvString) return [];
                 const tempChess = new Chess(startingFen);
@@ -1627,6 +1912,7 @@
                 return threats;
             }
 
+            // Variation Playback with Lighter Board and Floating Banner
             function playVariation(moveIndex, lineType = 'better') {
                 stopVariationPlayback();
                 const move = moves[moveIndex];
@@ -1695,26 +1981,26 @@
                 }
                 
                 isPlayingVariation = true;
+                isInVariationMode = true;
                 chess.load(startingFen);
                 board.position(startingFen);
                 
-                // Active variation banner inside diagnosis card
-                moveExplanation.innerHTML = `
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="badge ${isRefutation ? 'bg-danger' : 'bg-success'} text-white fw-bold">
-                            ${isRefutation ? 'PUNISHMENT LINE' : 'RECOMMENDED LINE'}
-                        </span>
-                        <button id="stopVariationBtn" class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size:0.78rem;">
-                            <i class="bi bi-arrow-return-left me-1"></i> Return
-                        </button>
-                    </div>
-                    <div id="moveIndicator" class="text-light small fw-medium mb-1">
-                        Move 0 of ${variationMoves.length}
-                    </div>
-                    <div id="variationThreatBanner" class="small text-danger"></div>
-                `;
+                // Make the board visually lighter during variation play
+                if (boardContainer) {
+                    boardContainer.classList.add('variation-mode');
+                }
 
-                document.getElementById('stopVariationBtn').addEventListener('click', returnToGamePosition);
+                // Show on-board floating variation banner
+                if (variationBanner) {
+                    variationBanner.classList.remove('d-none');
+                    if (variationTypeBadge) {
+                        variationTypeBadge.className = `var-type-badge ${isRefutation ? 'refutation' : 'better'}`;
+                        variationTypeBadge.textContent = isRefutation ? 'Punishing Line' : 'Recommended Line';
+                    }
+                    if (variationStatusText) {
+                        variationStatusText.textContent = `Starting variation (0 of ${variationMoves.length})`;
+                    }
+                }
 
                 let currentVarMoveIndex = 0;
                 clearArrows();
@@ -1751,23 +2037,9 @@
                                 drawArrow(nextMove.from, nextMove.to, arrowStyle);
                             }
 
-                            const indicator = document.getElementById('moveIndicator');
-                            if (indicator) {
+                            if (variationStatusText) {
                                 const moveNotation = executedMove ? executedMove.san : (moveData.san || '');
-                                indicator.innerHTML = `Move ${currentVarMoveIndex + 1} of ${variationMoves.length}: <strong class="text-info">${moveNotation}</strong>`;
-                            }
-
-                            const tb = document.getElementById('variationThreatBanner');
-                            if (tb) {
-                                let threatHtml = '';
-                                if (chess.in_checkmate && chess.in_checkmate()) {
-                                    threatHtml = '<span class="badge bg-danger">Checkmate delivered!</span>';
-                                } else if (chess.in_check && chess.in_check()) {
-                                    threatHtml = '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Check! King under attack.</span>';
-                                } else if (moveThreats.length > 0) {
-                                    threatHtml = `<span>Threat: <strong>${moveThreats.map(t => t.description).join(', ')}</strong></span>`;
-                                }
-                                tb.innerHTML = threatHtml;
+                                variationStatusText.innerHTML = `Move ${currentVarMoveIndex + 1}/${variationMoves.length}: <strong class="text-info font-monospace">${moveNotation}</strong>`;
                             }
                             
                             currentVarMoveIndex++;
@@ -1785,7 +2057,7 @@
                 
                 setTimeout(() => {
                     if (isPlayingVariation) playNextMove();
-                }, 650);
+                }, 600);
             }
 
             function showBetterMoveOnly(moveIndex, betterMoveData) {
@@ -1805,20 +2077,24 @@
                 }
                 
                 isPlayingVariation = true;
+                isInVariationMode = true;
                 chess.load(startingFen);
                 board.position(startingFen);
                 
-                moveExplanation.innerHTML = `
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="badge bg-success text-white fw-bold">BETTER MOVE</span>
-                        <button id="stopVariationBtn" class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size:0.78rem;">
-                            <i class="bi bi-arrow-return-left me-1"></i> Return
-                        </button>
-                    </div>
-                    <div class="small text-light mb-1">Playing: <strong>${betterMoveData.san || move.analysis.best_move}</strong></div>
-                    <div id="variationThreatBanner" class="small text-danger"></div>
-                `;
-                document.getElementById('stopVariationBtn').addEventListener('click', returnToGamePosition);
+                if (boardContainer) {
+                    boardContainer.classList.add('variation-mode');
+                }
+
+                if (variationBanner) {
+                    variationBanner.classList.remove('d-none');
+                    if (variationTypeBadge) {
+                        variationTypeBadge.className = 'var-type-badge better';
+                        variationTypeBadge.textContent = 'Recommended Move';
+                    }
+                    if (variationStatusText) {
+                        variationStatusText.textContent = `Playing ${betterMoveData.san || move.analysis.best_move}`;
+                    }
+                }
 
                 clearArrows();
                 clearSquareAnnotations();
@@ -1847,23 +2123,29 @@
                     } catch (e) {
                         console.error('Error executing better move:', e);
                     }
-                }, 650);
+                }, 600);
             }
 
             function onVariationComplete(move, isRefutation) {
                 isPlayingVariation = false;
-                const stopBtn = document.getElementById('stopVariationBtn');
-                if (stopBtn) {
-                    stopBtn.className = 'btn btn-primary btn-sm py-1 px-3';
-                    stopBtn.innerHTML = '<i class="bi bi-arrow-return-left me-1"></i> Return to Game';
+                // Keep isInVariationMode = true and boardContainer lighter so user can inspect final position without autoswitching!
+                if (variationStatusText) {
+                    variationStatusText.innerHTML = `<span class="text-success fw-bold">Line completed.</span> Inspect board or return to game.`;
                 }
             }
 
             function stopVariationPlayback() {
                 isPlayingVariation = false;
+                isInVariationMode = false;
                 if (animationTimeout) {
                     clearTimeout(animationTimeout);
                     animationTimeout = null;
+                }
+                if (boardContainer) {
+                    boardContainer.classList.remove('variation-mode');
+                }
+                if (variationBanner) {
+                    variationBanner.classList.add('d-none');
                 }
                 clearArrows();
                 clearSquareAnnotations();
