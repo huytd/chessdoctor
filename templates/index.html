@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Chess Doctor - Intelligent Game Analysis</title>
+    <title>Chess Doctor - Studio Game Analysis</title>
     
     <!-- Google Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- CSS Dependencies -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
@@ -17,28 +17,26 @@
     
     <style>
         :root {
-            --bg-base: #0b0f17;
-            --bg-surface: #121a29;
-            --bg-card: #162032;
-            --bg-card-hover: #1c2940;
-            --bg-input: #0f1624;
-            --border-subtle: rgba(255, 255, 255, 0.08);
-            --border-medium: rgba(255, 255, 255, 0.14);
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --accent-primary: #38bdf8;
-            --accent-hover: #0ea5e9;
-            --accent-glow: rgba(56, 189, 248, 0.25);
+            --bg-base: #101216;
+            --bg-surface: #171a21;
+            --bg-surface-elevated: #1e222b;
+            --bg-surface-hover: #262b37;
+            --border-subtle: rgba(255, 255, 255, 0.07);
+            --border-medium: rgba(255, 255, 255, 0.12);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent: #38bdf8;
+            --accent-dim: rgba(56, 189, 248, 0.15);
             
-            /* Move qualities */
-            --color-blunder: #ef4444;
-            --color-mistake: #f97316;
-            --color-inaccuracy: #eab308;
-            --color-good: #22c55e;
-            --color-brilliant: #38bdf8;
-            --color-great: #818cf8;
-            --color-book: #d97706;
+            /* Move quality colors */
+            --q-blunder: #ef4444;
+            --q-mistake: #f97316;
+            --q-inaccuracy: #eab308;
+            --q-good: #22c55e;
+            --q-brilliant: #38bdf8;
+            --q-great: #818cf8;
+            --q-book: #d97706;
         }
 
         * {
@@ -51,169 +49,196 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             margin: 0;
-            padding: 0 0 2rem 0;
+            padding: 0;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
 
-        /* App Header */
-        .app-header {
-            background: linear-gradient(180deg, #131d2e 0%, rgba(11, 15, 23, 0.8) 100%);
+        /* Slim Studio Header (48px) */
+        .studio-header {
+            height: 48px;
+            background: #13161c;
             border-bottom: 1px solid var(--border-subtle);
-            padding: 1rem 0;
-            backdrop-filter: blur(10px);
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
-        .header-logo {
-            display: inline-flex;
+        .brand-link {
+            display: flex;
             align-items: center;
-            justify-content: center;
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
-        }
-
-        .badge-wasm {
-            background: rgba(34, 197, 94, 0.15);
-            color: #4ade80;
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            padding: 4px 8px;
-            border-radius: 6px;
-        }
-
-        .hotkey-pill {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-subtle);
-            border-radius: 6px;
-            padding: 2px 6px;
-            font-size: 0.75rem;
-        }
-
-        .hotkey-pill kbd {
-            background: #1e293b;
-            color: #e2e8f0;
-            border-radius: 3px;
-            padding: 1px 4px;
-            font-size: 0.7rem;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* Responsive App Layout */
-        .max-w-7xl {
-            max-width: 1240px;
-            margin: 0 auto;
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-
-        /* Desktop Layout (min-width: 992px): 2 Columns */
-        @media (min-width: 992px) {
-            .app-grid {
-                display: grid;
-                grid-template-columns: minmax(360px, 480px) 1fr;
-                grid-template-rows: auto auto;
-                column-gap: 1.5rem;
-                row-gap: 1.25rem;
-                align-items: start;
-            }
-            .panel-board {
-                grid-column: 1;
-                grid-row: 1;
-            }
-            .panel-pgn {
-                grid-column: 1;
-                grid-row: 2;
-                display: block !important;
-            }
-            .panel-explanation {
-                grid-column: 2;
-                grid-row: 1;
-            }
-            .panel-movelist {
-                grid-column: 2;
-                grid-row: 2;
-                display: block !important;
-            }
-            .panel-mobile-tabs {
-                display: none !important;
-            }
-        }
-
-        /* Mobile Layout (max-width: 991px): 1 Stacked Column */
-        @media (max-width: 991px) {
-            .app-grid {
-                display: flex;
-                flex-direction: column;
-                gap: 1rem;
-            }
-            .panel-board {
-                order: 1;
-            }
-            .panel-explanation {
-                order: 2;
-            }
-            .panel-mobile-tabs {
-                order: 3;
-                display: block !important;
-            }
-            .panel-movelist {
-                order: 4;
-            }
-            .panel-pgn {
-                order: 5;
-            }
-            .d-mobile-none {
-                display: none !important;
-            }
-        }
-
-        /* Modern Card Component */
-        .card-dark {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
-        }
-
-        .card-header-clean {
-            background: rgba(255, 255, 255, 0.02);
-            border-bottom: 1px solid var(--border-subtle);
-            padding: 12px 16px;
-        }
-
-        .card-body-clean {
-            padding: 16px;
-        }
-
-        .panel-title {
-            font-size: 0.92rem;
-            font-weight: 600;
+            gap: 8px;
             color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: -0.01em;
+        }
+
+        .brand-icon {
+            color: #38bdf8;
+            font-size: 1.1rem;
+        }
+
+        .wasm-pill {
+            background: rgba(34, 197, 94, 0.12);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.25);
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 4px;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
 
-        /* Chessboard Styling */
-        .chessboard-wrapper {
+        .chip-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .chip-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            white-space: nowrap;
+        }
+
+        .chip-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            border-color: var(--border-medium);
+        }
+
+        .btn-pgn-toggle {
+            background: var(--bg-surface-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border-medium);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-pgn-toggle:hover {
+            background: var(--bg-surface-hover);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-pgn-toggle.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Collapsible PGN Drawer */
+        .pgn-drawer {
+            max-height: 0;
+            overflow: hidden;
+            background: #14171e;
+            border-bottom: 1px solid transparent;
+            transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s;
+        }
+
+        .pgn-drawer.open {
+            max-height: 380px;
+            border-bottom-color: var(--border-subtle);
+        }
+
+        .pgn-drawer-inner {
+            padding: 12px 1rem 14px 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .pgn-textarea {
+            background-color: #0d0f13;
+            border: 1px solid var(--border-subtle);
+            color: #f1f5f9;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.4;
+            border-radius: 6px;
+            resize: vertical;
+        }
+        .pgn-textarea:focus {
+            background-color: #0d0f13;
+            color: #fff;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-dim);
+        }
+
+        @media (max-width: 768px) {
+            .pgn-textarea {
+                font-size: 16px; /* Avoid iOS auto-zoom */
+            }
+        }
+
+        /* Studio Main Layout */
+        .studio-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px 1rem 1.5rem 1rem;
+        }
+
+        .studio-grid {
+            display: grid;
+            grid-template-columns: minmax(320px, 460px) 1fr;
+            gap: 1rem;
+            align-items: start;
+        }
+
+        /* Left Column: Board Studio */
+        .board-column {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .game-info-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            padding: 4px 6px;
+            color: var(--text-secondary);
+        }
+
+        .game-info-players {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .board-wrapper {
             position: relative;
             width: 100%;
-            max-width: 480px;
-            margin: 0 auto;
+            background: #15181f;
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
 
         .board-container {
             position: relative;
             width: 100%;
-            overflow: visible;
         }
 
         #board {
@@ -221,12 +246,8 @@
             aspect-ratio: 1 / 1;
         }
 
-        /* Style chessboard.js border */
         .board-b72b1 {
-            border: 2px solid #2a374f !important;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            border: none !important;
         }
 
         #arrow-svg {
@@ -240,36 +261,15 @@
         }
 
         /* Arrow SVG Styles */
-        .arrow-current {
-            stroke: rgba(56, 189, 248, 0.85);
-            stroke-width: 7px;
-        }
-        .arrow-better {
-            stroke: rgba(34, 197, 94, 0.85);
-            stroke-width: 7px;
-        }
-        .arrow-threat {
-            stroke: rgba(239, 68, 68, 0.9);
-            stroke-width: 6px;
-        }
-        .arrow-opponent-threat {
-            stroke: rgba(244, 63, 94, 0.9);
-            stroke-width: 6px;
-            stroke-dasharray: 6, 4;
-        }
+        .arrow-current { stroke: rgba(56, 189, 248, 0.9); stroke-width: 6.5px; }
+        .arrow-better { stroke: rgba(52, 211, 153, 0.9); stroke-width: 6.5px; }
+        .arrow-threat { stroke: rgba(248, 113, 113, 0.92); stroke-width: 5.5px; }
+        .arrow-opponent-threat { stroke: rgba(251, 113, 133, 0.92); stroke-width: 5.5px; stroke-dasharray: 5, 3.5; }
 
-        .arrow-head-current {
-            fill: rgba(56, 189, 248, 0.85);
-        }
-        .arrow-head-better {
-            fill: rgba(34, 197, 94, 0.85);
-        }
-        .arrow-head-threat {
-            fill: rgba(239, 68, 68, 0.9);
-        }
-        .arrow-head-opponent-threat {
-            fill: rgba(244, 63, 94, 0.9);
-        }
+        .arrow-head-current { fill: rgba(56, 189, 248, 0.9); }
+        .arrow-head-better { fill: rgba(52, 211, 153, 0.9); }
+        .arrow-head-threat { fill: rgba(248, 113, 113, 0.92); }
+        .arrow-head-opponent-threat { fill: rgba(251, 113, 133, 0.92); }
 
         /* Square Annotations */
         .square-annotation {
@@ -280,7 +280,6 @@
             pointer-events: none;
             box-sizing: border-box;
         }
-
         .square-annotation::before {
             content: attr(data-symbol);
             position: absolute;
@@ -288,734 +287,524 @@
             right: 3px;
             color: white;
             font-weight: 800;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             text-align: center;
             font-family: 'JetBrains Mono', monospace;
             border-radius: 50%;
-            width: 1.4rem;
-            height: 1.4rem;
+            width: 1.3rem;
+            height: 1.3rem;
             display: flex;
             justify-content: center;
             align-items: center;
             line-height: 1;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
         }
+        .annotation-blunder::before { background-color: var(--q-blunder); }
+        .annotation-mistake::before { background-color: var(--q-mistake); }
+        .annotation-inaccuracy::before { background-color: var(--q-inaccuracy); color: #111; }
 
-        .annotation-blunder::before {
-            background-color: var(--color-blunder);
-        }
-        .annotation-mistake::before {
-            background-color: var(--color-mistake);
-        }
-        .annotation-inaccuracy::before {
-            background-color: var(--color-inaccuracy);
-            color: #0b0f17;
-        }
-
-        /* Board Controls Bar */
-        .board-controls-bar {
+        /* Board Toolbar (Docked) */
+        .board-toolbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 12px;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.02);
+            background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
-            border-radius: 10px;
+            border-radius: 6px;
+            padding: 4px 6px;
+            gap: 6px;
         }
 
-        .btn-control {
-            background: #1c273c;
-            color: var(--text-primary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            min-height: 44px;
-            min-width: 44px;
-            padding: 8px 12px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.95rem;
-            transition: all 0.15s ease-in-out;
-            cursor: pointer;
-        }
-
-        .btn-control:hover {
-            background: #243350;
-            color: var(--accent-primary);
-            border-color: rgba(56, 189, 248, 0.3);
-        }
-
-        .btn-control:active {
-            background: #0284c7;
-            color: #ffffff;
-            transform: scale(0.98);
-        }
-
-        .board-nav-group {
-            display: flex;
-            gap: 4px;
-        }
-
-        .threat-switch-container {
-            display: inline-flex;
-            align-items: center;
-            margin-bottom: 0;
-            min-height: 44px;
-            padding-left: 2.8em;
-        }
-
-        .form-check-input:checked {
-            background-color: #ef4444;
-            border-color: #ef4444;
-        }
-
-        /* Game Info Strip */
-        .game-info-strip {
-            padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid var(--border-subtle);
-            font-size: 0.88rem;
-        }
-
-        .player-dot {
-            display: inline-block;
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            margin-right: 6px;
-        }
-        .white-dot {
-            background-color: #f8fafc;
-            box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
-        }
-        .black-dot {
-            background-color: #334155;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-        }
-
-        /* Mobile Segmented Tabs */
-        .segmented-tabs {
-            display: flex;
-            background: #101726;
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            padding: 4px;
-            gap: 4px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            min-height: 44px;
-            border-radius: 8px;
-            border: none;
+        .btn-tool {
             background: transparent;
             color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 0.9rem;
+            border: none;
+            border-radius: 4px;
+            min-height: 36px;
+            min-width: 36px;
+            padding: 4px 8px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            font-size: 0.9rem;
             cursor: pointer;
-            transition: all 0.15s ease-in-out;
+            transition: all 0.15s;
         }
-
-        .tab-btn.active {
-            background: #1e293b;
-            color: var(--accent-primary);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(56, 189, 248, 0.25);
-        }
-
-        .badge-count {
-            background: rgba(255, 255, 255, 0.1);
+        .btn-tool:hover {
+            background: var(--bg-surface-elevated);
             color: var(--text-primary);
-            font-size: 0.75rem;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 6px;
+        }
+        .btn-tool:active {
+            background: var(--bg-surface-hover);
         }
 
-        /* Move Explanation Card */
-        .card-explanation {
-            min-height: 180px;
+        .nav-cluster {
+            display: flex;
+            align-items: center;
+            gap: 2px;
         }
 
-        .move-quality-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 6px;
-            flex-shrink: 0;
-        }
-
-        .quality-blunder { background-color: var(--color-blunder); box-shadow: 0 0 6px var(--color-blunder); }
-        .quality-mistake { background-color: var(--color-mistake); box-shadow: 0 0 6px var(--color-mistake); }
-        .quality-inaccuracy { background-color: var(--color-inaccuracy); box-shadow: 0 0 6px var(--color-inaccuracy); }
-        .quality-good { background-color: var(--color-good); }
-        .quality-brilliant { background-color: var(--color-brilliant); box-shadow: 0 0 8px var(--color-brilliant); }
-        .quality-great { background-color: var(--color-great); }
-        .quality-book { background-color: var(--color-book); }
-
-        .blunder { color: var(--color-blunder); font-weight: 600; }
-        .mistake { color: var(--color-mistake); font-weight: 600; }
-        .inaccuracy { color: var(--color-inaccuracy); font-weight: 600; }
-        .good-move { color: var(--color-good); }
-        .brilliant { color: var(--color-brilliant); font-weight: bold; text-shadow: 0 0 8px rgba(56, 189, 248, 0.4); }
-        .great { color: var(--color-great); font-weight: bold; }
-        .book { color: var(--color-book); }
-
-        .badge-quality {
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
+        .threat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #f87171;
+            cursor: pointer;
             padding: 4px 8px;
-            border-radius: 6px;
+            border-radius: 4px;
+            user-select: none;
+        }
+        .threat-pill input {
+            cursor: pointer;
+            accent-color: #ef4444;
         }
 
-        .badge-blunder { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
-        .badge-mistake { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4); }
-        .badge-inaccuracy { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
-        .badge-good-move { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }
-        .badge-brilliant { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
-        .badge-great { background: rgba(129, 140, 248, 0.2); color: #a5b4fc; border: 1px solid rgba(129, 140, 248, 0.4); }
-        .badge-book { background: rgba(217, 119, 6, 0.2); color: #fbbf24; border: 1px solid rgba(217, 119, 6, 0.4); }
+        /* Right Column: Unified Analysis Studio */
+        .studio-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
 
-        .tag-pill {
-            background: rgba(255, 255, 255, 0.05);
+        /* Move Diagnosis Banner */
+        .diagnosis-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 12px 14px;
+            min-height: 80px;
+            transition: all 0.2s;
+        }
+
+        .diagnosis-empty {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 0.86rem;
+            padding: 14px 0;
+            justify-content: center;
+        }
+
+        .diagnosis-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .move-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-badge {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .player-badge.white {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        .player-badge.black {
+            background: #272c38;
+            color: #f1f5f9;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .move-san {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+        }
+
+        .badge-q {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.03em;
+        }
+        .badge-q.blunder { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .badge-q.mistake { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
+        .badge-q.inaccuracy { background: rgba(234, 179, 8, 0.2); color: #facc15; }
+        .badge-q.good-move { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .badge-q.brilliant { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+        .badge-q.great { background: rgba(129, 140, 248, 0.2); color: #a5b4fc; }
+        .badge-q.book { background: rgba(217, 119, 6, 0.2); color: #fbbf24; }
+
+        .eval-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #111317;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .diagnosis-text {
+            font-size: 0.88rem;
+            line-height: 1.45;
+            color: #d1d5db;
+            margin-bottom: 8px;
+        }
+
+        .tags-cluster {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .diag-tag {
+            background: rgba(255, 255, 255, 0.04);
             color: var(--text-secondary);
             border: 1px solid var(--border-subtle);
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 3px 8px;
-            border-radius: 6px;
+            font-size: 0.72rem;
+            padding: 1px 6px;
+            border-radius: 4px;
         }
 
-        .threat-created-box {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.25);
-            border-radius: 8px;
-            padding: 10px 12px;
-        }
-
-        .text-threat {
+        .threat-alert-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
             color: #f87171;
+            margin-bottom: 6px;
         }
 
-        .badge-better {
-            background: rgba(34, 197, 94, 0.2);
-            color: #4ade80;
-            border: 1px solid rgba(34, 197, 94, 0.4);
-            font-size: 0.85rem;
-            padding: 4px 8px;
+        /* Variation interactive pills */
+        .var-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 6px;
         }
 
-        .badge-eval {
-            background: #1e293b;
+        .var-pill {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .var-pill:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--border-medium);
+        }
+
+        .var-refutation {
+            border-left: 3px solid var(--q-blunder);
+            color: #fca5a5;
+        }
+        .var-better {
+            border-left: 3px solid var(--q-good);
+            color: #86efac;
+        }
+
+        .btn-var-play {
+            background: var(--bg-surface-elevated);
             color: var(--text-primary);
             border: 1px solid var(--border-subtle);
-            font-size: 0.85rem;
-            padding: 4px 8px;
-        }
-
-        /* Variation boxes */
-        .variation-box {
-            border-radius: 8px;
-            padding: 12px;
-        }
-
-        .box-refutation {
-            background: rgba(239, 68, 68, 0.07);
-            border: 1px solid rgba(239, 68, 68, 0.25);
-            border-left: 4px solid var(--color-blunder);
-        }
-
-        .box-better {
-            background: rgba(34, 197, 94, 0.07);
-            border: 1px solid rgba(34, 197, 94, 0.25);
-            border-left: 4px solid var(--color-good);
-        }
-
-        .principal-variation {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.88rem;
-            line-height: 1.5;
-            padding: 8px 10px;
-            border-radius: 6px;
-            background: rgba(0, 0, 0, 0.25);
-            color: var(--text-primary);
-        }
-
-        .principal-variation.clickable {
-            cursor: pointer;
-            transition: background-color 0.15s ease-in-out;
-        }
-
-        .principal-variation.clickable:hover {
-            background-color: rgba(255, 255, 255, 0.08);
-        }
-
-        .btn-play-better {
-            background: rgba(34, 197, 94, 0.15);
-            color: #4ade80;
-            border: 1px solid rgba(34, 197, 94, 0.35);
-            min-height: 38px;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 0.85rem;
-            padding: 6px 14px;
-            transition: all 0.15s;
-        }
-
-        .btn-play-better:hover {
-            background: #22c55e;
-            color: #0b0f17;
-        }
-
-        .btn-play-refutation {
-            background: rgba(239, 68, 68, 0.15);
-            color: #f87171;
-            border: 1px solid rgba(239, 68, 68, 0.35);
-            min-height: 38px;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 0.85rem;
-            padding: 6px 14px;
-            transition: all 0.15s;
-        }
-
-        .btn-play-refutation:hover {
-            background: #ef4444;
-            color: white;
-        }
-
-        .btn-return {
-            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
-            border: none;
-            color: white;
+            border-radius: 4px;
+            font-size: 0.74rem;
             font-weight: 600;
-            border-radius: 8px;
-            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+            padding: 2px 8px;
+            cursor: pointer;
             transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .btn-var-play:hover {
+            background: var(--accent);
+            color: #000;
         }
 
-        .btn-return:hover {
-            opacity: 0.95;
-            transform: translateY(-1px);
-        }
-
-        .alert-danger-dark {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
+        /* Move Notation Sheet */
+        .sheet-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
             border-radius: 8px;
-            padding: 10px 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
-        .alert-success-dark {
-            background: rgba(34, 197, 94, 0.15);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            color: #86efac;
-            border-radius: 8px;
-            padding: 10px 14px;
+        .sheet-header {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.015);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
         }
 
-        .alert-info-dark {
-            background: rgba(56, 189, 248, 0.15);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            color: #bae6fd;
-            border-radius: 8px;
-            padding: 10px 14px;
+        .sheet-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.76rem;
         }
 
-        /* Move List Container */
         .analysis-container {
             max-height: 380px;
             overflow-y: auto;
-            padding: 6px;
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Sleek dark scrollbars */
-        .analysis-container::-webkit-scrollbar,
-        .pgn-textarea::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        .analysis-container::-webkit-scrollbar {
+            width: 5px;
         }
-        .analysis-container::-webkit-scrollbar-track,
-        .pgn-textarea::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 4px;
+        .analysis-container::-webkit-scrollbar-track {
+            background: transparent;
         }
-        .analysis-container::-webkit-scrollbar-thumb,
-        .pgn-textarea::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 4px;
-        }
-        .analysis-container::-webkit-scrollbar-thumb:hover,
-        .pgn-textarea::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.25);
+        .analysis-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 3px;
         }
 
         .move-pair {
             display: grid;
-            grid-template-columns: 46px 1fr 1fr;
+            grid-template-columns: 42px 1fr 1fr;
             align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             font-family: 'JetBrains Mono', monospace;
-            padding: 2px 4px;
+            font-size: 0.86rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+            padding: 1px 4px;
         }
 
         .move-number {
             color: var(--text-muted);
-            font-size: 0.84rem;
-            padding-left: 4px;
+            font-size: 0.78rem;
+            padding-left: 6px;
         }
 
         .white-move, .black-move {
-            padding: 7px 10px;
-            min-height: 38px;
-            border-radius: 6px;
+            padding: 5px 8px;
+            border-radius: 4px;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.9rem;
-            transition: background-color 0.15s ease-in-out;
-            color: #e2e8f0;
+            color: #d1d5db;
+            transition: all 0.12s;
         }
 
         .white-move:hover, .black-move:hover {
-            background-color: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
         }
 
         .white-move.active, .black-move.active {
-            background-color: rgba(56, 189, 248, 0.2);
-            color: var(--accent-primary);
+            background: var(--accent-dim);
+            color: var(--accent);
             font-weight: 700;
-            outline: 1px solid rgba(56, 189, 248, 0.45);
         }
 
-        .empty-state {
-            padding: 3rem 1rem;
-            text-align: center;
+        .dot-q {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
         }
+        .dot-blunder { background-color: var(--q-blunder); }
+        .dot-mistake { background-color: var(--q-mistake); }
+        .dot-inaccuracy { background-color: var(--q-inaccuracy); }
+        .dot-good { background-color: var(--q-good); }
+        .dot-brilliant { background-color: var(--q-brilliant); }
+        .dot-great { background-color: var(--q-great); }
+        .dot-book { background-color: var(--q-book); }
 
-        /* PGN & Controls Card */
-        .select-dark {
-            background-color: #101726;
-            border: 1px solid var(--border-subtle);
-            color: var(--text-primary);
-            border-radius: 6px;
-            font-size: 0.85rem;
-        }
-        .select-dark:focus {
-            background-color: #101726;
-            color: var(--text-primary);
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 0.25rem var(--accent-glow);
-        }
-
-        .sample-games-bar {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .btn-sample {
-            background: #1a2438;
-            color: var(--text-secondary);
+        /* Inline Progress Strip */
+        .progress-strip {
+            background: #15181f;
             border: 1px solid var(--border-subtle);
             border-radius: 6px;
-            font-size: 0.78rem;
-            font-weight: 500;
-            padding: 4px 10px;
-            min-height: 32px;
-            transition: all 0.15s;
+            padding: 6px 10px;
+            margin-bottom: 8px;
+            display: none;
+        }
+        .progress-strip.show {
+            display: block;
         }
 
-        .btn-sample:hover {
-            background: #22314d;
-            color: var(--accent-primary);
-            border-color: rgba(56, 189, 248, 0.3);
-        }
-
-        .pgn-textarea {
-            background-color: var(--bg-input);
-            border: 1px solid var(--border-subtle);
-            color: #f1f5f9;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.86rem;
-            line-height: 1.4;
-            border-radius: 8px;
-            resize: vertical;
-        }
-
-        /* Ensure 16px min on mobile to prevent iOS auto-zoom */
-        @media (max-width: 768px) {
-            .pgn-textarea {
-                font-size: 16px;
+        /* Mobile specific styling */
+        @media (max-width: 991px) {
+            .studio-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
             }
-        }
-
-        .pgn-textarea:focus {
-            background-color: var(--bg-input);
-            color: #ffffff;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 0.25rem var(--accent-glow);
-        }
-
-        .pulse-glow {
-            animation: glowPulse 0.6s ease-out;
-        }
-
-        @keyframes glowPulse {
-            0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.6); }
-            100% { box-shadow: 0 0 0 10px rgba(56, 189, 248, 0); }
-        }
-
-        .btn-analyze {
-            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
-            border: none;
-            color: white;
-            font-weight: 600;
-            min-height: 44px;
-            border-radius: 8px;
-            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
-            transition: all 0.15s;
-        }
-
-        .btn-analyze:hover:not(:disabled) {
-            opacity: 0.92;
-            transform: translateY(-1px);
-        }
-
-        .btn-analyze:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn-cancel {
-            background: transparent;
-            color: #f87171;
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            min-height: 44px;
-            border-radius: 8px;
-            font-weight: 500;
-            padding: 8px 16px;
-        }
-
-        .btn-cancel:hover {
-            background: rgba(239, 68, 68, 0.15);
-            color: #ef4444;
-            border-color: #ef4444;
-        }
-
-        .progress-box {
-            background: #101726;
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            padding: 10px 14px;
-        }
-
-        .progress-dark {
-            background-color: #1e293b;
-            border-radius: 6px;
-            overflow: hidden;
+            .board-toolbar .btn-tool {
+                min-height: 42px;
+                min-width: 42px;
+            }
+            .white-move, .black-move {
+                padding: 8px 10px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- App Navigation Header -->
-    <header class="app-header mb-3">
-        <div class="container-fluid max-w-7xl d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-3">
-                <div class="header-logo">
-                    <i class="bi bi-heart-pulse-fill fs-5"></i>
-                </div>
-                <div>
-                    <h1 class="h5 mb-0 fw-bold text-white d-flex align-items-center gap-2">
-                        Chess Doctor
-                        <span class="badge badge-wasm"><i class="bi bi-cpu me-1"></i> WASM</span>
-                    </h1>
-                    <p class="text-secondary small mb-0 d-none d-sm-block">Blunder detector, threat radar & interactive refutations</p>
-                </div>
+    <!-- Slim Header -->
+    <header class="studio-header">
+        <div class="d-flex align-items-center gap-3">
+            <a href="#" class="brand-link">
+                <i class="bi bi-heart-pulse-fill brand-icon"></i>
+                <span>Chess Doctor</span>
+                <span class="wasm-pill">WASM</span>
+            </a>
+            <div class="d-none d-md-flex align-items-center gap-1 ms-2">
+                <span class="text-muted small me-1">Sample:</span>
+                <button type="button" class="chip-btn" data-sample="opera">Morphy's Opera</button>
+                <button type="button" class="chip-btn" data-sample="kasparov">Kasparov Immortal</button>
+                <button type="button" class="chip-btn" data-sample="scholar">Scholar's Mate</button>
             </div>
-            <div class="d-none d-md-flex align-items-center gap-2 text-secondary small">
-                <span class="hotkey-pill"><kbd>←</kbd> <kbd>→</kbd> Move</span>
-                <span class="hotkey-pill"><kbd>F</kbd> Flip</span>
-                <span class="hotkey-pill"><kbd>Home</kbd> / <kbd>End</kbd> First/Last</span>
-                <span class="hotkey-pill"><kbd>Space</kbd> Step</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <div class="d-none d-lg-flex align-items-center text-muted small me-2">
+                <span class="me-1">Keys:</span>
+                <kbd style="background:#1e222b;color:#9ca3af;font-size:0.7rem;padding:1px 4px;border-radius:3px;">←</kbd>
+                <kbd style="background:#1e222b;color:#9ca3af;font-size:0.7rem;padding:1px 4px;border-radius:3px;" class="ms-1">→</kbd>
+                <kbd style="background:#1e222b;color:#9ca3af;font-size:0.7rem;padding:1px 4px;border-radius:3px;" class="ms-1">F</kbd>
             </div>
+            <button type="button" id="btnTogglePgn" class="btn-pgn-toggle">
+                <i class="bi bi-file-earmark-text"></i>
+                <span>Load PGN</span>
+                <i id="pgnCaret" class="bi bi-chevron-down" style="font-size: 0.75rem;"></i>
+            </button>
         </div>
     </header>
 
-    <!-- Main Content Grid -->
-    <main class="container-fluid max-w-7xl">
-        <div class="app-grid">
-            <!-- 1. BOARD PANEL -->
-            <section class="panel-board" aria-label="Chessboard">
-                <div class="card-dark card-board">
-                    <!-- Game Info Header Strip -->
-                    <div class="game-info-strip" id="gameInfo">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="game-players text-light fw-semibold">
-                                <span class="player-dot white-dot"></span>White
-                                <span class="text-secondary mx-1">vs</span>
-                                <span class="player-dot black-dot"></span>Black
-                            </span>
-                            <span class="text-secondary small">Load PGN to begin</span>
-                        </div>
-                    </div>
-
-                    <!-- Chessboard Wrapper with SVG overlay -->
-                    <div class="p-3">
-                        <div class="chessboard-wrapper">
-                            <div class="board-container">
-                                <div id="board"></div>
-                                <svg id="arrow-svg"></svg>
-                            </div>
-                        </div>
-
-                        <!-- Board Navigation Controls -->
-                        <div class="board-controls-bar">
-                            <div class="board-nav-group" role="group" aria-label="Move navigation">
-                                <button id="btnFirst" class="btn btn-control" title="First Move (Home)" aria-label="First Move">
-                                    <i class="bi bi-skip-start-fill"></i>
-                                </button>
-                                <button id="btnPrev" class="btn btn-control" title="Previous Move (Left Arrow)" aria-label="Previous Move">
-                                    <i class="bi bi-chevron-left"></i>
-                                </button>
-                                <button id="btnNext" class="btn btn-control" title="Next Move (Right Arrow)" aria-label="Next Move">
-                                    <i class="bi bi-chevron-right"></i>
-                                </button>
-                                <button id="btnLast" class="btn btn-control" title="Last Move (End)" aria-label="Last Move">
-                                    <i class="bi bi-skip-end-fill"></i>
-                                </button>
-                            </div>
-
-                            <button id="btnFlip" class="btn btn-control" title="Flip Board Orientation (F)" aria-label="Flip Board">
-                                <i class="bi bi-arrow-left-right me-1"></i> Flip
-                            </button>
-
-                            <div class="form-check form-switch threat-switch-container">
-                                <input class="form-check-input" type="checkbox" id="toggleThreats" checked>
-                                <label class="form-check-label text-threat small fw-semibold" for="toggleThreats">
-                                    <i class="bi bi-bullseye me-1"></i> Threats
-                                </label>
-                            </div>
-                        </div>
+    <!-- Collapsible PGN Drawer -->
+    <div id="pgnDrawer" class="pgn-drawer">
+        <div class="pgn-drawer-inner">
+            <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small fw-semibold text-light">Paste PGN Notation</span>
+                    <div class="d-flex d-md-none gap-1">
+                        <button type="button" class="chip-btn" data-sample="opera">Opera</button>
+                        <button type="button" class="chip-btn" data-sample="kasparov">Kasparov</button>
                     </div>
                 </div>
-            </section>
+                <div class="d-flex align-items-center gap-2">
+                    <label for="analysisDepth" class="small text-muted mb-0">Depth:</label>
+                    <select id="analysisDepth" class="form-select form-select-sm py-0 px-2" style="width:auto; height:28px; background:#0d0f13; color:#f3f4f6; border-color:var(--border-subtle); font-size:0.78rem;">
+                        <option value="10">Fast (10)</option>
+                        <option value="12" selected>Standard (12)</option>
+                        <option value="14">Deep (14)</option>
+                        <option value="16">Master (16)</option>
+                    </select>
+                    <button type="button" id="btnCloseDrawer" class="btn-tool" style="min-height:28px;min-width:28px;" title="Close Drawer"><i class="bi bi-x-lg"></i></button>
+                </div>
+            </div>
+            <textarea class="form-control pgn-textarea mb-2" id="pgnInput" rows="3" placeholder="Paste standard PGN notation here..."></textarea>
+            <div class="d-flex align-items-center gap-2">
+                <button id="analyzeBtn" class="btn btn-primary btn-sm px-3 fw-semibold" style="background:var(--accent); border:none; color:#000; height:32px;">
+                    <i class="bi bi-play-circle-fill me-1"></i> Analyze Game
+                </button>
+                <button id="cancelAnalyzeBtn" class="btn btn-outline-danger btn-sm d-none" style="height:32px;">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
 
-            <!-- 2. EXPLANATION PANEL -->
-            <section class="panel-explanation" aria-label="Move Analysis Explanation">
-                <div class="card-dark card-explanation">
-                    <div class="card-header-clean d-flex justify-content-between align-items-center">
-                        <span class="panel-title">
-                            <i class="bi bi-chat-left-dots-fill text-info me-2"></i>Move Diagnosis
-                        </span>
-                    </div>
-                    <div class="card-body-clean" id="moveExplanation">
-                        <div class="empty-state py-4 text-center">
-                            <i class="bi bi-binoculars text-secondary fs-3 mb-2 d-block"></i>
-                            <p class="text-secondary mb-0">Select a move to inspect engine analysis, threats, and counter-tactics</p>
-                        </div>
+    <!-- Main Studio Space -->
+    <main class="studio-container">
+        <!-- Inline Progress Strip -->
+        <div id="analysisProgressContainer" class="progress-strip">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span id="progressText" class="small fw-medium text-info">Initializing Stockfish WASM...</span>
+                <span id="progressPercent" class="badge bg-info text-dark font-monospace">0%</span>
+            </div>
+            <div class="progress" style="height: 5px; background: #0d0f13;">
+                <div id="progressBar" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="studio-grid">
+            <!-- Left Column: Board -->
+            <div class="board-column">
+                <div class="game-info-strip" id="gameInfo">
+                    <span class="game-info-players">White vs Black</span>
+                    <span class="text-muted small">Ready</span>
+                </div>
+
+                <div class="board-wrapper">
+                    <div class="board-container">
+                        <div id="board"></div>
+                        <svg id="arrow-svg"></svg>
                     </div>
                 </div>
-            </section>
 
-            <!-- 3. MOBILE TABS SWITCHER (Visible only < 992px) -->
-            <div class="panel-mobile-tabs">
-                <div class="segmented-tabs w-100">
-                    <button type="button" class="tab-btn active" id="tabPgnBtn">
-                        <i class="bi bi-file-earmark-text me-1"></i> Game & PGN
-                    </button>
-                    <button type="button" class="tab-btn" id="tabMovesBtn">
-                        <i class="bi bi-list-ol me-1"></i> Moves <span id="movesBadge" class="badge-count">0</span>
-                    </button>
+                <!-- Docked Board Toolbar -->
+                <div class="board-toolbar">
+                    <div class="nav-cluster">
+                        <button id="btnFirst" class="btn-tool" title="First Move (Home)"><i class="bi bi-skip-start-fill"></i></button>
+                        <button id="btnPrev" class="btn-tool" title="Previous Move (←)"><i class="bi bi-chevron-left"></i></button>
+                        <button id="btnNext" class="btn-tool" title="Next Move (→)"><i class="bi bi-chevron-right"></i></button>
+                        <button id="btnLast" class="btn-tool" title="Last Move (End)"><i class="bi bi-skip-end-fill"></i></button>
+                    </div>
+                    <button id="btnFlip" class="btn-tool" title="Flip Board (F)"><i class="bi bi-arrow-left-right me-1"></i> Flip</button>
+                    <label class="threat-pill mb-0" title="Toggle Threat Radar">
+                        <input type="checkbox" id="toggleThreats" checked>
+                        <span><i class="bi bi-bullseye"></i> Threats</span>
+                    </label>
                 </div>
             </div>
 
-            <!-- 4. MOVELIST PANEL -->
-            <section class="panel-movelist d-mobile-none" id="panelMovelist" aria-label="Move List">
-                <div class="card-dark card-movelist">
-                    <div class="card-header-clean d-flex justify-content-between align-items-center">
-                        <span class="panel-title">
-                            <i class="bi bi-list-check text-primary me-2"></i>Move Analysis
-                        </span>
-                        <span id="moveCountSummary" class="text-secondary small">0 moves</span>
+            <!-- Right Column: Studio Panel -->
+            <div class="studio-panel">
+                <!-- Move Diagnosis Banner -->
+                <div class="diagnosis-card" id="moveExplanation">
+                    <div class="diagnosis-empty">
+                        <i class="bi bi-cursor-fill opacity-50"></i>
+                        <span>Select a move to inspect engine analysis, threats, and variations</span>
+                    </div>
+                </div>
+
+                <!-- Move Notation Sheet -->
+                <div class="sheet-card">
+                    <div class="sheet-header">
+                        <span class="sheet-title">Moves</span>
+                        <span id="moveCountSummary" class="text-muted small">0 moves</span>
                     </div>
                     <div class="analysis-container" id="analysisContainer">
-                        <div class="empty-state py-4 text-center">
-                            <p class="text-secondary mb-0">Analysis will appear here after you analyze a game.</p>
+                        <div class="text-center text-muted py-4 small">
+                            <p class="mb-2">Load a game or select a sample above to begin analysis.</p>
+                            <button type="button" class="chip-btn px-3 py-1" onclick="document.getElementById('btnTogglePgn').click()">
+                                <i class="bi bi-file-earmark-plus me-1"></i> Open PGN Input
+                            </button>
                         </div>
                     </div>
                 </div>
-            </section>
-
-            <!-- 5. PGN INPUT & ENGINE SETTINGS PANEL -->
-            <section class="panel-pgn" id="panelPgn" aria-label="PGN Input and Engine Settings">
-                <div class="card-dark card-pgn">
-                    <div class="card-header-clean d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <span class="panel-title">
-                            <i class="bi bi-file-earmark-code text-warning me-2"></i>Load Game
-                        </span>
-                        <div class="d-flex align-items-center gap-1">
-                            <label for="analysisDepth" class="small text-secondary mb-0">Depth:</label>
-                            <select id="analysisDepth" class="form-select form-select-sm select-dark" style="width: auto;" title="Higher depth provides deeper tactics and higher accuracy">
-                                <option value="10">Fast (10)</option>
-                                <option value="12" selected>Standard (12)</option>
-                                <option value="14">Deep (14)</option>
-                                <option value="16">Master (16)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card-body-clean">
-                        <!-- Sample Games Quick Picks -->
-                        <div class="sample-games-bar mb-2">
-                            <span class="small text-secondary me-1">Sample:</span>
-                            <div class="d-flex flex-wrap gap-1">
-                                <button type="button" class="btn btn-sample" data-sample="opera" title="Paul Morphy's famous 1858 Opera Game sacrifice masterpiece">Morphy's Opera</button>
-                                <button type="button" class="btn btn-sample" data-sample="kasparov" title="Kasparov vs Topalov 1999 immortal tactical king hunt">Kasparov Immortal</button>
-                                <button type="button" class="btn btn-sample" data-sample="scholar" title="Fast 4-move blunder and checkmate demonstration">Scholar's Mate</button>
-                            </div>
-                        </div>
-
-                        <!-- PGN Textarea -->
-                        <textarea class="form-control pgn-textarea" id="pgnInput" rows="5" placeholder="Paste your PGN notation here..."></textarea>
-
-                        <div class="d-flex align-items-center gap-2 mt-3">
-                            <button id="analyzeBtn" class="btn btn-analyze flex-grow-1">
-                                <i class="bi bi-play-circle-fill me-1"></i> Analyze Game
-                            </button>
-                            <button id="cancelAnalyzeBtn" class="btn btn-cancel d-none">
-                                <i class="bi bi-x-circle me-1"></i> Cancel
-                            </button>
-                        </div>
-
-                        <!-- In-Browser Analysis Progress Bar -->
-                        <div id="analysisProgressContainer" class="progress-box mt-3 d-none">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span id="progressText" class="small fw-semibold text-info">Initializing Stockfish WASM...</span>
-                                <span id="progressPercent" class="badge bg-info text-dark font-monospace">0%</span>
-                            </div>
-                            <div class="progress progress-dark" style="height: 8px;">
-                                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            </div>
         </div>
     </main>
 
-    <!-- JavaScript Dependencies -->
+    <!-- JS Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="js/chess.min.js"></script>
@@ -1026,7 +815,6 @@
     <script src="js/browser-analyzer.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize Chessboard & Chess engine state
             const board = Chessboard('board', {
                 position: 'start',
                 pieceTheme: 'img/chesspieces/wikipedia/{piece}.png'
@@ -1041,7 +829,6 @@
             let animationTimeout = null;
             let browserDoctor = null;
 
-            // Sample games presets
             const SAMPLE_GAMES = {
                 opera: `[Event "Paris"]\n[Site "Paris FRA"]\n[Date "1858.??.??"]\n[White "Paul Morphy"]\n[Black "Duke Karl / Count Isouard"]\n[Result "1-0"]\n\n1. e4 e5 2. Nf3 d6 3. d4 Bg4 4. dxe5 Bxf3 5. Qxf3 dxe5 6. Bc4 Nf6 7. Qb3 Qe7 8. Nc3 c6 9. Bg5 b5 10. Nxb5 cxb5 11. Bxb5+ Nbd7 12. O-O-O Rd8 13. Rxd7 Rxd7 14. Rd1 Qe6 15. Bxd7+ Nxd7 16. Qb8+ Nxb8 17. Rd8# 1-0`,
                 scholar: `[Event "Casual Game"]\n[Site "Chess Doctor"]\n[Date "2024.??.??"]\n[White "Scholar's Attacker"]\n[Black "Defender"]\n[Result "1-0"]\n\n1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6 4. Qxf7# 1-0`,
@@ -1062,32 +849,30 @@
             const btnFlip = document.getElementById('btnFlip');
             const arrowSvg = document.getElementById('arrow-svg');
             const boardContainer = document.querySelector('.board-container');
-            const tabMovesBtn = document.getElementById('tabMovesBtn');
-            const tabPgnBtn = document.getElementById('tabPgnBtn');
-            const panelMovelist = document.getElementById('panelMovelist');
-            const panelPgn = document.getElementById('panelPgn');
             const toggleThreats = document.getElementById('toggleThreats');
+            const pgnDrawer = document.getElementById('pgnDrawer');
+            const btnTogglePgn = document.getElementById('btnTogglePgn');
+            const btnCloseDrawer = document.getElementById('btnCloseDrawer');
+            const pgnCaret = document.getElementById('pgnCaret');
 
-            // Responsive Mobile Tab Switcher
-            function switchMobileTab(tab) {
-                if (!tabMovesBtn || !tabPgnBtn || !panelMovelist || !panelPgn) return;
-                if (tab === 'moves') {
-                    tabMovesBtn.classList.add('active');
-                    tabPgnBtn.classList.remove('active');
-                    panelMovelist.classList.remove('d-mobile-none');
-                    panelPgn.classList.add('d-mobile-none');
+            // Drawer Toggle
+            function toggleDrawer(open) {
+                if (open === undefined) {
+                    open = !pgnDrawer.classList.contains('open');
+                }
+                if (open) {
+                    pgnDrawer.classList.add('open');
+                    btnTogglePgn.classList.add('active');
+                    if (pgnCaret) pgnCaret.className = 'bi bi-chevron-up';
                 } else {
-                    tabPgnBtn.classList.add('active');
-                    tabMovesBtn.classList.remove('active');
-                    panelPgn.classList.remove('d-mobile-none');
-                    panelMovelist.classList.add('d-mobile-none');
+                    pgnDrawer.classList.remove('open');
+                    btnTogglePgn.classList.remove('active');
+                    if (pgnCaret) pgnCaret.className = 'bi bi-chevron-down';
                 }
             }
 
-            if (tabMovesBtn && tabPgnBtn) {
-                tabMovesBtn.addEventListener('click', () => switchMobileTab('moves'));
-                tabPgnBtn.addEventListener('click', () => switchMobileTab('pgn'));
-            }
+            btnTogglePgn.addEventListener('click', () => toggleDrawer());
+            if (btnCloseDrawer) btnCloseDrawer.addEventListener('click', () => toggleDrawer(false));
 
             // Ensure SVG dimensions match board exactly
             function updateSvgDimensions() {
@@ -1098,19 +883,14 @@
                     arrowSvg.setAttribute('height', boardRect.width);
                 }
             }
-            
             setTimeout(updateSvgDimensions, 100);
 
-            // Set up SVG arrowhead marker definitions
             setupArrowMarkers();
 
-            // Event listeners
             analyzeBtn.addEventListener('click', analyzeGame);
             if (cancelAnalyzeBtn) {
                 cancelAnalyzeBtn.addEventListener('click', function() {
-                    if (browserDoctor) {
-                        browserDoctor.cancel();
-                    }
+                    if (browserDoctor) browserDoctor.cancel();
                 });
             }
 
@@ -1119,35 +899,26 @@
             btnNext.addEventListener('click', goToNextMove);
             btnLast.addEventListener('click', goToLastMove);
             
-            // Flip board functionality
             function flipBoard() {
                 board.flip();
                 updateSvgDimensions();
-                if (currentMoveIndex >= 0) {
-                    drawMoveArrows(currentMoveIndex);
-                }
+                if (currentMoveIndex >= 0) drawMoveArrows(currentMoveIndex);
             }
-            if (btnFlip) {
-                btnFlip.addEventListener('click', flipBoard);
-            }
+            if (btnFlip) btnFlip.addEventListener('click', flipBoard);
 
             if (toggleThreats) {
                 toggleThreats.addEventListener('change', function() {
-                    if (currentMoveIndex >= 0) {
-                        drawMoveArrows(currentMoveIndex);
-                    }
+                    if (currentMoveIndex >= 0) drawMoveArrows(currentMoveIndex);
                 });
             }
 
-            // Sample games button click handler
-            document.querySelectorAll('.btn-sample').forEach(btn => {
+            // Sample games click handlers
+            document.querySelectorAll('.chip-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const sampleKey = this.dataset.sample;
                     if (SAMPLE_GAMES[sampleKey]) {
                         pgnInput.value = SAMPLE_GAMES[sampleKey];
-                        pgnInput.classList.add('pulse-glow');
-                        setTimeout(() => pgnInput.classList.remove('pulse-glow'), 600);
-                        
+                        toggleDrawer(true);
                         if (sampleKey === 'kasparov') {
                             const depthEl = document.getElementById('analysisDepth');
                             if (depthEl) depthEl.value = '10';
@@ -1159,9 +930,7 @@
             // Keyboard navigation listener (←, →, Home, End, F, Space)
             document.addEventListener('keydown', function(e) {
                 const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-                if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
-                    return;
-                }
+                if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
 
                 if (e.key === 'ArrowLeft') {
                     e.preventDefault();
@@ -1188,10 +957,8 @@
                 }
             });
 
-            // Set up SVG arrow markers
             function setupArrowMarkers() {
                 const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                
                 const createMarker = (id, className) => {
                     const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
                     marker.setAttribute('id', id);
@@ -1206,43 +973,34 @@
                     marker.appendChild(polygon);
                     return marker;
                 };
-
                 defs.appendChild(createMarker('arrowhead-current', 'arrow-head-current'));
                 defs.appendChild(createMarker('arrowhead-better', 'arrow-head-better'));
                 defs.appendChild(createMarker('arrowhead-threat', 'arrow-head-threat'));
                 defs.appendChild(createMarker('arrowhead-opponent-threat', 'arrow-head-opponent-threat'));
-
                 arrowSvg.appendChild(defs);
             }
 
-            // Handle completed game analysis data
             function handleAnalysisResult(data) {
                 if (!data) return;
-                
                 analysisData = data;
                 displayGameInfo(data.game_info || {});
                 moves = data.moves || [];
                 
                 if (moves.length === 0) {
-                    analysisContainer.innerHTML = '<div class="alert alert-warning m-2">No moves were analyzed. Please check your PGN format.</div>';
+                    analysisContainer.innerHTML = '<div class="alert alert-warning m-2 py-2 small">No moves analyzed. Please check PGN format.</div>';
                     return;
                 }
 
                 preprocessMoves();
                 displayAnalysis(moves);
                 goToFirstMove();
-
-                // On mobile, switch to Moves tab automatically when ready
-                if (window.innerWidth < 992) {
-                    switchMobileTab('moves');
-                }
+                toggleDrawer(false); // Collapse drawer on completion to maximize board space
             }
 
-            // Analyze game function (In-Browser WebAssembly)
             async function analyzeGame() {
                 const pgn = pgnInput.value.trim();
                 if (!pgn) {
-                    alert('Please paste a PGN to analyze or select a sample game.');
+                    alert('Please paste a PGN or choose a sample game.');
                     return;
                 }
                 
@@ -1252,11 +1010,11 @@
                 board.position('start');
                 clearArrows();
                 clearSquareAnnotations();
-                analysisContainer.innerHTML = '<div class="empty-state py-4 text-center"><p class="text-secondary mb-0">Engine analyzing positions...</p></div>';
+                analysisContainer.innerHTML = '<div class="text-center text-muted py-4 small">Analyzing game moves with Stockfish WASM...</div>';
                 moveExplanation.innerHTML = `
-                    <div class="empty-state py-4 text-center">
-                        <i class="bi bi-hourglass-split text-info fs-3 mb-2 d-block"></i>
-                        <p class="text-secondary mb-0">Analyzing moves with Stockfish WASM (Depth ${analysisDepth})...</p>
+                    <div class="d-flex align-items-center gap-2 py-2 text-info small">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                        <span>Stockfish WASM analyzing moves at depth ${analysisDepth}...</span>
                     </div>`;
                 currentMoveIndex = -1;
                 moveHistory = [];
@@ -1267,12 +1025,14 @@
                 const progressPercent = document.getElementById('progressPercent');
                 const cancelBtn = document.getElementById('cancelAnalyzeBtn');
 
-                if (progressContainer) progressContainer.classList.remove('d-none');
+                if (progressContainer) progressContainer.classList.add('show');
                 if (cancelBtn) cancelBtn.classList.remove('d-none');
                 analyzeBtn.disabled = true;
                 if (progressBar) progressBar.style.width = '0%';
                 if (progressPercent) progressPercent.textContent = '0%';
                 if (progressText) progressText.textContent = `Initializing Stockfish WASM (Depth ${analysisDepth})...`;
+
+                toggleDrawer(false); // Automatically collapse drawer
 
                 if (!browserDoctor) {
                     browserDoctor = new BrowserChessDoctor();
@@ -1282,7 +1042,7 @@
                     if (progressBar) progressBar.style.width = `${prog.percentage}%`;
                     if (progressPercent) progressPercent.textContent = `${prog.percentage}%`;
                     if (progressText) {
-                        progressText.textContent = `Move ${prog.ply} of ${prog.totalPlies} (${prog.move}) • Depth ${prog.depth || analysisDepth}`;
+                        progressText.textContent = `Analyzing ${prog.ply} of ${prog.totalPlies} (${prog.move}) • Depth ${prog.depth || analysisDepth}`;
                     }
                 };
 
@@ -1293,16 +1053,15 @@
                     }
                     handleAnalysisResult(data);
                 } catch (error) {
-                    analysisContainer.innerHTML = `<div class="alert alert-danger m-2">${error.message}</div>`;
+                    analysisContainer.innerHTML = `<div class="alert alert-danger m-2 py-2 small">${error.message}</div>`;
                     console.error('Browser analysis error:', error);
                 } finally {
-                    if (progressContainer) progressContainer.classList.add('d-none');
+                    if (progressContainer) progressContainer.classList.remove('show');
                     if (cancelBtn) cancelBtn.classList.add('d-none');
                     analyzeBtn.disabled = false;
                 }
             }
 
-            // Preprocess moves to calculate from/to squares
             function preprocessMoves() {
                 chess.reset();
                 moveHistory = [];
@@ -1366,11 +1125,9 @@
                         console.error('Error preprocessing move:', move.move, e);
                     }
                 });
-                
                 chess.reset();
             }
 
-            // Display game info in top header strip
             function displayGameInfo(info) {
                 if (!info) return;
                 const whitePlayer = info.white || 'White';
@@ -1380,24 +1137,14 @@
                 const result = info.result || '';
                 
                 gameInfo.innerHTML = `
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="game-players text-light fw-bold">
-                                <span class="player-dot white-dot"></span>${whitePlayer}
-                                <span class="text-secondary mx-1">vs</span>
-                                <span class="player-dot black-dot"></span>${blackPlayer}
-                            </span>
-                            ${result ? `<span class="badge bg-dark text-light border border-secondary small">${result}</span>` : ''}
-                        </div>
-                        ${(event || date) ? `<div class="text-secondary small text-truncate" style="max-width: 250px;">${event ? event : ''}${event && date ? ' • ' : ''}${date ? date : ''}</div>` : ''}
-                    </div>
+                    <span class="game-info-players">${whitePlayer} vs ${blackPlayer}</span>
+                    <span class="text-muted small">${result ? result + ' • ' : ''}${event || date || 'Analyzed'}</span>
                 `;
             }
 
-            // Display analysis move pairs
             function displayAnalysis(moves) {
                 if (!moves || moves.length === 0) {
-                    analysisContainer.innerHTML = '<div class="empty-state py-4 text-center"><p class="text-secondary mb-0">No moves to analyze.</p></div>';
+                    analysisContainer.innerHTML = '<div class="text-center text-muted py-4 small">No moves to display.</div>';
                     return;
                 }
                 
@@ -1413,37 +1160,37 @@
                     }
                 });
                 
-                let html = '<div class="move-list-table">';
+                let html = '<div class="move-sheet-rows">';
                 
                 Object.keys(movesByNumber).sort((a, b) => parseInt(a) - parseInt(b)).forEach(moveNumber => {
                     const movePair = movesByNumber[moveNumber];
                     html += `<div class="move-pair">`;
                     html += `<div class="move-number">${moveNumber}.</div>`;
                     
-                    // White move
+                    // White
                     if (movePair.white) {
                         const whiteIndex = moves.findIndex(m => m.move_number === parseInt(moveNumber) && m.is_white);
                         const whiteQuality = getQualityClass(movePair.white.detailed_quality || movePair.white.quality);
                         const dotClass = whiteQuality === 'good-move' ? 'good' : whiteQuality;
-                        html += `<div class="white-move ${whiteQuality}" data-index="${whiteIndex}" id="move-${whiteIndex}">`;
-                        html += `<span class="move-quality-indicator quality-${dotClass}"></span>`;
+                        html += `<div class="white-move" data-index="${whiteIndex}" id="move-${whiteIndex}">`;
+                        html += `<span class="dot-q dot-${dotClass}"></span>`;
                         html += `<span>${movePair.white.move}</span>`;
                         html += `</div>`;
                     } else {
-                        html += `<div class="white-move"></div>`;
+                        html += `<div></div>`;
                     }
                     
-                    // Black move
+                    // Black
                     if (movePair.black) {
                         const blackIndex = moves.findIndex(m => m.move_number === parseInt(moveNumber) && !m.is_white);
                         const blackQuality = getQualityClass(movePair.black.detailed_quality || movePair.black.quality);
                         const dotClass = blackQuality === 'good-move' ? 'good' : blackQuality;
-                        html += `<div class="black-move ${blackQuality}" data-index="${blackIndex}" id="move-${blackIndex}">`;
-                        html += `<span class="move-quality-indicator quality-${dotClass}"></span>`;
+                        html += `<div class="black-move" data-index="${blackIndex}" id="move-${blackIndex}">`;
+                        html += `<span class="dot-q dot-${dotClass}"></span>`;
                         html += `<span>${movePair.black.move}</span>`;
                         html += `</div>`;
                     } else {
-                        html += `<div class="black-move"></div>`;
+                        html += `<div></div>`;
                     }
                     
                     html += `</div>`;
@@ -1452,12 +1199,9 @@
                 html += '</div>';
                 analysisContainer.innerHTML = html;
                 
-                const movesBadge = document.getElementById('movesBadge');
-                if (movesBadge) movesBadge.textContent = moves.length;
                 const moveCountSummary = document.getElementById('moveCountSummary');
                 if (moveCountSummary) moveCountSummary.textContent = `${moves.length} moves`;
 
-                // Add click event to move items
                 document.querySelectorAll('.white-move, .black-move').forEach(item => {
                     if (item.dataset.index) {
                         item.addEventListener('click', function() {
@@ -1468,13 +1212,12 @@
                 });
             }
 
-            // Show move explanation in diagnosis card
             function showMoveExplanation(index) {
                 if (index < 0 || index >= moves.length) {
                     moveExplanation.innerHTML = `
-                        <div class="empty-state py-4 text-center">
-                            <i class="bi bi-binoculars text-secondary fs-3 mb-2 d-block"></i>
-                            <p class="text-secondary mb-0">Select a move to inspect engine analysis, threats, and counter-tactics</p>
+                        <div class="diagnosis-empty">
+                            <i class="bi bi-cursor-fill opacity-50"></i>
+                            <span>Select a move to inspect engine analysis, threats, and variations</span>
                         </div>`;
                     return;
                 }
@@ -1492,122 +1235,86 @@
                 }
 
                 html += `
-                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-25 flex-wrap gap-2">
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <span class="badge ${move.is_white ? 'bg-light text-dark fw-bold' : 'bg-dark text-light border border-secondary fw-bold'} px-2 py-1">${playerName}</span>
-                            <span class="fs-5 fw-bold font-monospace text-light">${move.move}</span>
-                            <span class="badge badge-quality badge-${qualityClass}">${qualityTitle}</span>
+                    <div class="diagnosis-header">
+                        <div class="move-title-wrap">
+                            <span class="player-badge ${move.is_white ? 'white' : 'black'}">${playerName}</span>
+                            <span class="move-san">${move.move}</span>
+                            <span class="badge-q ${qualityClass}">${qualityTitle}</span>
                         </div>
-                        ${evalText ? `<span class="badge badge-eval font-monospace">${evalText}</span>` : ''}
+                        ${evalText ? `<span class="eval-tag">${evalText}</span>` : ''}
                     </div>`;
                 
-                // Tactical / positional tags
                 if (move.tags && move.tags.length > 0) {
-                    html += `<div class="mb-3 d-flex flex-wrap gap-1">`;
+                    html += `<div class="tags-cluster">`;
                     move.tags.forEach(tag => {
-                        html += `<span class="tag-pill"><i class="bi bi-tag-fill me-1 opacity-50"></i>${tag}</span>`;
+                        html += `<span class="diag-tag">${tag}</span>`;
                     });
                     html += `</div>`;
                 }
-                
+
                 if (move.analysis) {
-                    // Threat created by the played move
                     if (move.analysis.threats_created && move.analysis.threats_created.length > 0) {
+                        const threatNames = move.analysis.threats_created.map(t => t.description || t).join(', ');
                         html += `
-                            <div class="threat-created-box mb-3">
-                                <div class="d-flex align-items-center text-threat fw-semibold mb-1 small">
-                                    <i class="bi bi-bullseye me-2"></i> Threat created:
-                                </div>
-                                <div class="d-flex flex-wrap gap-1">
-                                    ${move.analysis.threats_created.map(t => `<span class="badge bg-danger-subtle text-danger border border-danger-subtle">${t.description}</span>`).join(' ')}
-                                </div>
+                            <div class="threat-alert-box">
+                                <i class="bi bi-bullseye"></i>
+                                <span>Threat:</span>
+                                <strong>${threatNames}</strong>
                             </div>`;
                     }
 
-                    if (move.quality !== 'good move' && move.analysis.best_move) {
-                        html += `
-                            <div class="mb-2 d-flex align-items-center gap-2">
-                                <span class="text-secondary small fw-semibold">Better move:</span>
-                                <span class="badge badge-better font-monospace">${move.analysis.best_move}</span>
-                            </div>`;
-                    }
-                    
                     if (move.analysis.refutation) {
                         html += `
-                            <div class="mb-2 d-flex align-items-center gap-2">
-                                <span class="text-threat small fw-semibold"><i class="bi bi-exclamation-triangle-fill me-1"></i> Opponent's threat:</span>
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-monospace">${move.analysis.refutation}</span>
+                            <div class="threat-alert-box">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <span>Opponent threat:</span>
+                                <strong>${move.analysis.refutation}</strong>
                             </div>`;
                     }
-                    
+
                     if (move.analysis.explanation) {
-                        html += `
-                            <div class="mb-3 text-light">
-                                <p class="mb-0 lh-base small">${move.analysis.explanation}</p>
-                            </div>`;
+                        html += `<div class="diagnosis-text">${move.analysis.explanation}</div>`;
                     }
-                    
-                    // Punishing continuation (Refutation line)
+
+                    html += `<div class="var-row">`;
+
+                    // Punishment line
                     if (move.quality !== 'good move' && move.analysis.refutation_variation) {
                         html += `
-                            <div class="variation-box box-refutation mb-3">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="text-threat fw-semibold small">
-                                        <i class="bi bi-shield-slash me-1"></i> Punishing line (why this move is bad):
-                                    </span>
-                                </div>
-                                <div class="principal-variation refutation-line clickable" data-index="${index}" data-type="refutation">${move.analysis.refutation_variation}</div>
-                                <div class="mt-2 d-flex align-items-center gap-2">
-                                    <button class="btn btn-sm btn-play-refutation play-refutation-button" data-index="${index}">
-                                        <i class="bi bi-play-fill me-1"></i> Play punishment line
-                                    </button>
-                                </div>
+                            <div class="var-pill var-refutation clickable" data-index="${index}" data-type="refutation">
+                                <div class="text-truncate"><span class="text-danger fw-semibold me-1"><i class="bi bi-shield-slash"></i> Punishment:</span>${move.analysis.refutation_variation}</div>
+                                <button class="btn-var-play play-refutation-button" data-index="${index}">Play</button>
                             </div>`;
                     }
 
                     // Recommended line
                     if (move.analysis.principal_variation) {
                         html += `
-                            <div class="variation-box box-better mb-3">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <span class="text-success fw-semibold small">
-                                        <i class="bi bi-check-circle me-1"></i> Recommended line:
-                                    </span>
-                                </div>
-                                <div class="principal-variation clickable" data-index="${index}" data-type="better">${move.analysis.principal_variation}</div>
-                                <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
-                                    <button class="btn btn-sm btn-play-better play-button" data-index="${index}">
-                                        <i class="bi bi-play-fill me-1"></i> Play better line
-                                    </button>
-                                    <div class="d-flex align-items-center gap-1 ms-auto">
-                                        <span class="small text-secondary">Speed:</span>
-                                        <select id="speedControl" class="form-select form-select-sm select-dark py-0 px-2" style="width: auto; height: 32px;">
-                                            <option value="2000">Slow</option>
-                                            <option value="1000" selected>Normal</option>
-                                            <option value="500">Fast</option>
-                                            <option value="200">Very Fast</option>
-                                        </select>
-                                    </div>
-                                </div>
+                            <div class="var-pill var-better clickable" data-index="${index}" data-type="better">
+                                <div class="text-truncate"><span class="text-success fw-semibold me-1"><i class="bi bi-check2"></i> Recommended:</span>${move.analysis.principal_variation}</div>
+                                <button class="btn-var-play play-button" data-index="${index}">Play</button>
                             </div>`;
                     }
+
+                    html += `</div>`;
                 } else {
-                    html += '<p class="text-secondary mb-0">This move is considered good.</p>';
+                    html += '<div class="diagnosis-text text-muted mb-0">This move is considered solid.</div>';
                 }
                 
                 moveExplanation.innerHTML = html;
                 
-                moveExplanation.querySelectorAll('.principal-variation.clickable').forEach(el => {
-                    el.addEventListener('click', function() {
+                moveExplanation.querySelectorAll('.var-pill.clickable').forEach(el => {
+                    el.addEventListener('click', function(e) {
+                        if (e.target.closest('button')) return;
                         const idx = parseInt(this.dataset.index);
                         const type = this.dataset.type || 'better';
                         playVariation(idx, type);
                     });
                 });
                 
-                const playButton = moveExplanation.querySelector('.play-button');
-                if (playButton) {
-                    playButton.addEventListener('click', function() {
+                const playBtn = moveExplanation.querySelector('.play-button');
+                if (playBtn) {
+                    playBtn.addEventListener('click', function() {
                         const idx = parseInt(this.dataset.index);
                         playVariation(idx, 'better');
                     });
@@ -1622,7 +1329,6 @@
                 }
             }
 
-            // Draw arrows on the board
             function drawMoveArrows(index) {
                 clearArrows();
                 clearSquareAnnotations();
@@ -1656,7 +1362,6 @@
                 }
             }
 
-            // Draw SVG arrow on board with board-orientation awareness
             function drawArrow(from, to, type) {
                 const boardEl = document.getElementById('board');
                 if (!boardEl) return;
@@ -1690,7 +1395,6 @@
                 arrowSvg.appendChild(arrow);
             }
 
-            // Clear all arrows from the board
             function clearArrows() {
                 const defs = arrowSvg.querySelector('defs');
                 arrowSvg.innerHTML = '';
@@ -1701,7 +1405,6 @@
                 }
             }
 
-            // Add square annotation for poor moves with board-orientation awareness
             function addSquareAnnotation(square, moveQuality) {
                 clearSquareAnnotations();
                 if (!square || !moveQuality || moveQuality === 'good move') return;
@@ -1726,13 +1429,11 @@
                 boardContainer.appendChild(annotation);
             }
 
-            // Clear all square annotations
             function clearSquareAnnotations() {
                 const annotations = document.querySelectorAll('.square-annotation');
                 annotations.forEach(annotation => annotation.remove());
             }
 
-            // Get CSS class for move quality
             function getQualityClass(quality) {
                 switch (quality) {
                     case 'blunder': return 'blunder';
@@ -1749,7 +1450,6 @@
                 }
             }
 
-            // Navigation functions
             function goToFirstMove() {
                 stopVariationPlayback();
                 chess.reset();
@@ -1759,9 +1459,9 @@
                 clearArrows();
                 clearSquareAnnotations();
                 moveExplanation.innerHTML = `
-                    <div class="empty-state py-4 text-center">
-                        <i class="bi bi-binoculars text-secondary fs-3 mb-2 d-block"></i>
-                        <p class="text-secondary mb-0">Select a move to inspect engine analysis, threats, and counter-tactics</p>
+                    <div class="diagnosis-empty">
+                        <i class="bi bi-cursor-fill opacity-50"></i>
+                        <span>Select a move to inspect engine analysis, threats, and variations</span>
                     </div>`;
             }
 
@@ -1811,7 +1511,7 @@
                 
                 setTimeout(() => {
                     drawMoveArrows(index);
-                }, 100);
+                }, 80);
                 
                 const currentMove = document.getElementById(`move-${index}`);
                 if (currentMove) {
@@ -1823,12 +1523,9 @@
                 document.querySelectorAll('.white-move, .black-move').forEach(item => {
                     item.classList.remove('active');
                 });
-                
                 if (currentMoveIndex >= 0) {
                     const currentMove = document.getElementById(`move-${currentMoveIndex}`);
-                    if (currentMove) {
-                        currentMove.classList.add('active');
-                    }
+                    if (currentMove) currentMove.classList.add('active');
                 }
             }
 
@@ -1840,10 +1537,8 @@
                 }
             });
 
-            // Parse principal variation string into a sequence of moves
             function parsePrincipalVariation(pvString, startingFen) {
                 if (!pvString) return [];
-                
                 const tempChess = new Chess(startingFen);
                 let cleanPV = pvString.replace(/\s+/g, ' ').trim();
                 const tokens = cleanPV.split(' ');
@@ -1890,7 +1585,6 @@
                         });
                     }
                 }
-                
                 return movesList;
             }
 
@@ -1899,9 +1593,7 @@
                     for (let r = 1; r <= 8; r++) {
                         const sq = f + r;
                         const p = chessInstance.get(sq);
-                        if (p && p.type === 'k' && p.color === color) {
-                            return sq;
-                        }
+                        if (p && p.type === 'k' && p.color === color) return sq;
                     }
                 }
                 return null;
@@ -1925,7 +1617,7 @@
                                         target: 'king',
                                         is_check: true,
                                         is_undefended: true,
-                                        description: 'checks the enemy King'
+                                        description: 'checks enemy King'
                                     });
                                 });
                             }
@@ -1935,17 +1627,10 @@
                 return threats;
             }
 
-            // Play through a variation with animation
             function playVariation(moveIndex, lineType = 'better') {
                 stopVariationPlayback();
-                
                 const move = moves[moveIndex];
                 if (!move || !move.analysis) return;
-                
-                const speedControl = document.getElementById('speedControl');
-                if (speedControl) {
-                    animationSpeed = parseInt(speedControl.value);
-                }
                 
                 const isRefutation = (lineType === 'refutation');
                 
@@ -1956,9 +1641,7 @@
                     } else {
                         const tempChess = new Chess();
                         for (let i = 0; i <= moveIndex; i++) {
-                            try {
-                                tempChess.move(moves[i].move);
-                            } catch (e) {}
+                            try { tempChess.move(moves[i].move); } catch (e) {}
                         }
                         startingFen = tempChess.fen();
                     }
@@ -1968,9 +1651,7 @@
                     } else if (moveIndex > 0) {
                         const tempChess = new Chess();
                         for (let i = 0; i < moveIndex; i++) {
-                            try {
-                                tempChess.move(moves[i].move);
-                            } catch (e) {}
+                            try { tempChess.move(moves[i].move); } catch (e) {}
                         }
                         startingFen = tempChess.fen();
                     }
@@ -1982,14 +1663,14 @@
                 if (!rawVariation) {
                     if (isRefutation) {
                         if (!move.analysis.refutation_from || !move.analysis.refutation_to) {
-                            alert("Sorry, no punishment line available for this position.");
+                            alert('No punishment line available.');
                             return;
                         }
                     } else {
                         if (move.analysis.best_move && move.betterMoveData) {
                             showBetterMoveOnly(moveIndex, move.betterMoveData);
                         } else {
-                            alert("Sorry, no alternative moves available for this position.");
+                            alert('No alternative moves available.');
                         }
                         return;
                     }
@@ -2009,7 +1690,7 @@
                         showBetterMoveOnly(moveIndex, move.betterMoveData);
                         return;
                     }
-                    alert("Sorry, couldn't play the variation. The move format isn't recognized.");
+                    alert('Unable to parse variation moves.');
                     return;
                 }
                 
@@ -2017,44 +1698,33 @@
                 chess.load(startingFen);
                 board.position(startingFen);
                 
-                const stopButton = document.createElement('button');
-                stopButton.className = 'btn btn-outline-danger btn-sm mt-3 w-100';
-                stopButton.innerHTML = '<i class="bi bi-arrow-return-left me-1"></i> Return to Game';
-                stopButton.id = 'stopVariationBtn';
-                stopButton.addEventListener('click', returnToGamePosition);
-                moveExplanation.appendChild(stopButton);
-                
-                const variationIndicator = document.createElement('div');
-                variationIndicator.className = isRefutation ? 'alert alert-danger-dark mt-2' : 'alert alert-info-dark mt-2';
-                variationIndicator.id = 'variationIndicator';
-                variationIndicator.innerHTML = isRefutation
-                    ? `<strong><i class="bi bi-shield-slash me-1"></i> Playing punishment line</strong> - Showing how the opponent can punish this mistake`
-                    : `<strong><i class="bi bi-check-circle me-1"></i> Playing recommended line</strong> - Showing what could have happened with the better move`;
-                moveExplanation.appendChild(variationIndicator);
-                
-                const moveCounter = document.createElement('div');
-                moveCounter.id = 'moveIndicator';
-                moveCounter.className = isRefutation ? 'badge bg-danger-subtle text-danger border border-danger-subtle mt-2' : 'badge bg-info-subtle text-info border border-info-subtle mt-2';
-                moveCounter.textContent = `Move 0 of ${variationMoves.length}`;
-                moveExplanation.appendChild(moveCounter);
+                // Active variation banner inside diagnosis card
+                moveExplanation.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="badge ${isRefutation ? 'bg-danger' : 'bg-success'} text-white fw-bold">
+                            ${isRefutation ? 'PUNISHMENT LINE' : 'RECOMMENDED LINE'}
+                        </span>
+                        <button id="stopVariationBtn" class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size:0.78rem;">
+                            <i class="bi bi-arrow-return-left me-1"></i> Return
+                        </button>
+                    </div>
+                    <div id="moveIndicator" class="text-light small fw-medium mb-1">
+                        Move 0 of ${variationMoves.length}
+                    </div>
+                    <div id="variationThreatBanner" class="small text-danger"></div>
+                `;
 
-                const threatBanner = document.createElement('div');
-                threatBanner.id = 'variationThreatBanner';
-                threatBanner.className = 'mt-2 text-threat small';
-                moveExplanation.appendChild(threatBanner);
-                
+                document.getElementById('stopVariationBtn').addEventListener('click', returnToGamePosition);
+
                 let currentVarMoveIndex = 0;
-                
                 clearArrows();
                 clearSquareAnnotations();
                 if (variationMoves.length > 0) {
-                    const firstMove = variationMoves[0];
-                    drawArrow(firstMove.from, firstMove.to, arrowStyle);
+                    drawArrow(variationMoves[0].from, variationMoves[0].to, arrowStyle);
                 }
                 
                 function playNextMove() {
                     if (!isPlayingVariation) return;
-                    
                     if (currentVarMoveIndex < variationMoves.length) {
                         const moveData = variationMoves[currentVarMoveIndex];
                         let executedMove = null;
@@ -2064,9 +1734,7 @@
                                 to: moveData.to,
                                 promotion: moveData.promotion || 'q'
                             });
-                            
                             board.position(chess.fen(), true);
-                            
                             clearArrows();
                             clearSquareAnnotations();
 
@@ -2086,19 +1754,18 @@
                             const indicator = document.getElementById('moveIndicator');
                             if (indicator) {
                                 const moveNotation = executedMove ? executedMove.san : (moveData.san || '');
-                                indicator.innerHTML = `Move ${currentVarMoveIndex + 1} of ${variationMoves.length}: <strong>${moveNotation}</strong>`;
+                                indicator.innerHTML = `Move ${currentVarMoveIndex + 1} of ${variationMoves.length}: <strong class="text-info">${moveNotation}</strong>`;
                             }
 
                             const tb = document.getElementById('variationThreatBanner');
                             if (tb) {
                                 let threatHtml = '';
                                 if (chess.in_checkmate && chess.in_checkmate()) {
-                                    threatHtml = `<div class="badge bg-danger p-2 fs-6"><i class="bi bi-trophy-fill me-1"></i> Checkmate delivered!</div>`;
+                                    threatHtml = '<span class="badge bg-danger">Checkmate delivered!</span>';
                                 } else if (chess.in_check && chess.in_check()) {
-                                    threatHtml = `<span class="badge bg-danger p-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Check!</span> <span class="ms-1">Enemy King is under attack.</span>`;
+                                    threatHtml = '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Check! King under attack.</span>';
                                 } else if (moveThreats.length > 0) {
-                                    const threatDescs = moveThreats.map(t => `<span class="badge bg-danger text-white border me-1">${t.description}</span>`).join(' ');
-                                    threatHtml = `<div><strong><i class="bi bi-bullseye"></i> Threat created:</strong> ${threatDescs}</div>`;
+                                    threatHtml = `<span>Threat: <strong>${moveThreats.map(t => t.description).join(', ')}</strong></span>`;
                                 }
                                 tb.innerHTML = threatHtml;
                             }
@@ -2110,22 +1777,19 @@
                                 onVariationComplete(move, isRefutation);
                             }
                         } catch (e) {
-                            console.error("Failed to make move:", e);
+                            console.error('Error playing variation:', e);
                             stopVariationPlayback();
                         }
                     }
                 }
                 
                 setTimeout(() => {
-                    if (isPlayingVariation) {
-                        playNextMove();
-                    }
-                }, 700);
+                    if (isPlayingVariation) playNextMove();
+                }, 650);
             }
 
             function showBetterMoveOnly(moveIndex, betterMoveData) {
                 stopVariationPlayback();
-                
                 const move = moves[moveIndex];
                 if (!move) return;
                 
@@ -2135,9 +1799,7 @@
                 } else if (moveIndex > 0) {
                     const tempChess = new Chess();
                     for (let i = 0; i < moveIndex; i++) {
-                        try {
-                            tempChess.move(moves[i].move);
-                        } catch (e) {}
+                        try { tempChess.move(moves[i].move); } catch (e) {}
                     }
                     startingFen = tempChess.fen();
                 }
@@ -2146,24 +1808,18 @@
                 chess.load(startingFen);
                 board.position(startingFen);
                 
-                const stopButton = document.createElement('button');
-                stopButton.className = 'btn btn-outline-danger btn-sm mt-3 w-100';
-                stopButton.innerHTML = '<i class="bi bi-arrow-return-left me-1"></i> Return to Game';
-                stopButton.id = 'stopVariationBtn';
-                stopButton.addEventListener('click', returnToGamePosition);
-                moveExplanation.appendChild(stopButton);
+                moveExplanation.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="badge bg-success text-white fw-bold">BETTER MOVE</span>
+                        <button id="stopVariationBtn" class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size:0.78rem;">
+                            <i class="bi bi-arrow-return-left me-1"></i> Return
+                        </button>
+                    </div>
+                    <div class="small text-light mb-1">Playing: <strong>${betterMoveData.san || move.analysis.best_move}</strong></div>
+                    <div id="variationThreatBanner" class="small text-danger"></div>
+                `;
+                document.getElementById('stopVariationBtn').addEventListener('click', returnToGamePosition);
 
-                const variationIndicator = document.createElement('div');
-                variationIndicator.className = 'alert alert-info-dark mt-2';
-                variationIndicator.id = 'variationIndicator';
-                variationIndicator.innerHTML = `<strong><i class="bi bi-check-circle me-1"></i> Playing better move</strong>: ${betterMoveData.san || move.analysis.best_move}`;
-                moveExplanation.appendChild(variationIndicator);
-
-                const threatBanner = document.createElement('div');
-                threatBanner.id = 'variationThreatBanner';
-                threatBanner.className = 'mt-2 text-threat small';
-                moveExplanation.appendChild(threatBanner);
-                
                 clearArrows();
                 clearSquareAnnotations();
                 drawArrow(betterMoveData.from, betterMoveData.to, 'better');
@@ -2187,44 +1843,19 @@
                                 drawArrow(threat.from, threat.to, 'threat');
                             });
                         }
-
-                        if (threatBanner) {
-                            let threatHtml = '';
-                            if (chess.in_checkmate && chess.in_checkmate()) {
-                                threatHtml = `<div class="badge bg-danger p-2 fs-6"><i class="bi bi-trophy-fill me-1"></i> Checkmate delivered!</div>`;
-                            } else if (chess.in_check && chess.in_check()) {
-                                threatHtml = `<span class="badge bg-danger p-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Check!</span> <span class="ms-1">Enemy King is under attack.</span>`;
-                            } else if (moveThreats.length > 0) {
-                                const threatDescs = moveThreats.map(t => `<span class="badge bg-danger text-white border me-1">${t.description}</span>`).join(' ');
-                                threatHtml = `<div><strong><i class="bi bi-bullseye"></i> Threat created:</strong> ${threatDescs}</div>`;
-                            }
-                            threatBanner.innerHTML = threatHtml;
-                        }
-
                         onVariationComplete(move, false);
                     } catch (e) {
-                        console.error("Error executing better move:", e);
+                        console.error('Error executing better move:', e);
                     }
-                }, 700);
+                }, 650);
             }
 
             function onVariationComplete(move, isRefutation) {
                 isPlayingVariation = false;
-                
-                const variationIndicator = document.getElementById('variationIndicator');
-                if (variationIndicator) {
-                    variationIndicator.className = isRefutation ? 'alert alert-danger-dark mt-2' : 'alert alert-success-dark mt-2';
-                    variationIndicator.innerHTML = isRefutation
-                        ? `<strong><i class="bi bi-check2-circle me-1"></i> Punishment line complete.</strong> Notice the threats created on the board.`
-                        : `<strong><i class="bi bi-check2-circle me-1"></i> Better line complete.</strong> Notice the position and advantages achieved.`;
-                }
-                
-                const stopButton = document.getElementById('stopVariationBtn');
-                if (stopButton) {
-                    stopButton.className = 'btn btn-return mt-2 w-100 py-2';
-                    const moveLabel = move ? (move.notation || move.move || '') : '';
-                    stopButton.innerHTML = `<i class="bi bi-arrow-return-left me-1"></i> Return to Game (${moveLabel})`;
-                    stopButton.onclick = returnToGamePosition;
+                const stopBtn = document.getElementById('stopVariationBtn');
+                if (stopBtn) {
+                    stopBtn.className = 'btn btn-primary btn-sm py-1 px-3';
+                    stopBtn.innerHTML = '<i class="bi bi-arrow-return-left me-1"></i> Return to Game';
                 }
             }
 
@@ -2234,25 +1865,8 @@
                     clearTimeout(animationTimeout);
                     animationTimeout = null;
                 }
-                
-                const stopButton = document.getElementById('stopVariationBtn');
-                if (stopButton) stopButton.remove();
-                
-                const variationIndicator = document.getElementById('variationIndicator');
-                if (variationIndicator) variationIndicator.remove();
-                
-                const moveIndicator = document.getElementById('moveIndicator');
-                if (moveIndicator) moveIndicator.remove();
-
-                const threatBanner = document.getElementById('variationThreatBanner');
-                if (threatBanner) threatBanner.remove();
-                
                 clearArrows();
                 clearSquareAnnotations();
-                
-                document.querySelectorAll('.principal-variation.clickable').forEach(pv => {
-                    pv.style.backgroundColor = '';
-                });
             }
 
             function returnToGamePosition() {
