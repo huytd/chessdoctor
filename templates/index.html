@@ -205,25 +205,25 @@
 
         /* Studio Main Layout */
         .studio-container {
-            max-width: 1380px;
+            max-width: 1040px;
             margin: 0 auto;
             padding: 12px 1.25rem 2rem 1.25rem;
         }
 
         .studio-grid {
             display: grid;
-            grid-template-columns: minmax(360px, 560px) 1fr;
+            grid-template-columns: minmax(0, 1fr) 280px;
             gap: 1.25rem;
             align-items: start;
         }
 
-        /* Left Column: Board Studio */
+        /* Left Column: Board Studio & Move Explanation */
         .board-column {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             width: 100%;
-            max-width: 560px;
+            max-width: 100%;
         }
 
         .game-info-strip {
@@ -385,11 +385,20 @@
         .annotation-mistake::before { background-color: var(--q-mistake); }
         .annotation-inaccuracy::before { background-color: var(--q-inaccuracy); color: #111; }
 
-        /* Right Column: Unified Analysis Studio */
+        /* Right Column: Move Notation Studio */
         .studio-panel {
             display: flex;
             flex-direction: column;
             gap: 12px;
+            width: 280px;
+            min-width: 0;
+        }
+
+        @media (min-width: 992px) {
+            .studio-panel {
+                position: sticky;
+                top: 56px;
+            }
         }
 
         /* Move Diagnosis Card */
@@ -695,7 +704,7 @@
         }
 
         .analysis-container {
-            max-height: 380px;
+            max-height: min(550px, calc(100vh - 180px));
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -713,30 +722,32 @@
 
         .move-pair {
             display: grid;
-            grid-template-columns: 42px 1fr 1fr;
+            grid-template-columns: 36px 1fr 1fr;
             align-items: center;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.86rem;
+            font-size: 0.84rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.025);
-            padding: 1px 4px;
+            padding: 1px 3px;
         }
 
         .move-number {
             color: var(--text-muted);
             font-size: 0.78rem;
-            padding-left: 6px;
+            padding-left: 4px;
         }
 
         .white-move, .black-move {
-            padding: 5px 8px;
+            padding: 4px 6px;
             border-radius: 4px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             color: var(--text-secondary);
             transition: all 0.12s;
             user-select: none;
+            font-size: 0.82rem;
+            min-width: 0;
         }
 
         .white-move:hover, .black-move:hover {
@@ -847,10 +858,17 @@
             .studio-grid {
                 display: flex;
                 flex-direction: column;
-                gap: 10px;
+                gap: 12px;
             }
             .board-column {
                 max-width: 100%;
+            }
+            .studio-panel {
+                width: 100%;
+                position: static;
+            }
+            .analysis-container {
+                max-height: 280px;
             }
             .sheet-toolbar .btn-tool {
                 min-height: 42px;
@@ -963,7 +981,7 @@
         </div>
 
         <div class="studio-grid">
-            <!-- Left Column: Board Studio -->
+            <!-- Left Column: Board Studio & Move Explanation -->
             <div class="board-column">
                 <div class="game-info-strip" id="gameInfo">
                     <span class="game-info-players">White vs Black</span>
@@ -987,18 +1005,18 @@
                         <i class="bi bi-arrow-return-left me-1"></i> Return to Game
                     </button>
                 </div>
-            </div>
 
-            <!-- Right Column: Studio Panel -->
-            <div class="studio-panel">
-                <!-- Move Diagnosis Card -->
+                <!-- Move Diagnosis Card (Positioned beneath the chessboard) -->
                 <div class="diagnosis-card" id="moveExplanation">
                     <div class="diagnosis-empty">
                         <i class="bi bi-cursor-fill opacity-50"></i>
                         <span>Select a move to inspect engine analysis, threats, and variations</span>
                     </div>
                 </div>
+            </div>
 
+            <!-- Right Column: Move Notation Studio -->
+            <div class="studio-panel">
                 <!-- Move Notation Sheet with Integrated Move Navigation Toolbar -->
                 <div class="sheet-card">
                     <div class="sheet-header">
