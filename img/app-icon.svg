@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#24211d"/>
+      <stop offset="100%" stop-color="#141311"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- App Icon Base (Rounded Square) -->
+  <rect width="128" height="128" rx="28" fill="url(#bgGrad)"/>
+  <rect width="126" height="126" x="1" y="1" rx="27" fill="none" stroke="#33302a" stroke-width="1.5"/>
+
+  <!-- Knocked / Tilted King Piece -->
+  <g transform="translate(56, 68) rotate(-28) translate(-40, -42)" filter="url(#shadow)">
+    <!-- Scaled King Vector -->
+    <g transform="scale(1.65)" stroke="#1a1815" stroke-linejoin="round">
+      <!-- King Base Body -->
+      <path fill="#f5f5f5" stroke-width="1.4" d="M22.56 5.6v3.552h-3.693v4.694h3.495l-.605 3.772c-6.885-2.986-12.632-1.393-15.043 3.458-2.168 6.08 1.672 8.665 5.766 12.313v7.763c3.468 2.013 9.657 2.214 12.52 2.248h.05c2.864-.034 9.053-.235 12.52-2.248v-7.806c4.076-3.625 7.877-6.214 5.718-12.27-2.411-4.851-8.158-6.444-15.043-3.459l-.608-3.771h3.498V9.152h-3.693V5.6z"/>
+      <!-- Inner Ribs -->
+      <path fill="none" stroke-width="2" d="m22.68 28.948-8.402.783s-7.003-3.594-3.872-7.926c3.13-4.333 12.945-1.228 12.274 7.143zm4.63 0 8.402.783s7.003-3.594 3.872-7.926c-3.13-4.333-12.945-1.228-12.274 7.143z"/>
+      <!-- Base Trim -->
+      <path fill="#22201d" d="M35.42 36.783c-2.608-.994-6.088-1.496-10.424-1.496-4.373 0-7.888.511-10.554 1.527v2.973c2.68-.965 6.406-1.448 10.554-1.448 4.126 0 7.83.473 10.424 1.417z"/>
+    </g>
+  </g>
+
+  <!-- Red Blunder Marker (??) Badge -->
+  <g transform="translate(94, 46)" filter="url(#shadow)">
+    <circle r="22" fill="#cc3333" stroke="#e04444" stroke-width="1.5"/>
+    <text x="0" y="8" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="900" text-anchor="middle" letter-spacing="-1">??</text>
+  </g>
+</svg>
