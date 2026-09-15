@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WhyBlunder - Chess Analysis</title>
     
-    <!-- Fonts: Inter, JetBrains Mono -->
+    <!-- Clean Unified Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
     
     <style>
         :root {
-            /* Lichess Dark Theme Design System - Low Contrast Harmonious Borders */
+            /* Lichess Dark Theme Design System - Flat & Harmonious */
             --lic-bg-canvas: #161512;
             --lic-bg-surface: #262421;
             --lic-bg-surface-header: #1e1c18;
@@ -27,7 +27,7 @@
             --lic-bg-surface-hover: #312e2a;
             --lic-bg-input: #1b1916;
             
-            /* Reduced contrast borders blending smoothly with backgrounds */
+            /* Low-contrast borders */
             --lic-border-subtle: #24221f;
             --lic-border: #2e2b27;
             --lic-border-strong: #383530;
@@ -72,14 +72,16 @@
         body {
             background-color: var(--lic-bg-canvas);
             color: var(--lic-text-primary);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
             padding: 0;
             min-height: 100vh;
+            font-size: 0.84rem;
+            line-height: 1.5;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Lichess Header */
+        /* Lichess Top Header */
         .lic-header {
             background: var(--lic-bg-surface-header);
             border-bottom: 1px solid var(--lic-border-subtle);
@@ -96,11 +98,11 @@
         .lic-brand {
             display: inline-flex;
             align-items: center;
-            gap: 9px;
+            gap: 8px;
             text-decoration: none;
             color: var(--lic-text-bright);
             font-weight: 700;
-            font-size: 1.05rem;
+            font-size: 1rem;
             letter-spacing: -0.01em;
         }
         .lic-brand:hover {
@@ -108,18 +110,19 @@
         }
         .lic-brand-icon {
             color: var(--lic-red);
-            font-size: 1.15rem;
+            font-size: 1.1rem;
         }
 
-        /* Lichess Flat Buttons (No Drop Shadows, Subtle Low-Contrast Borders) */
+        /* Lichess Flat Buttons */
         .lic-btn {
             background: var(--lic-bg-surface);
             color: var(--lic-text-primary);
             border: 1px solid var(--lic-border);
             border-radius: 4px;
-            font-size: 0.82rem;
+            font-size: 0.8125rem;
             font-weight: 600;
-            padding: 5px 11px;
+            font-family: 'Inter', sans-serif;
+            padding: 5px 12px;
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -170,8 +173,9 @@
             color: var(--lic-text-secondary);
             border: 1px solid var(--lic-border-subtle);
             border-radius: 3px;
-            font-size: 0.76rem;
+            font-size: 0.75rem;
             font-weight: 500;
+            font-family: 'Inter', sans-serif;
             padding: 3px 8px;
             cursor: pointer;
             box-shadow: none;
@@ -195,7 +199,7 @@
         }
         .pgn-dropdown-menu .dropdown-item {
             color: var(--lic-text-primary);
-            font-size: 0.82rem;
+            font-size: 0.8125rem;
             padding: 7px 14px;
             background: transparent;
             border: none;
@@ -243,7 +247,7 @@
             border-radius: 4px;
             padding: 10px 12px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82rem;
+            font-size: 0.8125rem;
             line-height: 1.5;
             resize: vertical;
             transition: border-color 0.15s;
@@ -271,7 +275,7 @@
             margin: 0 auto;
         }
 
-        /* 3-COLUMN MAIN LAYOUT - ENLARGED & NO EMPTY GAPS */
+        /* 3-COLUMN MAIN LAYOUT */
         .studio-container {
             max-width: 1720px;
             width: 100%;
@@ -286,7 +290,7 @@
             align-items: start;
         }
 
-        /* Panels / Cards - NO DROP SHADOW, LOW CONTRAST BORDERS */
+        /* Panels / Cards - Flat, Same Background Color throughout */
         .lic-panel {
             background: var(--lic-bg-surface);
             border: 1px solid var(--lic-border-subtle);
@@ -297,17 +301,18 @@
             overflow: hidden;
         }
 
+        /* Flat Column Headers (Same color as panel surface) */
         .lic-panel-header {
-            background: var(--lic-bg-surface-header);
+            background: var(--lic-bg-surface);
             border-bottom: 1px solid var(--lic-border-subtle);
             padding: 8px 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.82rem;
-            font-weight: 700;
+            font-size: 0.8125rem;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.04em;
             color: var(--lic-text-secondary);
         }
 
@@ -316,7 +321,7 @@
             overflow-y: auto;
         }
 
-        /* COLUMN 1: MOVE ANALYSIS (LEFT - ENLARGED) */
+        /* COLUMN 1: MOVE ANALYSIS (LEFT) */
         .col-analysis {
             position: sticky;
             top: 56px;
@@ -346,11 +351,11 @@
             text-align: center;
             gap: 10px;
             color: var(--lic-text-muted);
-            font-size: 0.88rem;
+            font-size: 0.84rem;
             padding: 50px 14px;
         }
         .diagnosis-empty i {
-            font-size: 2.2rem;
+            font-size: 2rem;
             opacity: 0.4;
         }
 
@@ -368,16 +373,16 @@
         .move-title-wrap {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .player-badge {
-            font-size: 0.74rem;
-            font-weight: 700;
-            padding: 3px 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 7px;
             border-radius: 3px;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.03em;
         }
         .player-badge.white {
             background: #f0f0f0;
@@ -391,15 +396,15 @@
 
         .move-san {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 700;
             color: var(--lic-text-bright);
         }
 
         .badge-q {
-            font-size: 0.74rem;
-            font-weight: 700;
-            padding: 3px 9px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 8px;
             border-radius: 3px;
             text-transform: uppercase;
             letter-spacing: 0.03em;
@@ -414,19 +419,19 @@
 
         .eval-tag {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82rem;
-            font-weight: 700;
-            padding: 3px 9px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 2px 8px;
             border-radius: 3px;
-            background: var(--lic-bg-surface-header);
+            background: var(--lic-bg-surface-subtle);
             border: 1px solid var(--lic-border-subtle);
             color: var(--lic-text-bright);
         }
 
         .eval-best-tag {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.76rem;
-            padding: 2px 8px;
+            font-size: 0.75rem;
+            padding: 2px 7px;
             border-radius: 3px;
             background: var(--lic-green-dim);
             border: 1px solid rgba(98, 153, 36, 0.35);
@@ -434,7 +439,7 @@
         }
 
         .metric-chip {
-            font-size: 0.76rem;
+            font-size: 0.75rem;
             font-family: 'JetBrains Mono', monospace;
             padding: 2px 7px;
             border-radius: 3px;
@@ -456,8 +461,8 @@
             margin-bottom: 12px;
         }
         .diag-tag {
-            font-size: 0.74rem;
-            background: var(--lic-bg-surface-header);
+            font-size: 0.75rem;
+            background: var(--lic-bg-surface-subtle);
             color: var(--lic-text-secondary);
             border: 1px solid var(--lic-border-subtle);
             border-radius: 3px;
@@ -483,7 +488,7 @@
             color: #fff;
             padding: 2px 8px;
             border-radius: 3px;
-            font-size: 0.86rem;
+            font-size: 0.8125rem;
             font-weight: 700;
         }
 
@@ -496,7 +501,7 @@
             margin-bottom: 12px;
         }
         .threat-item {
-            font-size: 0.76rem;
+            font-size: 0.75rem;
             background: rgba(204, 51, 51, 0.2);
             color: #fca5a5;
             border: 1px solid rgba(204, 51, 51, 0.3);
@@ -510,17 +515,17 @@
             color: #fff;
             padding: 2px 8px;
             border-radius: 3px;
-            font-size: 0.84rem;
+            font-size: 0.8125rem;
             font-weight: 700;
         }
 
         /* Diagnosis Text */
         .diagnosis-text {
-            font-size: 0.86rem;
-            line-height: 1.6;
+            font-size: 0.84rem;
+            line-height: 1.55;
             color: var(--lic-text-primary);
             margin-bottom: 12px;
-            padding: 10px 14px;
+            padding: 10px 12px;
             background: var(--lic-bg-surface-subtle);
             border-radius: 4px;
             border: 1px solid var(--lic-border-subtle);
@@ -545,8 +550,8 @@
 
         .principal-variation {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82rem;
-            line-height: 1.55;
+            font-size: 0.8125rem;
+            line-height: 1.5;
             color: #e5e5e5;
             padding: 6px 8px;
             border-radius: 3px;
@@ -561,7 +566,7 @@
             background: var(--lic-bg-surface-hover);
         }
 
-        /* COLUMN 2: CHESS BOARD (CENTER - ENLARGED) */
+        /* COLUMN 2: CHESS BOARD (CENTER) */
         .col-board {
             display: flex;
             flex-direction: column;
@@ -578,7 +583,7 @@
             gap: 6px;
         }
 
-        /* Player Strip (Lichess Style) */
+        /* Player Strip (Flat Lichess Style) */
         .lic-player-bar {
             display: flex;
             align-items: center;
@@ -587,13 +592,13 @@
             border: 1px solid var(--lic-border-subtle);
             border-radius: 4px;
             padding: 7px 14px;
-            font-size: 0.86rem;
+            font-size: 0.84rem;
             color: var(--lic-text-primary);
         }
         .player-info-main {
             display: flex;
             align-items: center;
-            gap: 9px;
+            gap: 8px;
             font-weight: 600;
         }
         .player-avatar {
@@ -746,7 +751,7 @@
             right: 3px;
             color: white;
             font-weight: 800;
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             text-align: center;
             font-family: 'JetBrains Mono', monospace;
             border-radius: 50%;
@@ -782,8 +787,8 @@
         }
 
         .var-type-badge {
-            font-size: 0.72rem;
-            font-weight: 700;
+            font-size: 0.75rem;
+            font-weight: 600;
             padding: 2px 7px;
             border-radius: 3px;
             text-transform: uppercase;
@@ -801,11 +806,11 @@
         }
 
         .var-status-text {
-            font-size: 0.82rem;
+            font-size: 0.8125rem;
             color: var(--lic-text-bright);
         }
 
-        /* COLUMN 3: MOVE LIST (RIGHT - EXACT 320PX) */
+        /* COLUMN 3: MOVE LIST (RIGHT) */
         .col-moves {
             position: sticky;
             top: 56px;
@@ -838,7 +843,7 @@
             grid-template-columns: 36px 1fr 1fr;
             align-items: center;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.84rem;
+            font-size: 0.8125rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.02);
             padding: 2px 4px;
         }
@@ -848,7 +853,7 @@
 
         .move-number {
             color: var(--lic-text-muted);
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             padding-left: 4px;
             user-select: none;
         }
@@ -863,7 +868,7 @@
             color: var(--lic-text-primary);
             transition: all 0.12s;
             user-select: none;
-            font-size: 0.84rem;
+            font-size: 0.8125rem;
             min-width: 0;
         }
 
@@ -894,12 +899,12 @@
         .quality-brilliant { background-color: var(--q-brilliant); box-shadow: 0 0 5px var(--q-brilliant); }
         .quality-book { background-color: var(--q-book); }
 
-        /* Lichess Move Navigation Controller (Bottom Toolbar) */
+        /* Flat Move Navigation Controller (Bottom Toolbar) */
         .lic-nav-toolbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--lic-bg-surface-header);
+            background: var(--lic-bg-surface);
             border-top: 1px solid var(--lic-border-subtle);
             padding: 6px 10px;
             gap: 6px;
@@ -935,27 +940,11 @@
             background: var(--lic-bg-input);
         }
 
-        .threat-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.76rem;
-            font-weight: 600;
-            color: #f87171;
-            cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 3px;
-            user-select: none;
-        }
-        .threat-pill input {
-            cursor: pointer;
-            accent-color: var(--lic-red);
-        }
-
         .select-dark {
             background: var(--lic-bg-input);
             color: var(--lic-text-primary);
             border-color: var(--lic-border-subtle);
+            font-family: 'Inter', sans-serif;
         }
         .select-dark:focus {
             background: var(--lic-bg-input);
@@ -1008,11 +997,11 @@
                 <i class="bi bi-heart-pulse-fill lic-brand-icon"></i>
                 <span>WhyBlunder</span>
             </a>
-            <span class="d-none d-md-inline badge bg-secondary bg-opacity-25 text-secondary fw-normal font-monospace" style="font-size:0.7rem;">ANALYSIS BOARD</span>
+            <span class="d-none d-md-inline badge bg-secondary bg-opacity-25 text-secondary fw-normal font-monospace" style="font-size:0.68rem;">ANALYSIS BOARD</span>
         </div>
         <div class="d-flex align-items-center gap-2">
             <div class="d-none d-lg-flex align-items-center text-muted small me-2">
-                <span class="me-1">Keys:</span>
+                <span class="me-1" style="font-size:0.75rem;">Keys:</span>
                 <kbd style="background:#262421;color:#8c8c8c;border:1px solid #2e2b27;font-size:0.7rem;padding:1px 4px;border-radius:3px;">←</kbd>
                 <kbd style="background:#262421;color:#8c8c8c;border:1px solid #2e2b27;font-size:0.7rem;padding:1px 4px;border-radius:3px;" class="ms-1">→</kbd>
                 <kbd style="background:#262421;color:#8c8c8c;border:1px solid #2e2b27;font-size:0.7rem;padding:1px 4px;border-radius:3px;" class="ms-1">F</kbd>
@@ -1061,7 +1050,7 @@
         <div class="pgn-drawer-inner">
             <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <span class="small fw-semibold text-light">Paste PGN Game Notation</span>
+                    <span class="fw-semibold text-light" style="font-size:0.8125rem;">Paste PGN Game Notation</span>
                     <span class="text-muted small ms-2">Examples:</span>
                     <button type="button" class="lic-chip-btn" data-sample="opera">Morphy's Opera</button>
                     <button type="button" class="lic-chip-btn" data-sample="kasparov">Kasparov</button>
@@ -1069,7 +1058,7 @@
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <label for="analysisDepth" class="small text-muted mb-0">Depth:</label>
-                    <select id="analysisDepth" class="form-select form-select-sm py-0 px-2 select-dark" style="width:auto; height:28px; font-size:0.78rem;">
+                    <select id="analysisDepth" class="form-select form-select-sm py-0 px-2 select-dark" style="width:auto; height:28px; font-size:0.75rem;">
                         <option value="10">Fast (10)</option>
                         <option value="12" selected>Standard (12)</option>
                         <option value="14">Deep (14)</option>
@@ -1098,8 +1087,8 @@
     <div id="analysisProgressContainer" class="progress-strip">
         <div class="progress-strip-inner">
             <div class="d-flex justify-content-between align-items-center mb-1">
-                <span id="progressText" class="small fw-medium text-info">Initializing Stockfish WASM...</span>
-                <span id="progressPercent" class="badge bg-info text-dark font-monospace">0%</span>
+                <span id="progressText" class="fw-medium text-info" style="font-size:0.78rem;">Initializing Stockfish WASM...</span>
+                <span id="progressPercent" class="badge bg-info text-dark font-monospace" style="font-size:0.75rem;">0%</span>
             </div>
             <div class="progress" style="height: 4px; background: #141311;">
                 <div id="progressBar" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
@@ -1197,13 +1186,7 @@
                             <span>Moves</span>
                             <span id="moveCountSummary" class="badge bg-secondary bg-opacity-25 text-light font-monospace" style="font-size:0.68rem;">0 moves</span>
                         </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <button id="btnFlip" class="lic-chip-btn" title="Flip Board (F)"><i class="bi bi-arrow-left-right me-1"></i> Flip</button>
-                            <label class="threat-pill mb-0" title="Toggle Threat Radar">
-                                <input type="checkbox" id="toggleThreats" checked>
-                                <span><i class="bi bi-bullseye"></i> Threats</span>
-                            </label>
-                        </div>
+                        <button id="btnFlip" class="lic-chip-btn" title="Flip Board (F)"><i class="bi bi-arrow-left-right me-1"></i> Flip</button>
                     </div>
 
                     <!-- Scrollable 2-Column Move Notation Sheet -->
@@ -1216,7 +1199,7 @@
                         </div>
                     </div>
 
-                    <!-- Docked Lichess Move Navigation Controller -->
+                    <!-- Docked Lichess Move Navigation Controller (Flat) -->
                     <div class="lic-nav-toolbar" id="boardToolbar">
                         <div class="nav-btn-group">
                             <button id="btnFirst" class="btn-lic-tool" title="First Move (Home)"><i class="bi bi-skip-start-fill"></i></button>
@@ -1225,8 +1208,8 @@
                             <button id="btnLast" class="btn-lic-tool" title="Last Move (End)"><i class="bi bi-skip-end-fill"></i></button>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted small d-none d-sm-inline">Speed:</span>
-                            <select id="speedControl" class="form-select form-select-sm py-0 px-2 select-dark" style="width:auto; height:28px; font-size:0.76rem;">
+                            <span class="text-muted small d-none d-sm-inline" style="font-size:0.75rem;">Speed:</span>
+                            <select id="speedControl" class="form-select form-select-sm py-0 px-2 select-dark" style="width:auto; height:28px; font-size:0.75rem;">
                                 <option value="2000">Slow</option>
                                 <option value="1000" selected>Normal</option>
                                 <option value="500">Fast</option>
@@ -1275,7 +1258,6 @@
             const btnNext = document.getElementById('btnNext');
             const btnLast = document.getElementById('btnLast');
             const btnFlip = document.getElementById('btnFlip');
-            const toggleThreats = document.getElementById('toggleThreats');
             const speedControl = document.getElementById('speedControl');
             const arrowSvg = document.getElementById('arrow-svg');
             const boardContainer = document.querySelector('.board-container');
@@ -1408,15 +1390,6 @@
                         setTimeout(() => drawMoveArrows(currentMoveIndex), 50);
                     }
                     updateEvalGauge(currentMoveIndex);
-                });
-            }
-
-            // Toggle Threats
-            if (toggleThreats) {
-                toggleThreats.addEventListener('change', function() {
-                    if (currentMoveIndex >= 0 && !isPlayingVariation && !isInVariationMode) {
-                        drawMoveArrows(currentMoveIndex);
-                    }
                 });
             }
 
@@ -1991,7 +1964,7 @@
                 if (index < 0 || index >= moves.length) return;
                 
                 const move = moves[index];
-                const showThreats = toggleThreats ? toggleThreats.checked : true;
+                const showThreats = true; // Always display tactical threats
                 
                 if (moveHistory[index]) {
                     const moveData = moveHistory[index];
@@ -2391,8 +2364,7 @@
                             clearSquareAnnotations();
 
                             const moveThreats = getMoveThreats(chess, moveData);
-                            const showThreats = toggleThreats ? toggleThreats.checked : true;
-                            if (showThreats && moveThreats.length > 0) {
+                            if (moveThreats.length > 0) {
                                 moveThreats.slice(0, 3).forEach(threat => {
                                     drawArrow(threat.from, threat.to, 'threat');
                                 });
@@ -2479,8 +2451,7 @@
                         clearSquareAnnotations();
 
                         const moveThreats = getMoveThreats(chess, betterMoveData);
-                        const showThreats = toggleThreats ? toggleThreats.checked : true;
-                        if (showThreats && moveThreats.length > 0) {
+                        if (moveThreats.length > 0) {
                             moveThreats.slice(0, 3).forEach(threat => {
                                 drawArrow(threat.from, threat.to, 'threat');
                             });
