@@ -31,10 +31,11 @@
             this.currentResolve = null;
             this.currentReject = null;
             this.currentEvalData = null;
+            this.evalTimeout = null;
         }
 
-        async init() {
-            if (this.worker && this.isReady) return;
+        init() {
+            if (this.worker && this.isReady) return Promise.resolve();
             if (this.readyPromise) return this.readyPromise;
 
             const workerPath = getWorkerPath();
@@ -76,21 +77,25 @@
             if (line.startsWith('info ') && line.includes('multipv ')) {
                 this._parseInfoLine(line);
             } else if (line.startsWith('bestmove ')) {
+                if (this.evalTimeout) {
+                    clearTimeout(this.evalTimeout);
+                    this.evalTimeout = null;
+                }
                 const parts = line.split(' ');
-                const bestMove = parts[1];
-                if (this.currentResolve) {
-                    const resolve = this.currentResolve;
-                    const evalData = this.currentEvalData;
-                    this.currentResolve = null;
-                    this.currentReject = null;
-                    this.currentEvalData = null;
-                    this.isBusy = false;
+                const bestMove = parts[1] || '';
+                const resolve = this.currentResolve;
+                const evalData = this.currentEvalData;
+                this.currentResolve = null;
+                this.currentReject = null;
+                this.currentEvalData = null;
+                if (resolve) {
                     resolve({ bestMove, ...evalData });
                 }
             }
         }
 
         _parseInfoLine(line) {
+            if (!this.currentEvalData) return;
             const tokens = line.split(' ');
             let multipv = 1;
             let cp = null;
@@ -120,14 +125,29 @@
             if (pv.length > 0) this.currentEvalData.lines[multipv].pv = pv;
         }
 
-        async evaluate(fen, depth = 10, multipv = 3) {
-            await this.init();
+        evaluate(fen, depth = 10, multipv = 3) {
+            if (!this.isReady || !this.worker) {
+                return Promise.reject(new Error('Worker not initialized'));
+            }
 
             return new Promise((resolve, reject) => {
-                this.isBusy = true;
                 this.currentResolve = resolve;
                 this.currentReject = reject;
                 this.currentEvalData = { lines: {} };
+
+                // Safety timeout: 20s max per single position evaluation
+                this.evalTimeout = setTimeout(() => {
+                    if (this.currentResolve) {
+                        const fallbackResolve = this.currentResolve;
+                        const evalData = this.currentEvalData || { lines: {} };
+                        this.currentResolve = null;
+                        this.currentReject = null;
+                        this.currentEvalData = null;
+                        this.evalTimeout = null;
+                        fallbackResolve({ bestMove: '', ...evalData });
+                    }
+                }, 20000);
+
                 this.worker.postMessage(`setoption name MultiPV value ${multipv}`);
                 this.worker.postMessage(`position fen ${fen}`);
                 this.worker.postMessage(`go depth ${depth}`);
@@ -135,6 +155,10 @@
         }
 
         stop() {
+            if (this.evalTimeout) {
+                clearTimeout(this.evalTimeout);
+                this.evalTimeout = null;
+            }
             if (this.worker) {
                 this.worker.postMessage('stop');
             }
@@ -143,23 +167,26 @@
                 this.currentResolve = null;
                 this.currentReject = null;
                 this.currentEvalData = null;
-                this.isBusy = false;
                 reject(new Error('Evaluation stopped'));
             }
             this.isBusy = false;
         }
 
         terminate() {
+            if (this.evalTimeout) {
+                clearTimeout(this.evalTimeout);
+                this.evalTimeout = null;
+            }
             if (this.worker) {
                 this.worker.terminate();
                 this.worker = null;
-                this.isReady = false;
-                this.isBusy = false;
-                this.readyPromise = null;
-                this.currentResolve = null;
-                this.currentReject = null;
-                this.currentEvalData = null;
             }
+            this.isReady = false;
+            this.isBusy = false;
+            this.readyPromise = null;
+            this.currentResolve = null;
+            this.currentReject = null;
+            this.currentEvalData = null;
         }
     }
 
@@ -210,28 +237,39 @@
         }
 
         _processNext() {
-            if (this.isCancelled || this.taskQueue.length === 0) return;
+            if (this.isCancelled) return;
 
-            const idleWorker = this.workers.find(w => !w.isBusy && w.isReady);
-            if (!idleWorker) return;
+            // Loop through all idle workers and dispatch available tasks
+            while (this.taskQueue.length > 0) {
+                const idleWorker = this.workers.find(w => !w.isBusy && w.isReady);
+                if (!idleWorker) break;
 
-            const task = this.taskQueue.shift();
-            idleWorker.evaluate(task.fen, task.depth, task.multipv)
-                .then((res) => {
-                    task.resolve(res);
-                    this._processNext();
-                })
-                .catch((err) => {
-                    task.reject(err);
-                    this._processNext();
-                });
+                const task = this.taskQueue.shift();
+                idleWorker.isBusy = true; // Synchronously mark busy
+
+                idleWorker.evaluate(task.fen, task.depth, task.multipv)
+                    .then((res) => {
+                        idleWorker.isBusy = false;
+                        task.resolve(res);
+                        this._processNext();
+                    })
+                    .catch((err) => {
+                        idleWorker.isBusy = false;
+                        task.reject(err);
+                        this._processNext();
+                    });
+            }
         }
 
         cancelAll() {
             this.isCancelled = true;
-            this.taskQueue.forEach(t => t.reject(new Error('Evaluation cancelled')));
+            const tasks = this.taskQueue;
             this.taskQueue = [];
-            this.workers.forEach(w => w.stop());
+            tasks.forEach(t => t.reject(new Error('Evaluation cancelled')));
+            this.workers.forEach(w => {
+                w.stop();
+                w.isBusy = false;
+            });
             this.initPromise = null;
         }
 
