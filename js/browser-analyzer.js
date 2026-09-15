@@ -355,11 +355,11 @@
          * Analyze an entire chess game from PGN string directly in browser using parallel worker pool.
          * @param {string} pgnText
          * @param {function} onProgress - callback({ ply, totalPlies, percentage, move, moveNum, isWhite, depth, workers })
-         * @param {number} depth - Stockfish search depth (default 12)
+         * @param {number} depth - Stockfish search depth (default 14)
          * @param {number} concurrency - Number of parallel workers (optional)
          * @returns {Promise<object>} Complete analysisData JSON
          */
-        async analyzeGame(pgnText, onProgress = null, depth = 12, concurrency = null) {
+        async analyzeGame(pgnText, onProgress = null, depth = 14, concurrency = null) {
             this.isCancelled = false;
 
             if (concurrency && this.pool.size !== concurrency) {
