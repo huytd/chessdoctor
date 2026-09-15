@@ -724,48 +724,89 @@
             z-index: 1000;
         }
 
-        /* Lichess Crisp SVG Arrows */
-        .arrow-current { stroke: rgba(54, 146, 231, 0.92); stroke-width: 6.5px; }
-        .arrow-better { stroke: rgba(98, 153, 36, 0.95); stroke-width: 6.5px; }
-        .arrow-threat { stroke: rgba(204, 51, 51, 0.95); stroke-width: 5.5px; }
-        .arrow-opponent-threat { stroke: rgba(224, 68, 68, 0.95); stroke-width: 5.5px; stroke-dasharray: 5, 3.5; }
+        /* Lichess Crisp SVG Broad Polygon Arrows */
+        .arrow-polygon {
+            pointer-events: none;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+            transition: opacity 0.15s ease;
+        }
+        .arrow-current {
+            fill: rgba(45, 115, 195, 0.65);
+        }
+        .arrow-better {
+            fill: rgba(88, 151, 46, 0.72);
+        }
+        .arrow-opponent-threat {
+            fill: rgba(220, 50, 50, 0.75);
+        }
+        .arrow-threat {
+            fill: rgba(235, 125, 20, 0.75);
+        }
 
-        .arrow-head-current { fill: rgba(54, 146, 231, 0.92); }
-        .arrow-head-better { fill: rgba(98, 153, 36, 0.95); }
-        .arrow-head-threat { fill: rgba(204, 51, 51, 0.95); }
-        .arrow-head-opponent-threat { fill: rgba(224, 68, 68, 0.95); }
+        /* Lichess Move Square Highlights */
+        .square-highlight-from, .square-highlight-to {
+            box-shadow: inset 0 0 0 9999px rgba(135, 169, 34, 0.45) !important;
+        }
+        .white-1e1d7.square-highlight-from, .white-1e1d7.square-highlight-to {
+            box-shadow: inset 0 0 0 9999px rgba(205, 210, 106, 0.65) !important;
+        }
+        .black-3c85d.square-highlight-from, .black-3c85d.square-highlight-to {
+            box-shadow: inset 0 0 0 9999px rgba(170, 162, 58, 0.65) !important;
+        }
 
-        /* Square Annotations */
+        /* Square Annotations (Lichess Large Floating Move Badges) */
         .square-annotation {
             position: absolute;
             width: 12.5%;
             height: 12.5%;
-            z-index: 999;
+            z-index: 1010;
             pointer-events: none;
             box-sizing: border-box;
         }
         .square-annotation::before {
             content: attr(data-symbol);
             position: absolute;
-            top: 3px;
-            right: 3px;
-            color: white;
-            font-weight: 800;
-            font-size: 0.75rem;
+            top: 2px;
+            right: 2px;
+            color: #ffffff;
+            font-weight: 900;
+            font-size: 0.95rem;
             text-align: center;
-            font-family: 'JetBrains Mono', monospace;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             border-radius: 50%;
-            width: 1.35rem;
-            height: 1.35rem;
+            width: 2.15rem;
+            height: 2.15rem;
             display: flex;
             justify-content: center;
             align-items: center;
             line-height: 1;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.55);
+            letter-spacing: -0.05em;
         }
-        .annotation-blunder::before { background-color: var(--q-blunder); }
-        .annotation-mistake::before { background-color: var(--q-mistake); }
-        .annotation-inaccuracy::before { background-color: var(--q-inaccuracy); color: #111; }
+        .annotation-blunder::before {
+            background-color: #df4444;
+            color: #ffffff;
+        }
+        .annotation-mistake::before {
+            background-color: #e58226;
+            color: #ffffff;
+        }
+        .annotation-inaccuracy::before {
+            background-color: #e6b800;
+            color: #1a1815;
+            border-color: rgba(26, 24, 21, 0.35);
+            font-weight: 900;
+        }
+        .annotation-brilliant::before {
+            background-color: #10b981;
+            color: #ffffff;
+        }
+        .annotation-great::before,
+        .annotation-best::before {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
 
         /* Variation Status Bar (Under the Board) */
         .variation-under-board {
@@ -837,67 +878,217 @@
             border-radius: 2px;
         }
 
-        /* Lichess Move Pair Row */
+        /* Lichess Move List Table & Rows */
+        .move-list-table {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
         .move-pair {
             display: grid;
-            grid-template-columns: 36px 1fr 1fr;
+            grid-template-columns: 32px 1fr 1fr;
             align-items: center;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.8125rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-            padding: 2px 4px;
+            padding: 1px 4px;
+            min-height: 28px;
         }
         .move-pair:nth-child(even) {
-            background: rgba(255, 255, 255, 0.012);
+            background: rgba(255, 255, 255, 0.015);
         }
 
         .move-number {
             color: var(--lic-text-muted);
             font-size: 0.75rem;
-            padding-left: 4px;
+            padding-left: 2px;
             user-select: none;
+            font-weight: 500;
         }
 
-        .white-move, .black-move {
-            padding: 4px 8px;
+        .move-cell {
+            padding: 3px 6px;
             border-radius: 3px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: space-between;
             color: var(--lic-text-primary);
-            transition: all 0.12s;
+            transition: background 0.1s ease, color 0.1s ease;
             user-select: none;
             font-size: 0.8125rem;
             min-width: 0;
+            gap: 4px;
         }
-
-        .white-move:hover, .black-move:hover {
+        .move-cell:hover {
             background: var(--lic-bg-surface-hover);
             color: var(--lic-text-bright);
         }
 
-        .white-move.active, .black-move.active {
-            background: var(--lic-active-move) !important;
-            color: var(--lic-active-move-text) !important;
-            font-weight: 700;
+        .move-san-wrap {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .move-san-figurine {
+            font-size: 0.95em;
+            opacity: 0.9;
         }
 
-        /* Quality Dots */
-        .move-quality-indicator {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            display: inline-block;
+        .move-eval {
+            font-size: 0.6875rem;
+            color: var(--lic-text-muted);
+            font-weight: 400;
+            opacity: 0.75;
             flex-shrink: 0;
+            letter-spacing: -0.02em;
         }
-        .quality-blunder { background-color: var(--q-blunder); box-shadow: 0 0 5px var(--q-blunder); }
-        .quality-mistake { background-color: var(--q-mistake); }
-        .quality-inaccuracy { background-color: var(--q-inaccuracy); }
-        .quality-good { background-color: var(--q-good); opacity: 0.5; }
-        .quality-great { background-color: var(--q-great); }
-        .quality-brilliant { background-color: var(--q-brilliant); box-shadow: 0 0 5px var(--q-brilliant); }
-        .quality-book { background-color: var(--q-book); }
+
+        /* Quality Suffixes & Colors */
+        .quality-blunder .move-san-wrap {
+            color: #ff5c5c;
+        }
+        .quality-mistake .move-san-wrap {
+            color: #f59f00;
+        }
+        .quality-inaccuracy .move-san-wrap {
+            color: #38bdf8;
+        }
+        .quality-brilliant .move-san-wrap {
+            color: #10b981;
+        }
+        .quality-book .move-san-wrap {
+            color: #a78bfa;
+        }
+
+        /* Active Move State */
+        .move-cell.active {
+            background: var(--lic-active-move) !important;
+            color: #ffffff !important;
+        }
+        .move-cell.active .move-san-wrap {
+            color: #ffffff !important;
+        }
+        .move-cell.active .move-eval {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .move-cell.quality-blunder.active {
+            background: #d63939 !important;
+        }
+        .move-cell.quality-mistake.active {
+            background: #d97706 !important;
+        }
+        .move-cell.quality-inaccuracy.active {
+            background: #2563eb !important;
+        }
+
+        /* Lichess Inline Analysis Card (Under Inaccuracy/Mistake/Blunder) */
+        .inline-analysis-card {
+            background: rgba(0, 0, 0, 0.22);
+            border-left: 3px solid transparent;
+            margin: 1px 4px 4px 32px;
+            padding: 6px 8px;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            animation: fadeIn 0.15s ease-out;
+        }
+        .inline-analysis-card.inline-blunder {
+            border-left-color: #df4444;
+        }
+        .inline-analysis-card.inline-mistake {
+            border-left-color: #e58226;
+        }
+        .inline-analysis-card.inline-inaccuracy {
+            border-left-color: #38bdf8;
+        }
+
+        .inline-diag-header {
+            font-weight: 700;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .inline-blunder .inline-diag-header {
+            color: #ff5c5c;
+        }
+        .inline-mistake .inline-diag-header {
+            color: #f59f00;
+        }
+        .inline-inaccuracy .inline-diag-header {
+            color: #38bdf8;
+        }
+
+        .inline-pv-line {
+            font-family: 'JetBrains Mono', monospace;
+            color: #9c9993;
+            font-size: 0.72rem;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background 0.1s, color 0.1s;
+        }
+        .inline-pv-line:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #e0deda;
+        }
+
+        /* Bottom Variation Comparison Pill Bar */
+        .variation-preview-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--lic-bg-canvas);
+            border-top: 1px solid var(--lic-border-subtle);
+            padding: 4px 8px;
+            gap: 6px;
+        }
+        .var-pill {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 8px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: left;
+            background: var(--lic-bg-surface);
+            color: var(--lic-text-primary);
+        }
+        .var-pill:hover {
+            background: var(--lic-bg-surface-hover);
+            color: var(--lic-text-bright);
+        }
+        .var-pill-played {
+            border-color: var(--lic-border-subtle);
+        }
+        .var-pill-better {
+            background: rgba(32, 107, 180, 0.25);
+            color: #60a5fa;
+            border-color: rgba(32, 107, 180, 0.4);
+        }
+        .var-pill-better:hover {
+            background: rgba(32, 107, 180, 0.45);
+            color: #ffffff;
+        }
+        .var-pill .var-eval {
+            font-size: 0.6875rem;
+            opacity: 0.8;
+            font-weight: 400;
+        }
 
         /* Flat Move Navigation Controller (Bottom Toolbar) */
         .lic-nav-toolbar {
@@ -1199,6 +1390,18 @@
                         </div>
                     </div>
 
+                    <!-- Bottom Variation Comparison Bar (Lichess Pill) -->
+                    <div class="variation-preview-bar d-none" id="variationPreviewBar">
+                        <button type="button" class="var-pill var-pill-played" id="pillPlayedMove" title="Return to played move">
+                            <span class="var-san" id="pillPlayedSan">5. O-O?</span>
+                            <span class="var-eval" id="pillPlayedEval">+1.1</span>
+                        </button>
+                        <button type="button" class="var-pill var-pill-better" id="pillBetterMove" title="Explore recommended line">
+                            <span class="var-san" id="pillBetterSan">▶ 5. Nxe5</span>
+                            <span class="var-eval" id="pillBetterEval">-0.2</span>
+                        </button>
+                    </div>
+
                     <!-- Docked Lichess Move Navigation Controller (Flat) -->
                     <div class="lic-nav-toolbar" id="boardToolbar">
                         <div class="nav-btn-group">
@@ -1287,6 +1490,15 @@
             const evalGaugeWhite = document.getElementById('evalGaugeWhite');
             const evalGaugeTop = document.getElementById('evalGaugeTop');
             const evalGaugeBottom = document.getElementById('evalGaugeBottom');
+
+            // Variation Preview Bar DOM elements
+            const variationPreviewBar = document.getElementById('variationPreviewBar');
+            const pillPlayedMove = document.getElementById('pillPlayedMove');
+            const pillBetterMove = document.getElementById('pillBetterMove');
+            const pillPlayedSan = document.getElementById('pillPlayedSan');
+            const pillPlayedEval = document.getElementById('pillPlayedEval');
+            const pillBetterSan = document.getElementById('pillBetterSan');
+            const pillBetterEval = document.getElementById('pillBetterEval');
 
             // Initialize Chessboard
             const boardConfig = {
@@ -1422,6 +1634,20 @@
                 btnReturnMainLine.addEventListener('click', returnToGamePosition);
             }
 
+            if (pillPlayedMove) {
+                pillPlayedMove.addEventListener('click', function() {
+                    returnToGamePosition();
+                });
+            }
+
+            if (pillBetterMove) {
+                pillBetterMove.addEventListener('click', function() {
+                    if (currentMoveIndex >= 0) {
+                        playVariation(currentMoveIndex, 'better');
+                    }
+                });
+            }
+
             // Keyboard navigation
             document.addEventListener('keydown', function(e) {
                 if (['input', 'textarea', 'select'].includes(document.activeElement.tagName.toLowerCase())) {
@@ -1452,34 +1678,26 @@
                 }
             });
 
-            // Arrow markers definition
+            // Arrow markers and filters definition
             function setupArrowMarkers() {
                 const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
                 
-                const markers = [
-                    { id: 'arrowhead-current', color: 'rgba(54, 146, 231, 0.92)' },
-                    { id: 'arrowhead-better', color: 'rgba(98, 153, 36, 0.95)' },
-                    { id: 'arrowhead-threat', color: 'rgba(204, 51, 51, 0.95)' },
-                    { id: 'arrowhead-opponent-threat', color: 'rgba(224, 68, 68, 0.95)' }
-                ];
-                
-                markers.forEach(m => {
-                    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-                    marker.setAttribute('id', m.id);
-                    marker.setAttribute('viewBox', '0 0 10 10');
-                    marker.setAttribute('refX', '6');
-                    marker.setAttribute('refY', '5');
-                    marker.setAttribute('markerWidth', '6');
-                    marker.setAttribute('markerHeight', '6');
-                    marker.setAttribute('orient', 'auto-start-reverse');
-                    
-                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    path.setAttribute('d', 'M 0 1 L 10 5 L 0 9 z');
-                    path.setAttribute('fill', m.color);
-                    marker.appendChild(path);
-                    defs.appendChild(marker);
-                });
-                
+                const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+                filter.setAttribute('id', 'arrow-shadow');
+                filter.setAttribute('x', '-20%');
+                filter.setAttribute('y', '-20%');
+                filter.setAttribute('width', '140%');
+                filter.setAttribute('height', '140%');
+
+                const dropShadow = document.createElementNS('http://www.w3.org/2000/svg', 'feDropShadow');
+                dropShadow.setAttribute('dx', '0');
+                dropShadow.setAttribute('dy', '2');
+                dropShadow.setAttribute('stdDeviation', '2.5');
+                dropShadow.setAttribute('flood-color', '#000000');
+                dropShadow.setAttribute('flood-opacity', '0.45');
+
+                filter.appendChild(dropShadow);
+                defs.appendChild(filter);
                 arrowSvg.appendChild(defs);
             }
 
@@ -1743,6 +1961,111 @@
                 }
             }
 
+            function escapeHtml(str) {
+                if (!str) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            function formatSanWithFigurines(san, isWhite) {
+                if (!san) return '';
+                const cleanSan = String(san).replace(/[?!+#]+$/, '');
+                const suffix = String(san).substring(cleanSan.length);
+                const firstChar = cleanSan.charAt(0);
+                const whitePieces = { 'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘' };
+                const blackPieces = { 'K': '♚', 'Q': '♛', 'R': '♜', 'B': '♝', 'N': '♞' };
+                
+                if (['K', 'Q', 'R', 'B', 'N'].includes(firstChar)) {
+                    const fig = isWhite ? whitePieces[firstChar] : blackPieces[firstChar];
+                    return `<span class="move-san-figurine">${fig}</span>${escapeHtml(cleanSan.substring(1))}${escapeHtml(suffix)}`;
+                }
+                return escapeHtml(san);
+            }
+
+            function getMoveGlyph(move) {
+                if (!move) return '';
+                const quality = (move.detailed_quality || move.quality || '').toLowerCase();
+                switch (quality) {
+                    case 'blunder': return '??';
+                    case 'mistake': return '?';
+                    case 'inaccuracy': return '?!';
+                    case 'brilliant': return '!!';
+                    case 'great': return '!';
+                    default: return '';
+                }
+            }
+
+            function getMoveQualityClass(move) {
+                if (!move) return '';
+                const quality = (move.detailed_quality || move.quality || '').toLowerCase();
+                switch (quality) {
+                    case 'blunder': return 'quality-blunder';
+                    case 'mistake': return 'quality-mistake';
+                    case 'inaccuracy': return 'quality-inaccuracy';
+                    case 'brilliant': return 'quality-brilliant';
+                    case 'great': return 'quality-great';
+                    case 'book': return 'quality-book';
+                    default: return '';
+                }
+            }
+
+            function formatEvalForMoveList(evalVal) {
+                if (evalVal === undefined || evalVal === null || evalVal === '') return '';
+                let s = String(evalVal).trim();
+                if (!s) return '';
+                if (s.startsWith('M') || s.startsWith('+M')) {
+                    return '#' + s.replace(/^\+?M/, '');
+                }
+                if (s.startsWith('-M')) {
+                    return '#-' + s.replace(/^-M/, '');
+                }
+                if (s.startsWith('#')) {
+                    return s;
+                }
+                const num = parseFloat(s);
+                if (!isNaN(num)) {
+                    if (num > 0) return `+${num.toFixed(1)}`;
+                    if (num === 0) return `0.0`;
+                    return num.toFixed(1);
+                }
+                return s;
+            }
+
+            function renderInlineAnalysisCard(move, moveIndex) {
+                if (!move || !move.analysis) return '';
+                const quality = (move.detailed_quality || move.quality || '').toLowerCase();
+                if (quality !== 'blunder' && quality !== 'mistake' && quality !== 'inaccuracy') {
+                    return '';
+                }
+
+                const titleMap = {
+                    'blunder': 'Blunder',
+                    'mistake': 'Mistake',
+                    'inaccuracy': 'Inaccuracy'
+                };
+                const qualityTitle = titleMap[quality] || 'Mistake';
+                const cardClass = `inline-${quality}`;
+
+                const bestMoveSan = move.analysis.best_move || '';
+                const bestMoveFigurine = formatSanWithFigurines(bestMoveSan, move.is_white);
+                const bestMoveHeader = bestMoveSan ? `${bestMoveFigurine} was best.` : '';
+
+                const pvLine = move.analysis.principal_variation || '';
+                
+                return `
+                    <div class="inline-analysis-card ${cardClass}" data-move-index="${moveIndex}" title="Click to play recommended variation">
+                        <div class="inline-diag-header">
+                            <span class="inline-diag-title">${qualityTitle}.</span>
+                            ${bestMoveHeader ? `<span class="inline-diag-best">${bestMoveHeader}</span>` : ''}
+                        </div>
+                        ${pvLine ? `<div class="inline-pv-line" data-index="${moveIndex}">${escapeHtml(pvLine)}</div>` : ''}
+                    </div>
+                `;
+            }
+
             function displayAnalysis(movesList) {
                 if (!movesList || movesList.length === 0) {
                     analysisContainer.innerHTML = `
@@ -1756,53 +2079,74 @@
                 }
                 
                 const movesByNumber = {};
-                movesList.forEach(move => {
+                movesList.forEach((move, index) => {
                     if (!movesByNumber[move.move_number]) {
-                        movesByNumber[move.move_number] = { white: null, black: null };
+                        movesByNumber[move.move_number] = { white: null, whiteIndex: -1, black: null, blackIndex: -1 };
                     }
                     if (move.is_white) {
                         movesByNumber[move.move_number].white = move;
+                        movesByNumber[move.move_number].whiteIndex = index;
                     } else {
                         movesByNumber[move.move_number].black = move;
+                        movesByNumber[move.move_number].blackIndex = index;
                     }
                 });
                 
                 let html = '<div class="move-list-table">';
                 
-                Object.keys(movesByNumber).sort((a, b) => parseInt(a) - parseInt(b)).forEach(moveNumber => {
+                Object.keys(movesByNumber).map(Number).sort((a, b) => a - b).forEach(moveNumber => {
                     const movePair = movesByNumber[moveNumber];
                     html += `<div class="move-pair">`;
                     html += `<div class="move-number">${moveNumber}.</div>`;
                     
                     // White move
                     if (movePair.white) {
-                        const whiteIndex = movesList.findIndex(m => m.move_number === parseInt(moveNumber) && m.is_white);
-                        const whiteQuality = getQualityClass(movePair.white.detailed_quality || movePair.white.quality);
-                        const dotClass = (whiteQuality === 'good-move' || whiteQuality === '') ? 'good' : whiteQuality;
+                        const wIdx = movePair.whiteIndex;
+                        const wMove = movePair.white;
+                        const wQualityClass = getMoveQualityClass(wMove);
+                        const wGlyph = getMoveGlyph(wMove);
+                        const wBaseSan = (wMove.move || '').replace(/[?!]+$/, '');
+                        const wSanFormatted = formatSanWithFigurines(wBaseSan + wGlyph, true);
+                        const wEvalFormatted = formatEvalForMoveList(wMove.evaluation);
+
                         html += `
-                            <div class="white-move" data-index="${whiteIndex}" id="move-${whiteIndex}">
-                                <span class="move-quality-indicator quality-${dotClass}"></span>
-                                <span>${movePair.white.move}</span>
+                            <div class="move-cell white-move ${wQualityClass}" data-index="${wIdx}" id="move-${wIdx}">
+                                <span class="move-san-wrap">${wSanFormatted}</span>
+                                ${wEvalFormatted ? `<span class="move-eval">${wEvalFormatted}</span>` : ''}
                             </div>`;
                     } else {
-                        html += `<div class="white-move"></div>`;
+                        html += `<div class="move-cell white-move empty"></div>`;
                     }
                     
                     // Black move
                     if (movePair.black) {
-                        const blackIndex = movesList.findIndex(m => m.move_number === parseInt(moveNumber) && !m.is_white);
-                        const blackQuality = getQualityClass(movePair.black.detailed_quality || movePair.black.quality);
-                        const dotClass = (blackQuality === 'good-move' || blackQuality === '') ? 'good' : blackQuality;
+                        const bIdx = movePair.blackIndex;
+                        const bMove = movePair.black;
+                        const bQualityClass = getMoveQualityClass(bMove);
+                        const bGlyph = getMoveGlyph(bMove);
+                        const bBaseSan = (bMove.move || '').replace(/[?!]+$/, '');
+                        const bSanFormatted = formatSanWithFigurines(bBaseSan + bGlyph, false);
+                        const bEvalFormatted = formatEvalForMoveList(bMove.evaluation);
+
                         html += `
-                            <div class="black-move" data-index="${blackIndex}" id="move-${blackIndex}">
-                                <span class="move-quality-indicator quality-${dotClass}"></span>
-                                <span>${movePair.black.move}</span>
+                            <div class="move-cell black-move ${bQualityClass}" data-index="${bIdx}" id="move-${bIdx}">
+                                <span class="move-san-wrap">${bSanFormatted}</span>
+                                ${bEvalFormatted ? `<span class="move-eval">${bEvalFormatted}</span>` : ''}
                             </div>`;
                     } else {
-                        html += `<div class="black-move"></div>`;
+                        html += `<div class="move-cell black-move empty"></div>`;
                     }
                     
                     html += `</div>`;
+                    
+                    // Render inline analysis card if White made inaccuracy/mistake/blunder
+                    if (movePair.white) {
+                        html += renderInlineAnalysisCard(movePair.white, movePair.whiteIndex);
+                    }
+                    // Render inline analysis card if Black made inaccuracy/mistake/blunder
+                    if (movePair.black) {
+                        html += renderInlineAnalysisCard(movePair.black, movePair.blackIndex);
+                    }
                 });
                 
                 html += '</div>';
@@ -1810,13 +2154,24 @@
                 
                 if (moveCountSummary) moveCountSummary.textContent = `${movesList.length} moves`;
 
-                document.querySelectorAll('.white-move, .black-move').forEach(item => {
-                    if (item.dataset.index) {
-                        item.addEventListener('click', function() {
-                            const index = parseInt(this.dataset.index);
+                analysisContainer.querySelectorAll('.move-cell[data-index]').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.index);
+                        if (!isNaN(index)) {
                             goToMove(index);
-                        });
-                    }
+                        }
+                    });
+                });
+
+                analysisContainer.querySelectorAll('.inline-analysis-card, .inline-pv-line').forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const moveIndex = parseInt(this.dataset.index || this.dataset.moveIndex);
+                        if (!isNaN(moveIndex)) {
+                            goToMove(moveIndex);
+                            playVariation(moveIndex, 'better');
+                        }
+                    });
                 });
             }
 
@@ -1847,7 +2202,7 @@
                     <div class="diagnosis-header">
                         <div class="move-title-wrap">
                             <span class="player-badge ${move.is_white ? 'white' : 'black'}">${playerName}</span>
-                            <span class="move-san">${move.move}</span>
+                            <span class="move-san">${formatSanWithFigurines(move.move, move.is_white)}</span>
                             <span class="badge-q ${qualityClass}">${qualityTitle}</span>
                         </div>
                         <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -1873,7 +2228,7 @@
                         html += `
                             <div class="better-move-strip">
                                 <span class="text-success fw-semibold small me-1"><i class="bi bi-lightbulb me-1"></i>Better:</span>
-                                <span class="badge-better font-monospace">${move.analysis.best_move}</span>
+                                <span class="badge-better font-monospace">${formatSanWithFigurines(move.analysis.best_move, move.is_white)}</span>
                                 ${move.analysis.best_evaluation ? `<span class="text-muted small ms-1">(${move.analysis.best_evaluation})</span>` : ''}
                             </div>`;
                     }
@@ -1896,7 +2251,7 @@
                         html += `
                             <div class="threat-alert-box opponent-threat d-flex align-items-center flex-wrap gap-2">
                                 <span class="text-danger fw-semibold small"><i class="bi bi-exclamation-triangle-fill me-1"></i>Opponent's threat:</span>
-                                <span class="threat-refutation-badge font-monospace">${move.analysis.refutation}</span>
+                                <span class="threat-refutation-badge font-monospace">${formatSanWithFigurines(move.analysis.refutation, !move.is_white)}</span>
                             </div>`;
                     }
 
@@ -1974,9 +2329,28 @@
                 }
             }
 
+            function updateBoardSquareHighlights(fromSquare, toSquare) {
+                clearBoardSquareHighlights();
+                if (fromSquare) {
+                    const elFrom = document.querySelector(`#board .square-${fromSquare}`);
+                    if (elFrom) elFrom.classList.add('square-highlight-from');
+                }
+                if (toSquare) {
+                    const elTo = document.querySelector(`#board .square-${toSquare}`);
+                    if (elTo) elTo.classList.add('square-highlight-to');
+                }
+            }
+
+            function clearBoardSquareHighlights() {
+                document.querySelectorAll('#board .square-highlight-from, #board .square-highlight-to').forEach(el => {
+                    el.classList.remove('square-highlight-from', 'square-highlight-to');
+                });
+            }
+
             function drawMoveArrows(index) {
                 clearArrows();
                 clearSquareAnnotations();
+                clearBoardSquareHighlights();
                 updateSvgDimensions();
                 
                 if (index < 0 || index >= moves.length) return;
@@ -1986,9 +2360,10 @@
                 
                 if (moveHistory[index]) {
                     const moveData = moveHistory[index];
+                    updateBoardSquareHighlights(moveData.from, moveData.to);
                     drawArrow(moveData.from, moveData.to, 'current');
                     
-                    if (move.quality === 'blunder' || move.quality === 'mistake' || move.quality === 'inaccuracy') {
+                    if (move.quality === 'blunder' || move.quality === 'mistake' || move.quality === 'inaccuracy' || move.quality === 'brilliant' || move.quality === 'great') {
                         addSquareAnnotation(moveData.to, move.quality);
                     }
                     
@@ -2008,10 +2383,12 @@
             }
 
             function drawArrow(from, to, type) {
+                if (!from || !to || from === to) return;
                 const boardEl = document.getElementById('board');
-                if (!boardEl) return;
+                if (!boardEl || !arrowSvg) return;
                 const boardRect = boardEl.getBoundingClientRect();
                 const squareSize = boardRect.width / 8;
+                if (squareSize <= 0) return;
                 
                 const isFlipped = board.orientation() === 'black';
                 const fromFile = isFlipped ? 7 - (from.charCodeAt(0) - 97) : (from.charCodeAt(0) - 97);
@@ -2023,21 +2400,49 @@
                 const fromY = (fromRank + 0.5) * squareSize;
                 const toX = (toFile + 0.5) * squareSize;
                 const toY = (toRank + 0.5) * squareSize;
+
+                const dx = toX - fromX;
+                const dy = toY - fromY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist === 0) return;
+
+                const ux = dx / dist;
+                const uy = dy / dist;
+                const nx = -uy;
+                const ny = ux;
+
+                // Scaled proportions for Lichess wide polygon arrows
+                const shaftWidth = squareSize * 0.19;
+                const headWidth = squareSize * 0.46;
+                const headLength = Math.min(dist * 0.45, squareSize * 0.38);
+                const startOffset = squareSize * 0.18;
+                const endOffset = squareSize * 0.10;
+
+                const actualDist = Math.max(0, dist - startOffset - endOffset);
+                const shaftLength = Math.max(0, actualDist - headLength);
+
+                const startCenterX = fromX + ux * startOffset;
+                const startCenterY = fromY + uy * startOffset;
+
+                const baseCenterX = startCenterX + ux * shaftLength;
+                const baseCenterY = startCenterY + uy * shaftLength;
+
+                const tipX = toX - ux * endOffset;
+                const tipY = toY - uy * endOffset;
+
+                const p1 = `${(startCenterX + nx * (shaftWidth / 2)).toFixed(1)},${(startCenterY + ny * (shaftWidth / 2)).toFixed(1)}`;
+                const p2 = `${(baseCenterX + nx * (shaftWidth / 2)).toFixed(1)},${(baseCenterY + ny * (shaftWidth / 2)).toFixed(1)}`;
+                const p3 = `${(baseCenterX + nx * (headWidth / 2)).toFixed(1)},${(baseCenterY + ny * (headWidth / 2)).toFixed(1)}`;
+                const p4 = `${tipX.toFixed(1)},${tipY.toFixed(1)}`;
+                const p5 = `${(baseCenterX - nx * (headWidth / 2)).toFixed(1)},${(baseCenterY - ny * (headWidth / 2)).toFixed(1)}`;
+                const p6 = `${(baseCenterX - nx * (shaftWidth / 2)).toFixed(1)},${(baseCenterY - ny * (shaftWidth / 2)).toFixed(1)}`;
+                const p7 = `${(startCenterX - nx * (shaftWidth / 2)).toFixed(1)},${(startCenterY - ny * (shaftWidth / 2)).toFixed(1)}`;
+
+                const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygon.setAttribute('points', [p1, p2, p3, p4, p5, p6, p7].join(' '));
+                polygon.setAttribute('class', `arrow-polygon arrow-${type}`);
                 
-                const angle = Math.atan2(toY - fromY, toX - fromX);
-                const shortenBy = squareSize * 0.25;
-                const adjustedToX = toX - shortenBy * Math.cos(angle);
-                const adjustedToY = toY - shortenBy * Math.sin(angle);
-                
-                const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                arrow.setAttribute('x1', fromX);
-                arrow.setAttribute('y1', fromY);
-                arrow.setAttribute('x2', adjustedToX);
-                arrow.setAttribute('y2', adjustedToY);
-                arrow.setAttribute('class', `arrow-${type}`);
-                arrow.setAttribute('marker-end', `url(#arrowhead-${type})`);
-                
-                arrowSvg.appendChild(arrow);
+                arrowSvg.appendChild(polygon);
             }
 
             function clearArrows() {
@@ -2048,6 +2453,7 @@
                 } else {
                     setupArrowMarkers();
                 }
+                clearBoardSquareHighlights();
             }
 
             function addSquareAnnotation(square, moveQuality) {
@@ -2063,7 +2469,11 @@
                     case 'blunder': symbol = '??'; break;
                     case 'mistake': symbol = '?'; break;
                     case 'inaccuracy': symbol = '?!'; break;
+                    case 'brilliant': symbol = '!!'; break;
+                    case 'great':
+                    case 'best': symbol = '!'; break;
                 }
+                if (!symbol) return;
                 
                 const annotation = document.createElement('div');
                 annotation.className = `square-annotation annotation-${moveQuality.replace(' ', '-')}`;
@@ -2162,22 +2572,51 @@
                     drawMoveArrows(index);
                 }, 80);
                 
-                // Auto-scroll move item into view on desktop
-                if (window.innerWidth >= 992) {
-                    const currentMove = document.getElementById(`move-${index}`);
-                    if (currentMove) {
-                        currentMove.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }
+                // Auto-scroll move item into view
+                const currentMove = document.getElementById(`move-${index}`);
+                if (currentMove) {
+                    currentMove.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
             }
 
             function updateMoveHighlight() {
-                document.querySelectorAll('.white-move, .black-move').forEach(item => {
+                document.querySelectorAll('.move-cell').forEach(item => {
                     item.classList.remove('active');
                 });
-                if (currentMoveIndex >= 0) {
-                    const currentMove = document.getElementById(`move-${currentMoveIndex}`);
-                    if (currentMove) currentMove.classList.add('active');
+
+                if (currentMoveIndex >= 0 && currentMoveIndex < moves.length) {
+                    const currentMoveEl = document.getElementById(`move-${currentMoveIndex}`);
+                    if (currentMoveEl) currentMoveEl.classList.add('active');
+
+                    const move = moves[currentMoveIndex];
+                    if (variationPreviewBar && pillPlayedSan && pillPlayedEval) {
+                        variationPreviewBar.classList.remove('d-none');
+                        
+                        const playedGlyph = getMoveGlyph(move);
+                        const playedBase = (move.move || '').replace(/[?!]+$/, '');
+                        const movePrefix = move.is_white ? `${move.move_number}. ` : `${move.move_number}... `;
+                        pillPlayedSan.innerHTML = `${movePrefix}${formatSanWithFigurines(playedBase + playedGlyph, move.is_white)}`;
+                        pillPlayedEval.textContent = formatEvalForMoveList(move.evaluation);
+
+                        if (pillBetterMove && pillBetterSan && pillBetterEval) {
+                            const bestMove = (move.analysis && move.analysis.best_move) ? move.analysis.best_move : null;
+                            const isDifferent = bestMove && (bestMove.replace(/[?!+#]+$/, '') !== playedBase);
+                            
+                            if (isDifferent) {
+                                pillBetterMove.classList.remove('d-none');
+                                pillPlayedMove.style.gridColumn = '';
+                                pillBetterSan.innerHTML = `▶ ${movePrefix}${formatSanWithFigurines(bestMove, move.is_white)}`;
+                                pillBetterEval.textContent = formatEvalForMoveList(move.analysis.best_evaluation);
+                            } else {
+                                pillBetterMove.classList.add('d-none');
+                                pillPlayedMove.style.gridColumn = 'span 2';
+                            }
+                        }
+                    }
+                } else {
+                    if (variationPreviewBar) {
+                        variationPreviewBar.classList.add('d-none');
+                    }
                 }
             }
 
