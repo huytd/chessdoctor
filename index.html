@@ -1015,7 +1015,7 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark pgn-dropdown-menu">
                     <li>
-                        <button type="button" class="dropdown-item d-flex align-items-center gap-2" id="menuItemCustomPgn">
+                        <button type="button" class="dropdown-item d-flex align-items-center gap-2" id="menuItemCustomPgn" data-action="open-pgn">
                             <i class="bi bi-pencil-square text-info"></i>
                             <span>Paste Custom PGN...</span>
                         </button>
@@ -1193,7 +1193,7 @@
                     <div class="analysis-container" id="analysisContainer">
                         <div class="text-center text-muted py-5 small px-3">
                             <p class="mb-3">Load a game or select an example above to begin full analysis.</p>
-                            <button type="button" class="lic-btn lic-btn-primary" onclick="document.getElementById('btnTogglePgn').click()">
+                            <button type="button" id="btnOpenPgnInput" class="lic-btn lic-btn-primary" data-action="open-pgn">
                                 <i class="bi bi-file-earmark-plus"></i> Open PGN Input
                             </button>
                         </div>
@@ -1325,19 +1325,24 @@
                 const shouldOpen = (open !== undefined) ? open : !pgnDrawer.classList.contains('open');
                 if (shouldOpen) {
                     pgnDrawer.classList.add('open');
+                    setTimeout(() => {
+                        if (pgnInput) pgnInput.focus();
+                    }, 150);
                 } else {
                     pgnDrawer.classList.remove('open');
                 }
             }
 
-            const menuItemCustomPgn = document.getElementById('menuItemCustomPgn');
-            if (menuItemCustomPgn) {
-                menuItemCustomPgn.addEventListener('click', function(e) {
+            window.toggleDrawer = toggleDrawer;
+
+            // Global click handler for open-pgn buttons
+            document.addEventListener('click', function(e) {
+                const trigger = e.target.closest('#btnOpenPgnInput, [data-action="open-pgn"]');
+                if (trigger) {
                     e.preventDefault();
                     toggleDrawer(true);
-                    setTimeout(() => pgnInput.focus(), 150);
-                });
-            }
+                }
+            });
 
             if (btnCloseDrawer) btnCloseDrawer.addEventListener('click', () => toggleDrawer(false));
 
@@ -1528,7 +1533,13 @@
                     currentGameInfo = result.game_info || {};
                     
                     if (moves.length === 0) {
-                        analysisContainer.innerHTML = '<div class="alert alert-warning m-3 p-2 small">No moves were analyzed. Please check PGN format.</div>';
+                        analysisContainer.innerHTML = `
+                            <div class="text-center text-muted py-5 small px-3">
+                                <p class="mb-3">No moves analyzed. Please check PGN notation.</p>
+                                <button type="button" id="btnOpenPgnInput" class="lic-btn lic-btn-primary" data-action="open-pgn">
+                                    <i class="bi bi-file-earmark-plus"></i> Open PGN Input
+                                </button>
+                            </div>`;
                         return;
                     }
 
@@ -1733,7 +1744,13 @@
 
             function displayAnalysis(movesList) {
                 if (!movesList || movesList.length === 0) {
-                    analysisContainer.innerHTML = '<div class="text-center text-muted py-4 small">No moves to analyze.</div>';
+                    analysisContainer.innerHTML = `
+                        <div class="text-center text-muted py-5 small px-3">
+                            <p class="mb-3">No moves analyzed. Please check PGN notation.</p>
+                            <button type="button" id="btnOpenPgnInput" class="lic-btn lic-btn-primary" data-action="open-pgn">
+                                <i class="bi bi-file-earmark-plus"></i> Open PGN Input
+                            </button>
+                        </div>`;
                     return;
                 }
                 
@@ -1964,7 +1981,7 @@
                 if (index < 0 || index >= moves.length) return;
                 
                 const move = moves[index];
-                const showThreats = true; // Always display tactical threats
+                const showThreats = true;
                 
                 if (moveHistory[index]) {
                     const moveData = moveHistory[index];
