@@ -1241,11 +1241,12 @@
         <div class="pgn-drawer-inner">
             <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <span class="fw-semibold text-light" style="font-size:var(--lic-fs-base);">Paste PGN Game Notation</span>
+                    <span class="fw-semibold text-light" style="font-size:var(--lic-fs-base);">Paste PGN or Lichess Game URL</span>
                     <span class="small ms-2" style="color:var(--lic-text-secondary);">Examples:</span>
                     <button type="button" class="lic-chip-btn" data-sample="opera">Morphy's Opera</button>
                     <button type="button" class="lic-chip-btn" data-sample="kasparov">Kasparov</button>
                     <button type="button" class="lic-chip-btn" data-sample="scholar">Scholar's Mate</button>
+                    <button type="button" class="lic-chip-btn" data-sample="lichess"><i class="bi bi-link-45deg me-1"></i>Lichess URL</button>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <label for="analysisDepth" class="small mb-0" style="color:var(--lic-text-secondary);">Depth:</label>
@@ -1262,7 +1263,7 @@
                     <button type="button" id="btnCloseDrawer" class="btn-lic-tool" style="min-height:28px;min-width:28px;" title="Close Drawer"><i class="bi bi-x-lg"></i></button>
                 </div>
             </div>
-            <textarea class="form-control pgn-textarea mb-2" id="pgnInput" placeholder="Paste standard PGN notation here..."></textarea>
+            <textarea class="form-control pgn-textarea mb-2" id="pgnInput" placeholder="Paste standard PGN notation or Lichess game URL (e.g. https://lichess.org/Qa7FJNk2)..."></textarea>
             <div class="d-flex align-items-center gap-2">
                 <button id="analyzeBtn" class="lic-btn lic-btn-primary">
                     <i class="bi bi-play-circle-fill"></i> Analyze Game
@@ -1587,7 +1588,8 @@
 [Black "Amateur"]
 [Result "1-0"]
 
-1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0`
+1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0`,
+                lichess: 'https://lichess.org/Qa7FJNk2'
             };
 
             document.querySelectorAll('[data-sample]').forEach(btn => {
@@ -1707,13 +1709,93 @@
                 arrowSvg.appendChild(defs);
             }
 
-            // Analyze Game with In-Browser WASM
-            async function analyzeGame() {
-                const pgn = pgnInput.value.trim();
+            // Extract Lichess Game ID from URL / Text / Hash / Input
+            function extractLichessGameId(input) {
+                if (!input || typeof input !== 'string') return null;
+                input = input.trim();
+                
+                // If it clearly contains standard multi-line PGN and does not start with http/lichess.org
+                if ((input.includes('[Event ') || input.includes('1. e4') || input.includes('1. d4')) && !input.startsWith('http') && !input.startsWith('lichess.org')) {
+                    return null;
+                }
+
+                // Match lichess URL format: lichess.org/{gameId}
+                const lichessMatch = input.match(/lichess\.org\/(?:embed\/game\/)?([a-zA-Z0-9]{8})([a-zA-Z0-9]{4})?/i);
+                if (lichessMatch) {
+                    return lichessMatch[1];
+                }
+
+                // Match hash / query format: #/ID or #ID or #game=ID
+                const hashMatch = input.match(/[#?&](?:game=|id=)?\/?([a-zA-Z0-9]{8})([a-zA-Z0-9]{4})?/i);
+                if (hashMatch) {
+                    return hashMatch[1];
+                }
+
+                // Standalone 8 or 12 character alphanumeric ID
+                if (/^[a-zA-Z0-9]{8}([a-zA-Z0-9]{4})?$/.test(input)) {
+                    return input.substring(0, 8);
+                }
+
+                return null;
+            }
+
+            // Fetch game PGN from Lichess public API
+            async function fetchLichessGamePgn(gameId) {
+                const url = `https://lichess.org/game/export/${gameId}?clocks=false&evals=false&moves=true&tags=true`;
+                const response = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/x-chess-pgn'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error(`Failed to load Lichess game (${response.status}: ${response.statusText || 'Not Found'})`);
+                }
+                const pgn = await response.text();
+                if (!pgn || !pgn.trim()) {
+                    throw new Error('Received empty PGN from Lichess.');
+                }
+                return pgn.trim();
+            }
+
+            // Analyze Game with In-Browser WASM (supports Raw PGN or Lichess Game URLs/IDs)
+            async function analyzeGame(customPgn) {
+                let pgn = (typeof customPgn === 'string' ? customPgn : pgnInput.value).trim();
                 if (!pgn) {
-                    alert('Please enter a PGN first or select one of the sample games.');
+                    alert('Please enter a PGN notation or paste a Lichess game URL.');
                     toggleDrawer(true);
                     return;
+                }
+
+                // Auto-detect if input is a Lichess URL or Game ID
+                const lichessId = extractLichessGameId(pgn);
+                if (lichessId) {
+                    try {
+                        toggleDrawer(false);
+                        analysisProgressContainer.classList.add('show');
+                        progressBar.style.width = '0%';
+                        progressPercent.textContent = '0%';
+                        progressText.textContent = `Fetching game from Lichess (${lichessId})...`;
+                        if (analysisStatusBadge) {
+                            analysisStatusBadge.className = 'badge bg-info text-dark';
+                            analysisStatusBadge.textContent = 'FETCHING...';
+                        }
+                        const fetchedPgn = await fetchLichessGamePgn(lichessId);
+                        pgn = fetchedPgn;
+                        pgnInput.value = fetchedPgn;
+                        if (window.location.hash !== `#${lichessId}`) {
+                            history.replaceState(null, '', `#${lichessId}`);
+                        }
+                    } catch (err) {
+                        console.error('Lichess fetch error:', err);
+                        alert(`Could not fetch Lichess game: ${err.message}`);
+                        analysisProgressContainer.classList.remove('show');
+                        if (analysisStatusBadge) {
+                            analysisStatusBadge.className = 'badge bg-danger text-light';
+                            analysisStatusBadge.textContent = 'ERROR';
+                        }
+                        toggleDrawer(true);
+                        return;
+                    }
                 }
                 
                 toggleDrawer(false);
@@ -1869,12 +1951,16 @@
                 const isFlipped = board.orientation() === 'black';
                 const whiteName = (currentGameInfo && currentGameInfo.white) ? currentGameInfo.white : 'White';
                 const blackName = (currentGameInfo && currentGameInfo.black) ? currentGameInfo.black : 'Black';
+                const whiteElo = (currentGameInfo && currentGameInfo.white_elo) ? `(${currentGameInfo.white_elo})` : '';
+                const blackElo = (currentGameInfo && currentGameInfo.black_elo) ? `(${currentGameInfo.black_elo})` : '';
                 const result = (currentGameInfo && currentGameInfo.result) ? currentGameInfo.result : '';
 
                 if (isFlipped) {
                     // White on top, Black on bottom
                     if (topPlayerName) topPlayerName.textContent = whiteName;
+                    if (topPlayerMeta) topPlayerMeta.textContent = whiteElo;
                     if (bottomPlayerName) bottomPlayerName.textContent = blackName;
+                    if (bottomPlayerMeta) bottomPlayerMeta.textContent = blackElo || (result ? `Result: ${result}` : '');
                     
                     const topAvatar = document.querySelector('#playerBarTop .player-avatar');
                     const bottomAvatar = document.querySelector('#playerBarBottom .player-avatar');
@@ -1883,16 +1969,15 @@
                 } else {
                     // Black on top, White on bottom
                     if (topPlayerName) topPlayerName.textContent = blackName;
+                    if (topPlayerMeta) topPlayerMeta.textContent = blackElo;
                     if (bottomPlayerName) bottomPlayerName.textContent = whiteName;
+                    if (bottomPlayerMeta) bottomPlayerMeta.textContent = whiteElo || (result ? `Result: ${result}` : '');
 
                     const topAvatar = document.querySelector('#playerBarTop .player-avatar');
                     const bottomAvatar = document.querySelector('#playerBarBottom .player-avatar');
                     if (topAvatar) topAvatar.className = 'player-avatar black-avatar';
                     if (bottomAvatar) bottomAvatar.className = 'player-avatar white-avatar';
                 }
-
-                if (topPlayerMeta) topPlayerMeta.textContent = '';
-                if (bottomPlayerMeta) bottomPlayerMeta.textContent = result ? `Result: ${result}` : '';
             }
 
             function updateEvalGauge(index) {
@@ -2958,6 +3043,53 @@
                     goToFirstMove();
                 }
             }
+
+            // Auto-load game from URL Hash / Search Query / Path
+            async function checkUrlForGame() {
+                const searchParam = new URLSearchParams(window.location.search);
+                const gameParam = searchParam.get('game') || searchParam.get('id') || searchParam.get('url');
+                const hash = window.location.hash;
+                const path = window.location.pathname;
+
+                const rawCandidate = gameParam 
+                    || (hash && hash.length > 1 ? hash.slice(1) : '') 
+                    || (path && path !== '/' && !path.endsWith('.html') && !path.endsWith('.htm') ? path.slice(1) : '');
+
+                const gameId = extractLichessGameId(rawCandidate);
+                if (gameId) {
+                    try {
+                        toggleDrawer(false);
+                        analysisProgressContainer.classList.add('show');
+                        progressBar.style.width = '0%';
+                        progressPercent.textContent = '0%';
+                        progressText.textContent = `Fetching Lichess game (${gameId})...`;
+                        if (analysisStatusBadge) {
+                            analysisStatusBadge.className = 'badge bg-info text-dark';
+                            analysisStatusBadge.textContent = 'FETCHING...';
+                        }
+                        const pgn = await fetchLichessGamePgn(gameId);
+                        pgnInput.value = pgn;
+                        analyzeGame(pgn);
+                    } catch (err) {
+                        console.error('Failed to load game from URL:', err);
+                        if (progressText) {
+                            progressText.textContent = `Error loading Lichess game (${gameId}): ${err.message}`;
+                        }
+                        if (analysisStatusBadge) {
+                            analysisStatusBadge.className = 'badge bg-danger text-light';
+                            analysisStatusBadge.textContent = 'ERROR';
+                        }
+                    }
+                }
+            }
+
+            // Check URL for game on initial startup
+            checkUrlForGame();
+
+            // Also re-check when URL hash changes
+            window.addEventListener('hashchange', function() {
+                checkUrlForGame();
+            });
         });
     </script>
 </body>

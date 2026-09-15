@@ -392,6 +392,10 @@
                     black: header.Black || '?',
                     date: header.Date || '????.??.??',
                     event: header.Event || '?',
+                    result: header.Result || '',
+                    white_elo: header.WhiteElo || header.white_elo || '',
+                    black_elo: header.BlackElo || header.black_elo || '',
+                    site: header.Site || '',
                     eco: eco,
                     opening: openingName
                 },
