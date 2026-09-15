@@ -244,4 +244,85 @@ assert(hangBlunderDiag.tags.includes("Hanging Piece"), "Should tag Hanging Piece
 assert(hangBlunderDiag.explanation.includes("leaves the bishop hanging"), "Should explain hanging bishop");
 
 console.log("✓ SituationRecognizer passed!");
+
+// 4. AnalysisCache tests
+console.log("Testing AnalysisCache...");
+const AnalysisCacheModule = require('./js/analysis-cache.js');
+
+// Mock localStorage
+const mockStorage = (function() {
+    let store = {};
+    return {
+        getItem: (k) => store[k] || null,
+        setItem: (k, v) => { store[k] = String(v); },
+        removeItem: (k) => { delete store[k]; },
+        clear: () => { store = {}; }
+    };
+})();
+
+const cache = new AnalysisCacheModule.AnalysisCache(mockStorage, 5);
+cache.clear();
+
+const testPgn1 = "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5";
+const testResult1 = {
+    game_info: { white: 'Alice', black: 'Bob' },
+    moves: [{ move: 'e4', quality: 'good move' }]
+};
+
+// Test basic set & get
+assert.strictEqual(cache.get(testPgn1), null, "Initial cache should be empty");
+cache.set(testPgn1, 18, testResult1);
+const hit1 = cache.get(testPgn1, 18);
+assert(hit1 !== null, "Should retrieve cached game");
+assert.strictEqual(hit1.game_info.white, 'Alice');
+assert.strictEqual(hit1.moves.length, 1);
+assert.strictEqual(cache.count(), 1);
+
+// Test PGN with comments / whitespace variation
+const testPgn1WithComments = "1. e4 { best move } 1... e5 \n 2. Nf3 Nc6 3. Bc4 Bc5";
+const hit1Fuzzy = cache.get(testPgn1WithComments, 18);
+assert(hit1Fuzzy !== null, "Fuzzy comment/whitespace PGN should match cache");
+
+// Test depth threshold
+const hitDepth22 = cache.get(testPgn1, 22);
+assert.strictEqual(hitDepth22, null, "Requesting higher depth than cached should return null");
+
+// Test Lichess ID matching
+const lichessUrl = "https://lichess.org/Qa7FJNk2";
+cache.set(lichessUrl, 18, {
+    game_info: { white: 'Morphy', black: 'Duke' },
+    moves: [{ move: 'e4', quality: 'good move' }]
+}, 'Qa7FJNk2');
+
+const hitLichessById = cache.get('Qa7FJNk2', 18);
+assert(hitLichessById !== null, "Should retrieve by Lichess ID");
+assert.strictEqual(hitLichessById.game_info.white, 'Morphy');
+
+const hitLichessByUrl = cache.get('https://lichess.org/Qa7FJNk2', 18);
+assert(hitLichessByUrl !== null, "Should retrieve by full Lichess URL");
+
+// Test 5-game LRU eviction limit
+cache.clear();
+for (let i = 1; i <= 6; i++) {
+    cache.set(`1. e4 c${i}`, 18, {
+        game_info: { white: `Player ${i}`, black: 'Opp' },
+        moves: [{ move: 'e4', quality: 'good move' }]
+    });
+}
+assert.strictEqual(cache.count(), 5, "Cache should cap at 5 games");
+assert.strictEqual(cache.get("1. e4 c1", 18), null, "Game 1 should be evicted (LRU)");
+assert(cache.get("1. e4 c6", 18) !== null, "Game 6 (newest) should exist in cache");
+assert(cache.get("1. e4 c2", 18) !== null, "Game 2 should still exist in cache");
+
+// Accessing Game 2 bumps it to most recent; now adding Game 7 should evict Game 3, NOT Game 2
+cache.set("1. e4 c7", 18, {
+    game_info: { white: 'Player 7', black: 'Opp' },
+    moves: [{ move: 'e4', quality: 'good move' }]
+});
+assert.strictEqual(cache.count(), 5);
+assert(cache.get("1. e4 c2", 18) !== null, "Game 2 was bumped to MRU, should not be evicted");
+assert.strictEqual(cache.get("1. e4 c3", 18), null, "Game 3 should have been evicted instead");
+
+console.log("✓ AnalysisCache passed!");
 console.log("ALL BROWSER MODULE TESTS PASSED SUCCESSFULLY! 🎉");
+

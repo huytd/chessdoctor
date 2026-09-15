@@ -1522,6 +1522,7 @@
     <script src="js/chess-evaluator.js"></script>
     <script src="js/opening-detector.js"></script>
     <script src="js/situation-recognizer.js"></script>
+    <script src="js/analysis-cache.js"></script>
     <script src="js/browser-analyzer.js"></script>
     
     <script>
@@ -1845,7 +1846,7 @@
             }
 
             // Analyze Game with In-Browser WASM (supports Raw PGN or Lichess Game URLs/IDs)
-            async function analyzeGame(customPgn) {
+            async function analyzeGame(customPgn, forceRefresh = false) {
                 let pgn = (typeof customPgn === 'string' ? customPgn : pgnInput.value).trim();
                 if (!pgn) {
                     alert('Please enter a PGN notation or paste a Lichess game URL.');
@@ -1853,8 +1854,43 @@
                     return;
                 }
 
+                const depthSelect = document.getElementById('analysisDepth');
+                const analysisDepth = depthSelect ? parseInt(depthSelect.value) : 18;
+
                 // Auto-detect if input is a Lichess URL or Game ID
                 const lichessId = extractLichessGameId(pgn);
+
+                // 1. Check local storage cache for instant hit (by Lichess ID or PGN)
+                if (!forceRefresh && typeof AnalysisCache !== 'undefined') {
+                    const cached = AnalysisCache.get(lichessId || pgn, analysisDepth);
+                    if (cached && cached.moves && cached.moves.length > 0) {
+                        toggleDrawer(false);
+                        if (lichessId && window.location.hash !== `#${lichessId}`) {
+                            history.replaceState(null, '', `#${lichessId}`);
+                        }
+                        moves = cached.moves;
+                        currentGameInfo = cached.game_info || {};
+
+                        displayGameInfo(currentGameInfo);
+                        preprocessMoveData();
+                        displayAnalysis(moves);
+                        goToFirstMove();
+
+                        if (analysisStatusBadge) {
+                            analysisStatusBadge.className = 'badge bg-success text-light';
+                            analysisStatusBadge.textContent = 'CACHED';
+                        }
+                        analysisProgressContainer.classList.add('show');
+                        progressBar.style.width = '100%';
+                        progressPercent.textContent = '100%';
+                        progressText.innerHTML = `<i class="bi bi-lightning-charge-fill text-warning me-1"></i>Loaded from local cache (${lichessId || 'PGN'}, Depth ${cached.depth || analysisDepth})`;
+                        setTimeout(() => {
+                            analysisProgressContainer.classList.remove('show');
+                        }, 800);
+                        return;
+                    }
+                }
+
                 if (lichessId) {
                     try {
                         toggleDrawer(false);
@@ -1872,6 +1908,31 @@
                         if (window.location.hash !== `#${lichessId}`) {
                             history.replaceState(null, '', `#${lichessId}`);
                         }
+
+                        // Check cache again with fetched PGN text
+                        if (!forceRefresh && typeof AnalysisCache !== 'undefined') {
+                            const cached = AnalysisCache.get(pgn, analysisDepth);
+                            if (cached && cached.moves && cached.moves.length > 0) {
+                                moves = cached.moves;
+                                currentGameInfo = cached.game_info || {};
+                                displayGameInfo(currentGameInfo);
+                                preprocessMoveData();
+                                displayAnalysis(moves);
+                                goToFirstMove();
+
+                                if (analysisStatusBadge) {
+                                    analysisStatusBadge.className = 'badge bg-success text-light';
+                                    analysisStatusBadge.textContent = 'CACHED';
+                                }
+                                progressBar.style.width = '100%';
+                                progressPercent.textContent = '100%';
+                                progressText.innerHTML = `<i class="bi bi-lightning-charge-fill text-warning me-1"></i>Loaded from local cache (${lichessId}, Depth ${cached.depth || analysisDepth})`;
+                                setTimeout(() => {
+                                    analysisProgressContainer.classList.remove('show');
+                                }, 800);
+                                return;
+                            }
+                        }
                     } catch (err) {
                         console.error('Lichess fetch error:', err);
                         alert(`Could not fetch Lichess game: ${err.message}`);
@@ -1886,9 +1947,6 @@
                 }
                 
                 toggleDrawer(false);
-                
-                const depthSelect = document.getElementById('analysisDepth');
-                const analysisDepth = depthSelect ? parseInt(depthSelect.value) : 18;
 
                 analyzeBtn.disabled = true;
                 if (cancelAnalyzeBtn) cancelAnalyzeBtn.classList.remove('d-none');
@@ -1935,6 +1993,11 @@
                                 </button>
                             </div>`;
                         return;
+                    }
+
+                    // Save result to localStorage cache (5-game LRU limit)
+                    if (typeof AnalysisCache !== 'undefined') {
+                        AnalysisCache.set(pgn, analysisDepth, result, lichessId);
                     }
 
                     displayGameInfo(result.game_info);
@@ -3403,29 +3466,7 @@
 
                 const gameId = extractLichessGameId(rawCandidate);
                 if (gameId) {
-                    try {
-                        toggleDrawer(false);
-                        analysisProgressContainer.classList.add('show');
-                        progressBar.style.width = '0%';
-                        progressPercent.textContent = '0%';
-                        progressText.textContent = `Fetching Lichess game (${gameId})...`;
-                        if (analysisStatusBadge) {
-                            analysisStatusBadge.className = 'badge bg-info text-dark';
-                            analysisStatusBadge.textContent = 'FETCHING...';
-                        }
-                        const pgn = await fetchLichessGamePgn(gameId);
-                        pgnInput.value = pgn;
-                        analyzeGame(pgn);
-                    } catch (err) {
-                        console.error('Failed to load game from URL:', err);
-                        if (progressText) {
-                            progressText.textContent = `Error loading Lichess game (${gameId}): ${err.message}`;
-                        }
-                        if (analysisStatusBadge) {
-                            analysisStatusBadge.className = 'badge bg-danger text-light';
-                            analysisStatusBadge.textContent = 'ERROR';
-                        }
-                    }
+                    analyzeGame(gameId);
                 }
             }
 
