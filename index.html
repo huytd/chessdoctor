@@ -1251,13 +1251,11 @@
                 <div class="d-flex align-items-center gap-2">
                     <label for="analysisDepth" class="small mb-0" style="color:var(--lic-text-secondary);">Depth:</label>
                     <select id="analysisDepth" class="form-select form-select-sm py-0 px-2 select-dark" style="width:auto; height:28px; font-size:var(--lic-fs-sm);">
-                        <option value="10">Fast (10)</option>
-                        <option value="12">Standard (12)</option>
-                        <option value="14" selected>Deep (14)</option>
-                        <option value="16">Master (16)</option>
-                        <option value="18">Grandmaster (18)</option>
-                        <option value="20">Super GM (20)</option>
-                        <option value="22">Deep Analysis (22)</option>
+                        <option value="14">Fast (14)</option>
+                        <option value="16">Standard (16)</option>
+                        <option value="18" selected>Deep (18)</option>
+                        <option value="20">Master (20)</option>
+                        <option value="22">Grandmaster (22)</option>
                         <option value="24">Elite Search (24)</option>
                     </select>
                     <button type="button" id="btnCloseDrawer" class="btn-lic-tool" style="min-height:28px;min-width:28px;" title="Close Drawer"><i class="bi bi-x-lg"></i></button>
@@ -1801,7 +1799,7 @@
                 toggleDrawer(false);
                 
                 const depthSelect = document.getElementById('analysisDepth');
-                const analysisDepth = depthSelect ? parseInt(depthSelect.value) : 14;
+                const analysisDepth = depthSelect ? parseInt(depthSelect.value) : 18;
 
                 analyzeBtn.disabled = true;
                 if (cancelAnalyzeBtn) cancelAnalyzeBtn.classList.remove('d-none');
