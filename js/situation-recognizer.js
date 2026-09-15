@@ -211,7 +211,52 @@
     }
 
     /**
-     * Detect fork / double attack.
+     * Check if a piece of `color` on `square` is safe from being captured profitably.
+     */
+    function isPieceSafe(board, color, square, oppAttackerVal = null) {
+        const piece = board.get(square);
+        if (!piece) return true;
+        const oppColor = (color === 'w' ? 'b' : 'w');
+
+        if (!isSquareAttackedBy(board, oppColor, square)) {
+            return true;
+        }
+
+        const val = PIECE_VALUES[piece.type] || 0;
+        const isDefended = isSquareAttackedBy(board, color, square);
+        if (!isDefended) {
+            return false;
+        }
+
+        const attackers = getAttackers(board, oppColor, square);
+        let minAttackerVal = 999;
+        for (const a of attackers) {
+            const p = board.get(a);
+            if (p) {
+                const aVal = PIECE_VALUES[p.type] || 0;
+                if (aVal < minAttackerVal) minAttackerVal = aVal;
+            }
+        }
+        if (minAttackerVal < val) {
+            return false;
+        }
+
+        if (oppAttackerVal !== null && val > oppAttackerVal) {
+            return false;
+        }
+
+        if (minAttackerVal <= val) {
+            const defenders = getAttackers(board, color, square);
+            if (attackers.length > defenders.length) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Detect genuine, unavoidable fork / double attack.
      */
     function detectFork(boardAfter, move) {
         const piece = boardAfter.get(move.to);
@@ -221,6 +266,23 @@
         const color = piece.color;
         const oppColor = (color === 'w' ? 'b' : 'w');
 
+        // Check 1: Is the attacker itself en prise / easily capturable?
+        const isAttackerDefended = isSquareAttackedBy(boardAfter, color, move.to);
+        const oppAttackers = getAttackers(boardAfter, oppColor, move.to);
+        if (oppAttackers.length > 0) {
+            if (!isAttackerDefended) return null;
+            let minOppVal = 999;
+            for (const a of oppAttackers) {
+                const p = boardAfter.get(a);
+                if (p) {
+                    const aVal = PIECE_VALUES[p.type] || 0;
+                    if (aVal < minOppVal) minOppVal = aVal;
+                }
+            }
+            if (minOppVal <= attackerVal) return null;
+        }
+
+        // Check 2: Identify valuable targets
         const attackedSquares = getPieceAttacks(boardAfter, move.to);
         const valuableTargets = [];
 
@@ -231,25 +293,99 @@
             const targetVal = PIECE_VALUES[target.type] || 0;
             const isDefended = isSquareAttackedBy(boardAfter, oppColor, sq);
 
-            if (target.type === 'k' || !isDefended || targetVal > attackerVal) {
+            if (target.type === 'k') {
                 valuableTargets.push({
                     square: sq,
                     type: target.type,
-                    name: PIECE_NAMES[target.type] || 'piece'
+                    val: targetVal,
+                    name: PIECE_NAMES[target.type] || 'piece',
+                    is_defended: isDefended
+                });
+            } else if (targetVal > attackerVal) {
+                valuableTargets.push({
+                    square: sq,
+                    type: target.type,
+                    val: targetVal,
+                    name: PIECE_NAMES[target.type] || 'piece',
+                    is_defended: isDefended
+                });
+            } else if (!isDefended) {
+                valuableTargets.push({
+                    square: sq,
+                    type: target.type,
+                    val: targetVal,
+                    name: PIECE_NAMES[target.type] || 'piece',
+                    is_defended: false
                 });
             }
         }
 
-        if (valuableTargets.length >= 2) {
-            const names = [valuableTargets[0].name, valuableTargets[1].name];
-            return {
-                type: 'fork',
-                attacker: PIECE_NAMES[piece.type] || 'piece',
-                targets: names,
-                description: `forking the ${names[0]} and ${names[1]}`
-            };
+        if (valuableTargets.length < 2) return null;
+
+        // At least one target must be a piece (not both pawns)
+        if (!valuableTargets.some(t => t.type !== 'p')) return null;
+
+        valuableTargets.sort((a, b) => b.val - a.val);
+        const t1 = valuableTargets[0];
+        const t2 = valuableTargets[1];
+
+        // Check 3: Can opponent resolve both threats in a single legal move?
+        const legalMoves = boardAfter.moves({ verbose: true });
+        for (const oppMove of legalMoves) {
+            boardAfter.move(oppMove);
+
+            // Case 3a: Counter-check
+            if (boardAfter.in_check && boardAfter.in_check()) {
+                const chkSafe = isPieceSafe(boardAfter, oppColor, oppMove.to);
+                boardAfter.undo();
+                if (chkSafe) return null;
+                continue;
+            }
+
+            // Case 3b: Opponent captures attacker
+            if (oppMove.to === move.to) {
+                const capturer = oppMove.piece;
+                const capturerVal = PIECE_VALUES[capturer] || 1;
+                boardAfter.undo();
+                if (!isAttackerDefended || capturerVal <= attackerVal) {
+                    return null;
+                }
+                continue;
+            }
+
+            // Case 3c: Check safety of both targets after oppMove
+            const sq1 = (oppMove.from === t1.square) ? oppMove.to : t1.square;
+            const sq2 = (oppMove.from === t2.square) ? oppMove.to : t2.square;
+
+            const attacksFromForker = getPieceAttacks(boardAfter, move.to);
+            const t1AttackedByForker = attacksFromForker.includes(sq1);
+            const t1Defended = isSquareAttackedBy(boardAfter, oppColor, sq1);
+            let t1Safe = !t1AttackedByForker || (t1Defended && t1.val <= attackerVal);
+            if (oppMove.from === t1.square) {
+                t1Safe = t1Safe && isPieceSafe(boardAfter, oppColor, sq1);
+            }
+
+            const t2AttackedByForker = attacksFromForker.includes(sq2);
+            const t2Defended = isSquareAttackedBy(boardAfter, oppColor, sq2);
+            let t2Safe = !t2AttackedByForker || (t2Defended && t2.val <= attackerVal);
+            if (oppMove.from === t2.square) {
+                t2Safe = t2Safe && isPieceSafe(boardAfter, oppColor, sq2);
+            }
+
+            boardAfter.undo();
+
+            if (t1Safe && t2Safe) {
+                return null;
+            }
         }
-        return null;
+
+        const names = [t1.name, t2.name];
+        return {
+            type: 'fork',
+            attacker: PIECE_NAMES[piece.type] || 'piece',
+            targets: names,
+            description: `forking the ${names[0]} and ${names[1]}`
+        };
     }
 
     /**
@@ -263,6 +399,23 @@
 
         const color = piece.color;
         const oppColor = (color === 'w' ? 'b' : 'w');
+
+        // Check if pinning piece is safe (not hanging / en prise)
+        const isAttackerDefended = isSquareAttackedBy(boardAfter, color, move.to);
+        const oppAttackers = getAttackers(boardAfter, oppColor, move.to);
+        if (oppAttackers.length > 0) {
+            if (!isAttackerDefended) return null;
+            let minOppVal = 999;
+            for (const a of oppAttackers) {
+                const p = boardAfter.get(a);
+                if (p) {
+                    const aVal = PIECE_VALUES[p.type] || 0;
+                    if (aVal < minOppVal) minOppVal = aVal;
+                }
+            }
+            const attackerVal = PIECE_VALUES[piece.type] || 0;
+            if (minOppVal < attackerVal) return null;
+        }
         const kingSq = findKingSquare(boardAfter, oppColor);
         if (!kingSq) return null;
 
@@ -558,17 +711,28 @@
         // Check 3: Refutation move
         let refutationEffect = null;
         if (refutationMove) {
-            const targetPiece = boardAfter.get(refutationMove.to);
-            const isCheckmate = !!(options.refutationIsCheckmate);
+            let boardAfterRef = null;
+            try {
+                boardAfterRef = new Chess(boardAfter.fen());
+                boardAfterRef.move({
+                    from: refutationMove.from,
+                    to: refutationMove.to,
+                    promotion: refutationMove.promotion
+                });
+            } catch (e) {
+                boardAfterRef = null;
+            }
+
+            const isCheckmate = !!(options.refutationIsCheckmate) || (boardAfterRef && boardAfterRef.in_checkmate && boardAfterRef.in_checkmate());
             if (isCheckmate) {
                 tags.push('Checkmate');
                 refutationEffect = `allows ${sanRef || 'refutation'}# delivering checkmate`;
-            } else {
-                const fork = detectFork(boardAfter, refutationMove);
+            } else if (boardAfterRef) {
+                const fork = detectFork(boardAfterRef, refutationMove);
                 if (fork) {
                     tags.push('Fork');
                     refutationEffect = `allows ${sanRef || 'refutation'} ${fork.description}`;
-                } else if (detectPin(boardAfter, refutationMove)) {
+                } else if (detectPin(boardAfterRef, refutationMove)) {
                     tags.push('Pin');
                     refutationEffect = `allows ${sanRef || 'refutation'} pinning a piece`;
                 } else if (refutationMove.to === playedMove.to) {
@@ -577,33 +741,51 @@
                 } else {
                     refutationEffect = `gives ${oppName} the initiative with ${sanRef || 'threats'}`;
                 }
+            } else {
+                refutationEffect = `gives ${oppName} the initiative with ${sanRef || 'threats'}`;
             }
         }
 
         // Check 4: Best move reason
         let bestReason = null;
         if (bestMove) {
-            const fork = detectFork(boardAfter, bestMove);
-            if (fork) {
-                tags.push('Tactical Fork');
-                bestReason = `delivers a ${fork.description}`;
-            } else if (boardBefore.get(bestMove.to)) {
-                const cap = PIECE_NAMES[boardBefore.get(bestMove.to)?.type] || 'piece';
-                bestReason = `captures the ${cap}`;
-            } else {
-                const fc = detectFileControl(boardBefore, bestMove);
-                if (fc) {
-                    tags.push('File Control');
-                    bestReason = fc;
-                } else if (isTrueOutpost(boardAfter, bestMove.to, color)) {
-                    tags.push('Outpost');
-                    bestReason = 'places your knight on a powerful outpost';
-                } else if (detectPassedPawn(boardAfter, bestMove)) {
-                    tags.push('Passed Pawn');
-                    bestReason = 'creates a dangerous passed pawn';
+            let boardAfterBest = null;
+            try {
+                boardAfterBest = new Chess(boardBefore.fen());
+                boardAfterBest.move({
+                    from: bestMove.from,
+                    to: bestMove.to,
+                    promotion: bestMove.promotion
+                });
+            } catch (e) {
+                boardAfterBest = null;
+            }
+
+            if (boardAfterBest) {
+                const fork = detectFork(boardAfterBest, bestMove);
+                if (fork) {
+                    tags.push('Tactical Fork');
+                    bestReason = `delivers a ${fork.description}`;
+                } else if (boardBefore.get(bestMove.to)) {
+                    const cap = PIECE_NAMES[boardBefore.get(bestMove.to)?.type] || 'piece';
+                    bestReason = `captures the ${cap}`;
                 } else {
-                    bestReason = 'maintains optimal piece activity and board control';
+                    const fc = detectFileControl(boardBefore, bestMove);
+                    if (fc) {
+                        tags.push('File Control');
+                        bestReason = fc;
+                    } else if (isTrueOutpost(boardAfterBest, bestMove.to, color)) {
+                        tags.push('Outpost');
+                        bestReason = 'places your knight on a powerful outpost';
+                    } else if (detectPassedPawn(boardAfterBest, bestMove)) {
+                        tags.push('Passed Pawn');
+                        bestReason = 'creates a dangerous passed pawn';
+                    } else {
+                        bestReason = 'maintains optimal piece activity and board control';
+                    }
                 }
+            } else {
+                bestReason = 'maintains optimal piece activity and board control';
             }
         }
 
@@ -712,6 +894,7 @@
         getPieceAttacks,
         isSquareAttackedBy,
         getAttackers,
+        isPieceSafe,
         detectThreatsCreated,
         detectFork,
         detectPin,

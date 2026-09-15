@@ -1,6 +1,6 @@
 # Chess Doctor
 
-Chess Doctor is a powerful chess game analyzer that uses the Stockfish engine to provide detailed analysis of chess games. It identifies mistakes, blunders, and suggests better moves with explanations.
+Chess Doctor is a powerful chess game analyzer that runs entirely in your browser using WebAssembly. It uses the Stockfish engine (compiled to WASM) to provide detailed analysis of chess games — no server or installation required.
 
 <img width="1418" alt="image" src="https://github.com/user-attachments/assets/750a4c91-aafc-42d9-a491-adb01199c853" />
 
@@ -10,130 +10,39 @@ Chess Doctor is a powerful chess game analyzer that uses the Stockfish engine to
 - Identify blunders, mistakes, and inaccuracies
 - Suggest better moves with detailed explanations
 - Interactive web UI to visualize the analysis
-- RESTful API for integration with other applications
+- Runs 100% in-browser — no backend, no installation
 
-## Requirements
+## Usage
 
-- Python 3.7+
-- Stockfish chess engine
-- Flask
-- Requests
-- python-chess
+Simply open the app in your browser:
 
-## Installation
+👉 **[chessdoctor.vercel.app](https://chessdoctor.vercel.app)**
 
-1. Clone this repository:
-   ```
-   git clone https://github.com/yourusername/chessdoctor.git
-   cd chessdoctor
-   ```
-
-2. Install the required Python packages:
-   ```
-   pip install flask requests python-chess
-   ```
-
-3. Install Stockfish:
-   - **Linux**: `sudo apt-get install stockfish` (Debian/Ubuntu)
-   - **macOS**: `brew install stockfish` (using Homebrew)
-   - **Windows**: Download from [stockfishchess.org](https://stockfishchess.org/download/) and install
-
-## Running the Application
-
-The application consists of two parts:
-1. The Chess Doctor API (main.py)
-2. The Web UI (app.py)
-
-### Running the API
-
-```
-python main.py
-```
-
-By default, the API runs on port 5000. You can specify a different port or Stockfish engine path:
-
-```
-python main.py --port 5001 --engine /path/to/stockfish
-```
-
-### Running the Web UI
-
-```
-python app.py
-```
-
-The web UI runs on port 8080 by default and connects to the API on localhost:5000.
-
-You can configure the API host and port using environment variables:
-
-```
-API_HOST=localhost API_PORT=5001 python app.py
-```
-
-## Using the Web UI
-
-1. Open your browser and navigate to `http://localhost:8080`
-2. Paste a PGN (Portable Game Notation) of a chess game into the text area
-3. Click "Analyze Game"
-4. Once analysis is complete, you can:
+1. Paste a PGN (Portable Game Notation) of a chess game into the text area
+2. Click **Analyze Game**
+3. Once analysis is complete, you can:
    - View the game move by move using the navigation buttons
    - See analysis for each move, with mistakes and blunders highlighted
    - Click on any move in the analysis panel to jump to that position
 
-## API Endpoints
+## Running Locally
 
-### `/analyze` (POST)
+The frontend is a static site — just serve the repo root with any static file server:
 
-Analyzes a chess game from PGN notation.
-
-**Request:**
-```json
-{
-  "pgn": "[PGN string of the chess game]"
-}
+```bash
+# Using Python's built-in server
+python3 -m http.server 3030
+# Then open http://localhost:3030
 ```
 
-**Response:**
-```json
-{
-  "game_info": {
-    "white": "Player Name",
-    "black": "Opponent Name",
-    "event": "Tournament Name",
-    "date": "2023.01.01"
-  },
-  "moves": [
-    {
-      "move_number": 1,
-      "ply": 1,
-      "move": "e4",
-      "player": "White",
-      "is_white": true,
-      "quality": "good move",
-      "evaluation": "PovScore(Cp(+20), WHITE)",
-      "notation": "1. e4"
-    },
-    // More moves...
-  ],
-  "errors": []
-}
-```
+Or use any other static server (e.g. `npx serve .`).
 
-## CLI Mode
+## Deployment
 
-You can also run Chess Doctor in CLI mode to analyze a PGN file directly:
-
-```
-python main.py --cli --pgn_file game.pgn
-```
-
-## License
-
-[MIT License](LICENSE)
+The app is deployed as a static site on [Vercel](https://vercel.com).
 
 ## Acknowledgements
 
-- [Stockfish](https://stockfishchess.org/) - The powerful chess engine used for analysis
-- [python-chess](https://python-chess.readthedocs.io/) - Chess library for Python
-- [chessboard.js](https://chessboardjs.com/) - JavaScript chessboard component
-- [chess.js](https://github.com/jhlywa/chess.js) - JavaScript chess library 
+- [Stockfish](https://stockfishchess.org/) — The powerful chess engine (compiled to WebAssembly)
+- [chessboard.js](https://chessboardjs.com/) — JavaScript chessboard component
+- [chess.js](https://github.com/jhlywa/chess.js) — JavaScript chess library

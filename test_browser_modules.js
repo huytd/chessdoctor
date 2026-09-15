@@ -98,6 +98,31 @@ assert(forkRes !== null, "Fork should be detected");
 assert.strictEqual(forkRes.type, 'fork');
 assert(forkRes.targets.includes('king') && forkRes.targets.includes('rook'));
 
+// Fork test 2: Attacker is capturable by Black bishop on d6 (Bxe7) -> filtered out
+const forkBoardCapturable = new Chess("2r3k1/4N3/3b4/8/8/8/8/4K3 b - - 0 1");
+const forkResCapturable = SituationRecognizer.detectFork(forkBoardCapturable, forkMove);
+assert.strictEqual(forkResCapturable, null, "Capturable attacker fork should be filtered out");
+
+// Fork test 3: Defensible fork (1... Bd6 defends both bishops) -> filtered out
+const forkBoardDefensible = new Chess("7k/2b1b3/8/3N4/8/8/8/4K3 b - - 0 1");
+const forkMoveDefensible = { from: 'c3', to: 'd5', piece: 'n' };
+const forkResDefensible = SituationRecognizer.detectFork(forkBoardDefensible, forkMoveDefensible);
+assert.strictEqual(forkResDefensible, null, "Defensible fork should be filtered out");
+
+// Fork test 4: Real pawn fork (d4 forks knight on c5 and bishop on e5) -> detected
+const pawnForkBoard = new Chess("r2qk2r/ppp2ppp/8/2n1b3/3P4/8/PPP2PPP/RNBQK2R b KQkq - 0 1");
+const pawnForkMove = { from: 'd2', to: 'd4', piece: 'p' };
+const pawnForkRes = SituationRecognizer.detectFork(pawnForkBoard, pawnForkMove);
+assert(pawnForkRes !== null, "Pawn fork should be detected");
+assert.strictEqual(pawnForkRes.type, 'fork');
+assert(pawnForkRes.targets.includes('bishop') && pawnForkRes.targets.includes('knight'));
+
+// Fork test 5: Piece attacking two pawns only -> filtered out
+const twoPawnsBoard = new Chess("rnbqkbnr/p1pppppp/8/8/Q7/8/PPPPPPPP/RNB1KBNR b KQkq - 0 1");
+const twoPawnsMove = { from: 'd1', to: 'a4', piece: 'q' };
+const twoPawnsRes = SituationRecognizer.detectFork(twoPawnsBoard, twoPawnsMove);
+assert.strictEqual(twoPawnsRes, null, "Two pawns attack should not be considered a tactical fork");
+
 // Pin test: White bishop on c4 pins Black pawn/knight to king on g8
 const pinBoard = new Chess("6k1/5p2/8/8/2B5/8/8/4K3 b - - 0 1");
 const pinMove = { from: 'f1', to: 'c4', piece: 'b' };

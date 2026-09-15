@@ -38,7 +38,7 @@
                 const handler = (e) => {
                     const line = typeof e.data === 'string' ? e.data : (e.data?.data || '');
                     if (line === 'uciok') {
-                        this.worker.postMessage('setoption name Hash value 32');
+                        this.worker.postMessage('setoption name Hash value 64');
                         this.worker.postMessage('setoption name MultiPV value 3');
                         this.worker.postMessage('isready');
                     } else if (line === 'readyok') {
