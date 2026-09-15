@@ -1522,7 +1522,8 @@
                         const pct = Math.round(prog.percentage || 0);
                         progressBar.style.width = `${pct}%`;
                         progressPercent.textContent = `${pct}%`;
-                        progressText.textContent = `Analyzing move ${prog.ply} of ${prog.totalPlies} (${prog.move}) • Depth ${prog.depth || analysisDepth}...`;
+                        const workersMsg = prog.workers ? ` • ${prog.workers} workers in parallel` : '';
+                        progressText.textContent = `Analyzed ${prog.ply} of ${prog.totalPlies} plies (${prog.move || ''})${workersMsg}...`;
                     };
 
                     const result = await browserDoctor.analyzeGame(pgn, onProgress, analysisDepth);

@@ -1,6 +1,6 @@
 /**
- * browser-analyzer.js - Client-Side Stockfish WASM Game Analyzer for WhyBlunder.
- * Runs Stockfish in a Web Worker, parses UCI output, and orchestrates game analysis in the browser.
+ * browser-analyzer.js - Multi-Worker Parallel Client-Side Stockfish WASM Game Analyzer for WhyBlunder.
+ * Runs a pool of Stockfish Web Workers, parses UCI output, and executes game analysis in parallel.
  */
 (function(root, factory) {
     if (typeof module === 'object' && module.exports) {
@@ -22,34 +22,46 @@
     }
 
     class StockfishWorker {
-        constructor() {
+        constructor(id = 0) {
+            this.id = id;
             this.worker = null;
             this.isReady = false;
+            this.isBusy = false;
             this.readyPromise = null;
             this.currentResolve = null;
+            this.currentReject = null;
             this.currentEvalData = null;
         }
 
         async init() {
-            if (this.worker) return;
-            const workerPath = getWorkerPath();
-            this.worker = new Worker(workerPath);
+            if (this.worker && this.isReady) return;
+            if (this.readyPromise) return this.readyPromise;
 
-            this.readyPromise = new Promise((resolve) => {
-                const handler = (e) => {
+            const workerPath = getWorkerPath();
+            try {
+                this.worker = new Worker(workerPath);
+            } catch (err) {
+                return Promise.reject(err);
+            }
+
+            this.readyPromise = new Promise((resolve, reject) => {
+                const onInitialMessage = (e) => {
                     const line = typeof e.data === 'string' ? e.data : (e.data?.data || '');
                     if (line === 'uciok') {
-                        this.worker.postMessage('setoption name Hash value 64');
+                        this.worker.postMessage('setoption name Hash value 32');
                         this.worker.postMessage('setoption name MultiPV value 3');
                         this.worker.postMessage('isready');
                     } else if (line === 'readyok') {
                         this.isReady = true;
-                        this.worker.removeEventListener('message', handler);
+                        this.worker.removeEventListener('message', onInitialMessage);
                         this.worker.addEventListener('message', this._onMessage.bind(this));
                         resolve();
                     }
                 };
-                this.worker.addEventListener('message', handler);
+                this.worker.addEventListener('message', onInitialMessage);
+                this.worker.addEventListener('error', (err) => {
+                    reject(err);
+                });
                 this.worker.postMessage('uci');
             });
 
@@ -70,7 +82,9 @@
                     const resolve = this.currentResolve;
                     const evalData = this.currentEvalData;
                     this.currentResolve = null;
+                    this.currentReject = null;
                     this.currentEvalData = null;
+                    this.isBusy = false;
                     resolve({ bestMove, ...evalData });
                 }
             }
@@ -85,12 +99,12 @@
 
             for (let i = 0; i < tokens.length; i++) {
                 if (tokens[i] === 'multipv' && i + 1 < tokens.length) {
-                    multipv = parseInt(tokens[i + 1]);
+                    multipv = parseInt(tokens[i + 1], 10);
                 } else if (tokens[i] === 'score' && i + 2 < tokens.length) {
                     if (tokens[i + 1] === 'cp') {
-                        cp = parseInt(tokens[i + 2]);
+                        cp = parseInt(tokens[i + 2], 10);
                     } else if (tokens[i + 1] === 'mate') {
-                        mate = parseInt(tokens[i + 2]);
+                        mate = parseInt(tokens[i + 2], 10);
                     }
                 } else if (tokens[i] === 'pv') {
                     pv = tokens.slice(i + 1);
@@ -109,8 +123,10 @@
         async evaluate(fen, depth = 10, multipv = 3) {
             await this.init();
 
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
+                this.isBusy = true;
                 this.currentResolve = resolve;
+                this.currentReject = reject;
                 this.currentEvalData = { lines: {} };
                 this.worker.postMessage(`setoption name MultiPV value ${multipv}`);
                 this.worker.postMessage(`position fen ${fen}`);
@@ -122,10 +138,15 @@
             if (this.worker) {
                 this.worker.postMessage('stop');
             }
-            if (this.currentResolve) {
+            if (this.currentReject) {
+                const reject = this.currentReject;
                 this.currentResolve = null;
+                this.currentReject = null;
                 this.currentEvalData = null;
+                this.isBusy = false;
+                reject(new Error('Evaluation stopped'));
             }
+            this.isBusy = false;
         }
 
         terminate() {
@@ -133,19 +154,106 @@
                 this.worker.terminate();
                 this.worker = null;
                 this.isReady = false;
+                this.isBusy = false;
+                this.readyPromise = null;
+                this.currentResolve = null;
+                this.currentReject = null;
+                this.currentEvalData = null;
             }
         }
     }
 
+    class StockfishWorkerPool {
+        constructor(size = null) {
+            if (!size) {
+                const concurrency = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency)
+                    ? navigator.hardwareConcurrency
+                    : 4;
+                // Auto pool size: 2 to 6 workers, leaving headroom for UI
+                this.size = Math.max(2, Math.min(concurrency >= 4 ? concurrency - 1 : concurrency, 6));
+            } else {
+                this.size = Math.max(1, size);
+            }
+            this.workers = [];
+            this.taskQueue = [];
+            this.initPromise = null;
+            this.isCancelled = false;
+        }
+
+        async init() {
+            if (this.workers.length > 0 && this.workers.every(w => w.isReady)) return;
+            if (this.initPromise) return this.initPromise;
+
+            this.isCancelled = false;
+            this.initPromise = (async () => {
+                if (this.workers.length === 0) {
+                    for (let i = 0; i < this.size; i++) {
+                        this.workers.push(new StockfishWorker(i));
+                    }
+                }
+                await Promise.all(this.workers.map(w => w.init()));
+            })();
+
+            return this.initPromise;
+        }
+
+        async evaluate(fen, depth = 10, multipv = 3) {
+            if (this.isCancelled) {
+                throw new Error('Evaluation cancelled');
+            }
+            await this.init();
+
+            return new Promise((resolve, reject) => {
+                this.taskQueue.push({ fen, depth, multipv, resolve, reject });
+                this._processNext();
+            });
+        }
+
+        _processNext() {
+            if (this.isCancelled || this.taskQueue.length === 0) return;
+
+            const idleWorker = this.workers.find(w => !w.isBusy && w.isReady);
+            if (!idleWorker) return;
+
+            const task = this.taskQueue.shift();
+            idleWorker.evaluate(task.fen, task.depth, task.multipv)
+                .then((res) => {
+                    task.resolve(res);
+                    this._processNext();
+                })
+                .catch((err) => {
+                    task.reject(err);
+                    this._processNext();
+                });
+        }
+
+        cancelAll() {
+            this.isCancelled = true;
+            this.taskQueue.forEach(t => t.reject(new Error('Evaluation cancelled')));
+            this.taskQueue = [];
+            this.workers.forEach(w => w.stop());
+            this.initPromise = null;
+        }
+
+        terminateAll() {
+            this.cancelAll();
+            this.workers.forEach(w => w.terminate());
+            this.workers = [];
+            this.initPromise = null;
+        }
+    }
+
     class BrowserWhyBlunder {
-        constructor() {
-            this.engine = new StockfishWorker();
+        constructor(concurrency = null) {
+            this.pool = new StockfishWorkerPool(concurrency);
             this.isCancelled = false;
         }
 
         cancel() {
             this.isCancelled = true;
-            this.engine.stop();
+            if (this.pool) {
+                this.pool.cancelAll();
+            }
         }
 
         /**
@@ -188,7 +296,7 @@
                 try {
                     const isWhite = (temp.turn() === 'w');
                     const fenParts = temp.fen().split(' ');
-                    const moveNum = parseInt(fenParts[5]) || 1;
+                    const moveNum = parseInt(fenParts[5], 10) || 1;
                     const m = temp.move({ from, to, promotion });
                     if (!m) break;
 
@@ -206,14 +314,20 @@
         }
 
         /**
-         * Analyze an entire chess game from PGN string directly in browser.
+         * Analyze an entire chess game from PGN string directly in browser using parallel worker pool.
          * @param {string} pgnText
-         * @param {function} onProgress - callback({ ply, totalPlies, percentage, move })
-         * @param {number} depth - Stockfish search depth (default 10)
+         * @param {function} onProgress - callback({ ply, totalPlies, percentage, move, moveNum, isWhite, depth, workers })
+         * @param {number} depth - Stockfish search depth (default 12)
+         * @param {number} concurrency - Number of parallel workers (optional)
          * @returns {Promise<object>} Complete analysisData JSON
          */
-        async analyzeGame(pgnText, onProgress = null, depth = 12) {
+        async analyzeGame(pgnText, onProgress = null, depth = 12, concurrency = null) {
             this.isCancelled = false;
+
+            if (concurrency && this.pool.size !== concurrency) {
+                this.pool.terminateAll();
+                this.pool = new StockfishWorkerPool(concurrency);
+            }
 
             const fullChess = new Chess();
             const valid = fullChess.load_pgn(pgnText);
@@ -247,41 +361,60 @@
                 errors: []
             };
 
-            const boardBefore = new Chess();
+            if (totalPlies === 0) {
+                return analysisData;
+            }
 
+            // Pre-calculate all board states and FENs sequentially
+            const plyContexts = [];
+            const tempBoard = new Chess();
             for (let ply = 0; ply < totalPlies; ply++) {
-                if (this.isCancelled) {
-                    analysisData.errors.push("Analysis cancelled by user");
-                    break;
-                }
-
                 const moveObj = history[ply];
-                const moveNum = Math.floor(ply / 2) + 1;
-                const isWhite = (ply % 2 === 0);
+                const fenBefore = tempBoard.fen();
+                tempBoard.move({
+                    from: moveObj.from,
+                    to: moveObj.to,
+                    promotion: moveObj.promotion
+                });
+                const fenAfter = tempBoard.fen();
+                plyContexts.push({
+                    ply,
+                    moveObj,
+                    moveNum: Math.floor(ply / 2) + 1,
+                    isWhite: (ply % 2 === 0),
+                    fenBefore,
+                    fenAfter
+                });
+            }
+
+            // Initialize worker pool in parallel
+            await this.pool.init();
+            if (this.isCancelled) {
+                analysisData.errors.push("Analysis cancelled by user");
+                return analysisData;
+            }
+
+            let completedCount = 0;
+
+            // Execute ply evaluations concurrently across the worker pool
+            const plyPromises = plyContexts.map(async (ctx) => {
+                if (this.isCancelled) return null;
+
+                const { ply, moveObj, moveNum, isWhite, fenBefore, fenAfter } = ctx;
                 const player = isWhite ? 'White' : 'Black';
-                const turnColor = isWhite ? 'w' : 'b';
 
-                if (onProgress) {
-                    const pct = Math.round(((ply + 1) / totalPlies) * 100);
-                    onProgress({
-                        ply: ply + 1,
-                        totalPlies,
-                        percentage: pct,
-                        move: moveObj.san,
-                        moveNum,
-                        isWhite,
-                        depth
-                    });
-                }
-
-                // Yield briefly to ensure UI repaints
-                await new Promise(r => setTimeout(r, 0));
-
-                const fenBefore = boardBefore.fen();
+                const boardBefore = new Chess(fenBefore);
+                const boardAfter = new Chess(fenAfter);
 
                 // 1. MultiPV analysis of position BEFORE move
-                const preEval = await this.engine.evaluate(fenBefore, depth, 3);
-                if (this.isCancelled) break;
+                let preEval;
+                try {
+                    preEval = await this.pool.evaluate(fenBefore, depth, 3);
+                } catch (e) {
+                    if (this.isCancelled) return null;
+                    throw e;
+                }
+                if (this.isCancelled) return null;
 
                 const bestUci = preEval.bestMove;
                 const bestLine = preEval.lines[1] || { cp: 0, pv: [] };
@@ -293,16 +426,7 @@
                 const playedUci = moveObj.from + moveObj.to + (moveObj.promotion || '');
                 const playedIsBest = (playedUci === bestUci);
 
-                // 2. Advance board
-                const boardAfter = new Chess(fenBefore);
-                boardAfter.move({
-                    from: moveObj.from,
-                    to: moveObj.to,
-                    promotion: moveObj.promotion
-                });
-                const fenAfter = boardAfter.fen();
-
-                // 3. Score after move & Refutation detection
+                // 2. Score after move & Refutation detection
                 let playedScoreObj = bestScoreObj;
                 let refUci = null;
                 let refSan = null;
@@ -329,8 +453,14 @@
                     }
 
                     // Evaluate boardAfter to get opponent's refutation and exact score
-                    const postEval = await this.engine.evaluate(fenAfter, Math.max(8, depth - 2), 1);
-                    if (this.isCancelled) break;
+                    let postEval;
+                    try {
+                        postEval = await this.pool.evaluate(fenAfter, Math.max(8, depth - 2), 1);
+                    } catch (e) {
+                        if (this.isCancelled) return null;
+                        throw e;
+                    }
+                    if (this.isCancelled) return null;
 
                     const postBest = postEval.lines[1] || {};
                     refUci = postEval.bestMove;
@@ -355,8 +485,7 @@
                     refTo = refUci.substring(2, 4);
                 }
 
-                // 4. Win probabilities & Move classification
-                // Stockfish UCI scores are already from the perspective of the side to move
+                // 3. Win probabilities & Move classification
                 const bestCp = (typeof ChessEvaluator !== 'undefined') ? ChessEvaluator.scoreToCp(bestScoreObj) : (bestScoreObj.cp || 0);
                 const playedCp = (typeof ChessEvaluator !== 'undefined') ? ChessEvaluator.scoreToCp(playedScoreObj) : (playedScoreObj.cp || 0);
 
@@ -369,7 +498,7 @@
                     ? ChessEvaluator.classifyMove(wpBefore, wpAfter, { playedIsBest, isBook })
                     : { uiQuality: 'good move', detailedQuality: 'good', wpLoss: 0 };
 
-                // 5. Situation Recognition & Explanations
+                // 4. Situation Recognition & Explanations
                 let explanation = '';
                 let tags = [];
 
@@ -448,7 +577,22 @@
                     ? ChessEvaluator.formatScore(whiteBestScore, 'w')
                     : '+0.00';
 
-                const moveData = {
+                completedCount++;
+                if (onProgress) {
+                    const pct = Math.round((completedCount / totalPlies) * 100);
+                    onProgress({
+                        ply: completedCount,
+                        totalPlies,
+                        percentage: pct,
+                        move: moveObj.san,
+                        moveNum,
+                        isWhite,
+                        depth,
+                        workers: this.pool.size
+                    });
+                }
+
+                return {
                     move_number: moveNum,
                     ply: ply + 1,
                     move: moveObj.san,
@@ -475,20 +619,23 @@
                         threats_created: threatsCreated
                     }
                 };
+            });
 
-                analysisData.moves.push(moveData);
+            const moveResults = await Promise.all(plyPromises);
 
-                // Advance boardBefore for next ply
-                boardBefore.move({
-                    from: moveObj.from,
-                    to: moveObj.to,
-                    promotion: moveObj.promotion
-                });
+            if (this.isCancelled) {
+                analysisData.errors.push("Analysis cancelled by user");
+                return analysisData;
             }
 
+            // Plies are guaranteed to preserve original chronological order (index 0 to totalPlies - 1)
+            analysisData.moves = moveResults.filter(Boolean);
             return analysisData;
         }
     }
+
+    BrowserWhyBlunder.StockfishWorker = StockfishWorker;
+    BrowserWhyBlunder.StockfishWorkerPool = StockfishWorkerPool;
 
     return BrowserWhyBlunder;
 }));
