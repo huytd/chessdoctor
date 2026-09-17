@@ -174,6 +174,25 @@
             background: var(--lic-red-hover);
             color: #fff;
         }
+        .lic-btn-warning {
+            background: #d97706;
+            color: #fff;
+            border-color: #b45309;
+        }
+        .lic-btn-warning:hover {
+            background: #b45309;
+            color: #fff;
+            border-color: #92400e;
+        }
+        .lic-btn-secondary {
+            background: var(--lic-bg-surface-subtle);
+            color: var(--lic-text-primary);
+            border-color: var(--lic-border-subtle);
+        }
+        .lic-btn-secondary:hover {
+            background: var(--lic-bg-surface-hover);
+            color: #fff;
+        }
 
         .lic-chip-btn {
             background: var(--lic-bg-surface-subtle);
@@ -421,6 +440,7 @@
             letter-spacing: 0.03em;
         }
         .badge-q.blunder { background: var(--lic-red-dim); color: #ff7575; border: 1px solid rgba(204, 51, 51, 0.4); }
+        .badge-q.miss, .badge-q.missed-win { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.5); }
         .badge-q.mistake { background: rgba(217, 119, 6, 0.16); color: #fba444; border: 1px solid rgba(217, 119, 6, 0.4); }
         .badge-q.inaccuracy { background: rgba(201, 160, 0, 0.16); color: #ffd644; border: 1px solid rgba(201, 160, 0, 0.4); }
         .badge-q.good-move { background: var(--lic-green-dim); color: #86efac; border: 1px solid rgba(98, 153, 36, 0.4); }
@@ -436,7 +456,7 @@
             border-radius: 3px;
             background: var(--lic-bg-surface-subtle);
             border: 1px solid var(--lic-border-subtle);
-            color: var(--lic-text-bright);
+            color: var(--lic-text-primary);
         }
 
         .eval-best-tag {
@@ -480,6 +500,17 @@
             padding: 2px 8px;
             display: inline-flex;
             align-items: center;
+        }
+        .diag-tag.tag-miss {
+            background: rgba(239, 68, 68, 0.14);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.35);
+            font-weight: 600;
+        }
+        .diag-tag.tag-control {
+            background: rgba(59, 130, 246, 0.12);
+            color: #93c5fd;
+            border-color: rgba(59, 130, 246, 0.3);
         }
 
         /* Better Move Callout */
@@ -533,13 +564,43 @@
         /* Diagnosis Text */
         .diagnosis-text {
             font-size: var(--lic-fs-base);
-            line-height: 1.55;
+            line-height: 1.6;
             color: var(--lic-text-primary);
             margin-bottom: 12px;
-            padding: 10px 12px;
+            padding: 11px 14px;
             background: var(--lic-bg-surface-subtle);
-            border-radius: 4px;
+            border-radius: 5px;
             border: 1px solid var(--lic-border-subtle);
+        }
+        .diag-missed-banner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 9px;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 4px;
+            font-size: var(--lic-fs-sm);
+            color: #fca5a5;
+            font-weight: 500;
+        }
+        .diag-missed-badge {
+            background: #ef4444;
+            color: #fff;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .diag-highlight-move {
+            font-family: monospace;
+            font-weight: 700;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1px 5px;
+            border-radius: 3px;
         }
 
         /* Variation Boxes */
@@ -1068,6 +1129,10 @@
         .quality-blunder .move-san-wrap {
             color: #ff5c5c;
         }
+        .quality-miss .move-san-wrap,
+        .quality-missed-win .move-san-wrap {
+            color: #f87171;
+        }
         .quality-mistake .move-san-wrap {
             color: #f59f00;
         }
@@ -1095,6 +1160,10 @@
 
         .move-cell.quality-blunder.active {
             background: #d63939 !important;
+        }
+        .move-cell.quality-miss.active,
+        .move-cell.quality-missed-win.active {
+            background: #dc2626 !important;
         }
         .move-cell.quality-mistake.active {
             background: #d97706 !important;
@@ -1134,6 +1203,10 @@
         }
         .inline-blunder .inline-diag-title {
             color: #ff5c5c;
+        }
+        .inline-miss .inline-diag-title,
+        .inline-missed-win .inline-diag-title {
+            color: #f87171;
         }
         .inline-mistake .inline-diag-title {
             color: #f59f00;
@@ -1261,6 +1334,69 @@
             color: #ffffff !important;
             border-color: var(--lic-blue);
             outline: none;
+        }
+
+        /* Key Moment Navigation Controls */
+        .btn-lic-key-next {
+            background: rgba(245, 158, 11, 0.16) !important;
+            color: #f59e0b !important;
+            border: 1px solid rgba(245, 158, 11, 0.35) !important;
+            padding: 3px 9px !important;
+            font-weight: 600 !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+        }
+        .btn-lic-key-next:hover {
+            background: rgba(245, 158, 11, 0.28) !important;
+            color: #fbbf24 !important;
+            border-color: rgba(245, 158, 11, 0.6) !important;
+        }
+        .btn-lic-key-next:active {
+            background: rgba(245, 158, 11, 0.42) !important;
+        }
+        .btn-lic-key-next.is-playing {
+            background: rgba(239, 68, 68, 0.22) !important;
+            color: #f87171 !important;
+            border-color: rgba(239, 68, 68, 0.5) !important;
+            animation: pulseKeyPlay 0.9s infinite alternate;
+        }
+        @keyframes pulseKeyPlay {
+            from { box-shadow: 0 0 2px rgba(245, 158, 11, 0.3); }
+            to { box-shadow: 0 0 8px rgba(245, 158, 11, 0.7); }
+        }
+        .key-moment-counter-badge {
+            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 999px;
+            font-family: monospace;
+            background: #f59e0b;
+            color: #1a1816;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .move-cell.is-key-moment {
+            position: relative;
+        }
+        .move-cell.is-key-moment::after {
+            content: '';
+            position: absolute;
+            bottom: 3px;
+            right: 4px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #f59e0b;
+            box-shadow: 0 0 3px rgba(245, 158, 11, 0.8);
+            pointer-events: none;
+        }
+        .key-moment-bar {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 12px;
+            border: 1px solid var(--lic-border-subtle);
         }
 
         /* RESPONSIVE LAYOUT */
@@ -1464,6 +1600,7 @@
                         <div class="d-flex align-items-center gap-2">
                             <span>Moves</span>
                             <span id="moveCountSummary" class="badge bg-secondary bg-opacity-25 text-light font-monospace" style="font-size:var(--lic-fs-sm);">0 moves</span>
+                            <span id="keyMomentsSummary" class="badge bg-warning bg-opacity-25 text-warning font-monospace d-none" style="font-size:var(--lic-fs-sm);">0 moments</span>
                         </div>
                         <button id="btnFlip" class="lic-chip-btn" title="Flip Board (F)"><i class="bi bi-arrow-left-right me-1"></i> Flip</button>
                     </div>
@@ -1495,12 +1632,19 @@
                         <div class="nav-btn-group">
                             <button id="btnFirst" class="btn-lic-tool" title="First Move (Home)"><i class="bi bi-skip-start-fill"></i></button>
                             <button id="btnPrev" class="btn-lic-tool" title="Previous Move (←)"><i class="bi bi-chevron-left"></i></button>
+                            <button id="btnPrevKey" class="btn-lic-tool" title="Previous Key Moment (P)"><i class="bi bi-rewind-fill"></i></button>
+                            <button id="btnNextKey" class="btn-lic-tool btn-lic-key-next" title="Next Key Moment (Space or N)">
+                                <i class="bi bi-fast-forward-fill text-warning key-icon"></i>
+                                <span class="d-none d-sm-inline ms-1 fw-bold key-label">Next</span>
+                                <span id="keyMomentBadge" class="key-moment-counter-badge ms-1 d-none">0/0</span>
+                            </button>
                             <button id="btnNext" class="btn-lic-tool" title="Next Move (→)"><i class="bi bi-chevron-right"></i></button>
                             <button id="btnLast" class="btn-lic-tool" title="Last Move (End)"><i class="bi bi-skip-end-fill"></i></button>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <span class="text-muted small d-none d-sm-inline" style="font-size:var(--lic-fs-sm);">Speed:</span>
                             <select id="speedControl" class="form-select form-select-sm py-0 px-2 select-dark" style="width:auto; height:28px; font-size:var(--lic-fs-sm);">
+                                <option value="0">Instant (Jump)</option>
                                 <option value="2000">Slow</option>
                                 <option value="1000" selected>Normal</option>
                                 <option value="500">Fast</option>
@@ -1534,6 +1678,9 @@
             let moveHistory = [];
             let isPlayingVariation = false;
             let isInVariationMode = false;
+            let isTraversingKeyMoments = false;
+            let keyMomentTimeout = null;
+            let targetKeyIndex = -1;
             let animationSpeed = 1000;
             let animationTimeout = null;
             let browserDoctor = null;
@@ -1547,6 +1694,10 @@
             const moveExplanation = document.getElementById('moveExplanation');
             const btnFirst = document.getElementById('btnFirst');
             const btnPrev = document.getElementById('btnPrev');
+            const btnPrevKey = document.getElementById('btnPrevKey');
+            const btnNextKey = document.getElementById('btnNextKey');
+            const keyMomentBadge = document.getElementById('keyMomentBadge');
+            const keyMomentsSummary = document.getElementById('keyMomentsSummary');
             const btnNext = document.getElementById('btnNext');
             const btnLast = document.getElementById('btnLast');
             const btnFlip = document.getElementById('btnFlip');
@@ -1709,13 +1860,17 @@
             // Speed Control
             if (speedControl) {
                 speedControl.addEventListener('change', function() {
-                    animationSpeed = parseInt(this.value) || 1000;
+                    stopKeyMomentTraversal();
+                    const val = parseInt(this.value);
+                    animationSpeed = isNaN(val) ? 1000 : val;
                 });
             }
 
             // Board navigation buttons
             btnFirst.addEventListener('click', goToFirstMove);
             btnPrev.addEventListener('click', goToPrevMove);
+            if (btnPrevKey) btnPrevKey.addEventListener('click', goToPrevKeyMoment);
+            if (btnNextKey) btnNextKey.addEventListener('click', goToNextKeyMoment);
             btnNext.addEventListener('click', goToNextMove);
             btnLast.addEventListener('click', goToLastMove);
             analyzeBtn.addEventListener('click', analyzeGame);
@@ -1764,12 +1919,26 @@
                 } else if (e.key === 'f' || e.key === 'F') {
                     e.preventDefault();
                     if (btnFlip) btnFlip.click();
-                } else if (e.key === ' ' || e.key === 'Escape') {
+                } else if (e.key === ' ' || e.code === 'Space' || e.key === 'n' || e.key === 'N') {
                     e.preventDefault();
                     if (isInVariationMode || isPlayingVariation) {
                         returnToGamePosition();
                     } else {
-                        goToNextMove();
+                        goToNextKeyMoment();
+                    }
+                } else if (e.key === 'p' || e.key === 'P') {
+                    e.preventDefault();
+                    if (isInVariationMode || isPlayingVariation) {
+                        returnToGamePosition();
+                    } else {
+                        goToPrevKeyMoment();
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    if (isInVariationMode || isPlayingVariation) {
+                        returnToGamePosition();
+                    } else if (isTraversingKeyMoments) {
+                        stopKeyMomentTraversal();
                     }
                 }
             });
@@ -2231,6 +2400,8 @@
                 const quality = (move.detailed_quality || move.quality || '').toLowerCase();
                 switch (quality) {
                     case 'blunder': return '??';
+                    case 'missed win':
+                    case 'miss': return '✕';
                     case 'mistake': return '?';
                     case 'inaccuracy': return '?!';
                     case 'brilliant': return '!!';
@@ -2244,6 +2415,8 @@
                 const quality = (move.detailed_quality || move.quality || '').toLowerCase();
                 switch (quality) {
                     case 'blunder': return 'quality-blunder';
+                    case 'missed win':
+                    case 'miss': return 'quality-miss';
                     case 'mistake': return 'quality-mistake';
                     case 'inaccuracy': return 'quality-inaccuracy';
                     case 'brilliant': return 'quality-brilliant';
@@ -2278,17 +2451,19 @@
             function renderInlineAnalysisCard(move, moveIndex) {
                 if (!move || !move.analysis) return '';
                 const quality = (move.detailed_quality || move.quality || '').toLowerCase();
-                if (quality !== 'blunder' && quality !== 'mistake' && quality !== 'inaccuracy') {
+                if (quality !== 'blunder' && quality !== 'mistake' && quality !== 'inaccuracy' && quality !== 'missed win' && quality !== 'miss') {
                     return '';
                 }
 
                 const titleMap = {
                     'blunder': 'Blunder',
+                    'missed win': 'Missed Win',
+                    'miss': 'Miss',
                     'mistake': 'Mistake',
                     'inaccuracy': 'Inaccuracy'
                 };
                 const qualityTitle = titleMap[quality] || 'Mistake';
-                const cardClass = `inline-${quality}`;
+                const cardClass = `inline-${quality.replace(/\s+/g, '-')}`;
 
                 const bestMoveSan = move.analysis.best_move || '';
                 const bestMoveFigurine = formatSanWithFigurines(bestMoveSan, move.is_white);
@@ -2345,13 +2520,15 @@
                         const wIdx = movePair.whiteIndex;
                         const wMove = movePair.white;
                         const wQualityClass = getMoveQualityClass(wMove);
+                        const isWKey = (typeof isKeyMoment === 'function') && isKeyMoment(wMove);
+                        const wKeyClass = isWKey ? 'is-key-moment' : '';
                         const wGlyph = getMoveGlyph(wMove);
                         const wBaseSan = (wMove.move || '').replace(/[?!]+$/, '');
                         const wSanFormatted = formatSanWithFigurines(wBaseSan + wGlyph, true);
                         const wEvalFormatted = formatEvalForMoveList(wMove.evaluation);
 
                         html += `
-                            <div class="move-cell white-move ${wQualityClass}" data-index="${wIdx}" id="move-${wIdx}">
+                            <div class="move-cell white-move ${wQualityClass} ${wKeyClass}" data-index="${wIdx}" id="move-${wIdx}" ${isWKey ? 'title="Key Moment"' : ''}>
                                 <span class="move-san-wrap">${wSanFormatted}</span>
                                 ${wEvalFormatted ? `<span class="move-eval">${wEvalFormatted}</span>` : ''}
                             </div>`;
@@ -2364,13 +2541,15 @@
                         const bIdx = movePair.blackIndex;
                         const bMove = movePair.black;
                         const bQualityClass = getMoveQualityClass(bMove);
+                        const isBKey = (typeof isKeyMoment === 'function') && isKeyMoment(bMove);
+                        const bKeyClass = isBKey ? 'is-key-moment' : '';
                         const bGlyph = getMoveGlyph(bMove);
                         const bBaseSan = (bMove.move || '').replace(/[?!]+$/, '');
                         const bSanFormatted = formatSanWithFigurines(bBaseSan + bGlyph, false);
                         const bEvalFormatted = formatEvalForMoveList(bMove.evaluation);
 
                         html += `
-                            <div class="move-cell black-move ${bQualityClass}" data-index="${bIdx}" id="move-${bIdx}">
+                            <div class="move-cell black-move ${bQualityClass} ${bKeyClass}" data-index="${bIdx}" id="move-${bIdx}" ${isBKey ? 'title="Key Moment"' : ''}>
                                 <span class="move-san-wrap">${bSanFormatted}</span>
                                 ${bEvalFormatted ? `<span class="move-eval">${bEvalFormatted}</span>` : ''}
                             </div>`;
@@ -2394,6 +2573,7 @@
                 analysisContainer.innerHTML = html;
                 
                 if (moveCountSummary) moveCountSummary.textContent = `${movesList.length} moves`;
+                if (typeof updateKeyMomentBadge === 'function') updateKeyMomentBadge();
 
                 analysisContainer.querySelectorAll('.move-cell[data-index]').forEach(item => {
                     item.addEventListener('click', function() {
@@ -2458,7 +2638,18 @@
                 if (move.tags && move.tags.length > 0) {
                     html += `<div class="tags-cluster">`;
                     move.tags.forEach(tag => {
-                        html += `<span class="diag-tag"><i class="bi bi-tag-fill me-1 opacity-50"></i>${tag}</span>`;
+                        const isMiss = tag.startsWith('Missed') || tag.includes('Attack') || tag === 'Tactical Fork' || tag === 'Hanging Piece';
+                        const isControl = tag.includes('Center') || tag.includes('File') || tag.includes('Outpost') || tag.includes('Diagonal');
+                        let tagClass = 'diag-tag';
+                        let icon = 'bi-tag-fill';
+                        if (isMiss) {
+                            tagClass += ' tag-miss';
+                            icon = 'bi-lightning-charge-fill';
+                        } else if (isControl) {
+                            tagClass += ' tag-control';
+                            icon = 'bi-compass-fill';
+                        }
+                        html += `<span class="${tagClass}"><i class="bi ${icon} me-1 opacity-75"></i>${tag}</span>`;
                     });
                     html += `</div>`;
                 }
@@ -2498,7 +2689,25 @@
 
                     // Explanation / Why
                     if (move.analysis.explanation) {
-                        html += `<div class="diagnosis-text"><i class="bi bi-info-circle me-1 text-info opacity-75"></i>${move.analysis.explanation}</div>`;
+                        let cardContent = '';
+                        if (move.analysis.missed_chance) {
+                            const missTitle = move.analysis.missed_chance.charAt(0).toUpperCase() + move.analysis.missed_chance.slice(1);
+                            cardContent += `
+                                <div class="diag-missed-banner mb-2">
+                                    <span class="diag-missed-badge"><i class="bi bi-crosshair me-1"></i>Missed Opportunity</span>
+                                    <span>${escapeHtml(missTitle)}</span>
+                                </div>`;
+                        }
+
+                        let formattedExpl = escapeHtml(move.analysis.explanation);
+                        const highlightMoves = [move.move, move.analysis.best_move, move.analysis.refutation].filter(Boolean);
+                        highlightMoves.forEach(m => {
+                            const escapedM = m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            formattedExpl = formattedExpl.replace(new RegExp(`\\b${escapedM}\\b`, 'g'), `<span class="diag-highlight-move">${m}</span>`);
+                        });
+
+                        cardContent += `<div class="diag-body"><i class="bi bi-info-circle me-1 text-info opacity-75"></i>${formattedExpl}</div>`;
+                        html += `<div class="diagnosis-text">${cardContent}</div>`;
                     }
 
                     // Variations: Punishing Line & Recommended Line
@@ -2542,8 +2751,43 @@
                 } else {
                     html += '<div class="diagnosis-text text-muted mb-0"><i class="bi bi-check2-circle text-success me-1"></i>This move is considered solid by the engine.</div>';
                 }
+
+                // Key Moment review footer strip
+                const keyIndices = (typeof getKeyMomentIndices === 'function') ? getKeyMomentIndices() : [];
+                if (keyIndices.length > 0) {
+                    const isCurKey = (typeof isKeyMoment === 'function') && isKeyMoment(move);
+                    const curKeyIdx = keyIndices.indexOf(index);
+                    const statusText = (curKeyIdx !== -1)
+                        ? `<span class="badge bg-warning text-dark me-1 fw-bold">Moment ${curKeyIdx + 1} of ${keyIndices.length}</span><span class="text-warning small fw-semibold">Critical position</span>`
+                        : `<span class="text-muted small">Between key moments (${keyIndices.filter(k => k <= index).length} of ${keyIndices.length} reached)</span>`;
+
+                    html += `
+                        <div class="key-moment-bar d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-1 small">
+                                <i class="bi bi-stars text-warning"></i>
+                                ${statusText}
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="lic-btn lic-btn-secondary py-1 px-2 btn-prev-key-action" title="Previous Key Moment (P)">
+                                    <i class="bi bi-rewind-fill me-1"></i>Prev
+                                </button>
+                                <button type="button" class="lic-btn lic-btn-warning py-1 px-3 btn-next-key-action" title="Next Key Moment (Space or N)">
+                                    <span>Next Key Moment</span> <i class="bi bi-fast-forward-fill ms-1"></i>
+                                </button>
+                            </div>
+                        </div>`;
+                }
                 
                 moveExplanation.innerHTML = html;
+                
+                const nextKeyActionBtn = moveExplanation.querySelector('.btn-next-key-action');
+                if (nextKeyActionBtn) {
+                    nextKeyActionBtn.addEventListener('click', goToNextKeyMoment);
+                }
+                const prevKeyActionBtn = moveExplanation.querySelector('.btn-prev-key-action');
+                if (prevKeyActionBtn) {
+                    prevKeyActionBtn.addEventListener('click', goToPrevKeyMoment);
+                }
                 
                 moveExplanation.querySelectorAll('.principal-variation.clickable').forEach(el => {
                     el.addEventListener('click', function() {
@@ -2733,6 +2977,8 @@
             function getQualityClass(quality) {
                 switch (quality) {
                     case 'blunder': return 'blunder';
+                    case 'missed win':
+                    case 'miss': return 'miss';
                     case 'mistake': return 'mistake';
                     case 'inaccuracy': return 'inaccuracy';
                     case 'good move': 
@@ -2746,7 +2992,208 @@
                 }
             }
 
+            // --- Key Moment Navigation & Recognition ---
+            function isKeyMoment(move) {
+                if (!move) return false;
+                if (typeof ChessEvaluator !== 'undefined' && typeof ChessEvaluator.isKeyMoment === 'function') {
+                    return ChessEvaluator.isKeyMoment(move);
+                }
+                const q = (move.detailed_quality || move.quality || '').toLowerCase();
+                if (['blunder', 'mistake', 'inaccuracy', 'missed win', 'miss', 'brilliant', 'great'].includes(q)) {
+                    return true;
+                }
+                if (typeof move.win_prob_loss === 'number' && move.win_prob_loss >= 0.10) {
+                    return true;
+                }
+                if (Array.isArray(move.tags) && move.tags.length > 0) {
+                    return move.tags.some(tag => {
+                        const t = tag.toLowerCase();
+                        return t.includes('miss') || t.includes('fork') || t.includes('hanging') || t.includes('tactic') || t.includes('checkmate') || t.includes('trapped');
+                    });
+                }
+                return false;
+            }
+
+            function getKeyMomentIndices() {
+                if (!moves || moves.length === 0) return [];
+                const indices = [];
+                for (let i = 0; i < moves.length; i++) {
+                    if (isKeyMoment(moves[i])) {
+                        indices.push(i);
+                    }
+                }
+                return indices;
+            }
+
+            function stopKeyMomentTraversal() {
+                if (keyMomentTimeout) {
+                    clearTimeout(keyMomentTimeout);
+                    keyMomentTimeout = null;
+                }
+                isTraversingKeyMoments = false;
+                targetKeyIndex = -1;
+                updateKeyMomentButtonUI(false);
+            }
+
+            function updateKeyMomentButtonUI(isPlaying) {
+                if (!btnNextKey) return;
+                const icon = btnNextKey.querySelector('.key-icon');
+                const label = btnNextKey.querySelector('.key-label');
+                const badge = document.getElementById('keyMomentBadge');
+
+                if (isPlaying) {
+                    btnNextKey.classList.add('is-playing');
+                    if (icon) icon.className = 'bi bi-skip-forward-fill text-danger key-icon';
+                    if (label) label.textContent = 'Skip';
+                    if (badge) badge.classList.add('d-none');
+                    btnNextKey.title = 'Skip forward directly to key moment';
+                } else {
+                    btnNextKey.classList.remove('is-playing');
+                    if (icon) icon.className = 'bi bi-fast-forward-fill text-warning key-icon';
+                    if (label) label.textContent = 'Next';
+                    btnNextKey.title = 'Next Key Moment (Space or N)';
+                    updateKeyMomentBadge();
+                }
+            }
+
+            function updateKeyMomentBadge() {
+                const badge = document.getElementById('keyMomentBadge');
+                const summary = document.getElementById('keyMomentsSummary');
+                const keyIndices = getKeyMomentIndices();
+                const total = keyIndices.length;
+
+                if (summary) {
+                    if (total > 0) {
+                        summary.textContent = `${total} moment${total === 1 ? '' : 's'}`;
+                        summary.classList.remove('d-none');
+                    } else {
+                        summary.classList.add('d-none');
+                    }
+                }
+
+                if (!badge) return;
+
+                if (total === 0) {
+                    badge.classList.add('d-none');
+                    return;
+                }
+
+                badge.classList.remove('d-none');
+
+                const currentKeyPos = keyIndices.findIndex(idx => idx === currentMoveIndex);
+                if (currentKeyPos !== -1) {
+                    badge.textContent = `${currentKeyPos + 1}/${total}`;
+                    badge.title = `Key moment ${currentKeyPos + 1} of ${total}`;
+                } else {
+                    const passed = keyIndices.filter(idx => idx <= currentMoveIndex).length;
+                    badge.textContent = `${passed}/${total}`;
+                    badge.title = `${passed} of ${total} key moments passed`;
+                }
+            }
+
+            function goToNextKeyMoment() {
+                if (!moves || moves.length === 0) return;
+
+                // Fast-skip if traversal is actively playing
+                if (isTraversingKeyMoments) {
+                    const dest = targetKeyIndex;
+                    stopKeyMomentTraversal();
+                    if (typeof dest === 'number' && dest >= 0 && dest < moves.length) {
+                        goToMove(dest);
+                    }
+                    return;
+                }
+
+                stopVariationPlayback();
+
+                const keyIndices = getKeyMomentIndices();
+                if (keyIndices.length === 0) {
+                    if (currentMoveIndex < moves.length - 1) {
+                        goToLastMove();
+                    }
+                    return;
+                }
+
+                // Find the first key moment after currentMoveIndex
+                const nextKeyIndex = keyIndices.find(idx => idx > currentMoveIndex);
+
+                if (nextKeyIndex === undefined) {
+                    // Already past last key moment: go to last move or loop back
+                    if (currentMoveIndex < moves.length - 1) {
+                        goToLastMove();
+                    } else {
+                        goToMove(keyIndices[0]);
+                    }
+                    return;
+                }
+
+                targetKeyIndex = nextKeyIndex;
+
+                // If instant jump or adjacent move, immediately go to destination
+                if (animationSpeed === 0 || nextKeyIndex === currentMoveIndex + 1) {
+                    goToMove(nextKeyIndex);
+                    return;
+                }
+
+                // Smoothly traverse moves until reaching the key moment
+                isTraversingKeyMoments = true;
+                updateKeyMomentButtonUI(true);
+
+                const stepDelay = Math.max(120, Math.min(Math.round(animationSpeed * 0.3), 350));
+                let stepIndex = currentMoveIndex;
+
+                // Sync chess board up to currentMoveIndex
+                chess.reset();
+                for (let i = 0; i <= stepIndex; i++) {
+                    try { chess.move(moves[i].move); } catch (e) {}
+                }
+
+                function step() {
+                    if (!isTraversingKeyMoments) return;
+
+                    stepIndex++;
+                    if (stepIndex < targetKeyIndex) {
+                        try {
+                            chess.move(moves[stepIndex].move);
+                            board.position(chess.fen(), true);
+                            currentMoveIndex = stepIndex;
+                            updateMoveHighlight();
+                            updateTurnIndicators(stepIndex);
+                            updateEvalGauge(stepIndex);
+                        } catch (e) {
+                            console.error('Error during key moment step:', e);
+                        }
+                        keyMomentTimeout = setTimeout(step, stepDelay);
+                    } else {
+                        stopKeyMomentTraversal();
+                        goToMove(targetKeyIndex);
+                    }
+                }
+
+                keyMomentTimeout = setTimeout(step, stepDelay);
+            }
+
+            function goToPrevKeyMoment() {
+                if (!moves || moves.length === 0) return;
+                stopKeyMomentTraversal();
+                stopVariationPlayback();
+
+                const keyIndices = getKeyMomentIndices();
+                if (keyIndices.length === 0) {
+                    goToFirstMove();
+                    return;
+                }
+
+                const prevKeyIndices = keyIndices.filter(idx => idx < currentMoveIndex);
+                if (prevKeyIndices.length > 0) {
+                    goToMove(prevKeyIndices[prevKeyIndices.length - 1]);
+                } else {
+                    goToFirstMove();
+                }
+            }
+
             function goToFirstMove() {
+                stopKeyMomentTraversal();
                 stopVariationPlayback();
                 chess.reset();
                 board.position('start');
@@ -2756,14 +3203,32 @@
                 updateEvalGauge(-1);
                 clearArrows();
                 clearSquareAnnotations();
+                updateKeyMomentBadge();
+
+                const keyIndices = (typeof getKeyMomentIndices === 'function') ? getKeyMomentIndices() : [];
+                const keyCount = keyIndices.length;
+
                 moveExplanation.innerHTML = `
                     <div class="diagnosis-empty">
                         <i class="bi bi-search"></i>
                         <span>Select any move in the list to view engine diagnosis, tactical tags, threats, and alternative variations.</span>
+                        ${keyCount > 0 ? `
+                            <div class="mt-3">
+                                <button type="button" class="lic-btn lic-btn-warning px-3 py-2 btn-start-key-review">
+                                    <i class="bi bi-fast-forward-fill me-1"></i> Start Review (${keyCount} Key Moments)
+                                </button>
+                            </div>
+                        ` : ''}
                     </div>`;
+
+                const startReviewBtn = moveExplanation.querySelector('.btn-start-key-review');
+                if (startReviewBtn) {
+                    startReviewBtn.addEventListener('click', goToNextKeyMoment);
+                }
             }
 
             function goToPrevMove() {
+                stopKeyMomentTraversal();
                 stopVariationPlayback();
                 if (currentMoveIndex > 0) {
                     goToMove(currentMoveIndex - 1);
@@ -2773,6 +3238,7 @@
             }
 
             function goToNextMove() {
+                stopKeyMomentTraversal();
                 stopVariationPlayback();
                 if (currentMoveIndex < moves.length - 1) {
                     goToMove(currentMoveIndex + 1);
@@ -2780,6 +3246,7 @@
             }
 
             function goToLastMove() {
+                stopKeyMomentTraversal();
                 stopVariationPlayback();
                 if (moves.length > 0) {
                     goToMove(moves.length - 1);
@@ -2789,6 +3256,9 @@
             function goToMove(index) {
                 if (index < 0 || index >= moves.length) return;
                 
+                if (!isTraversingKeyMoments || index !== targetKeyIndex) {
+                    stopKeyMomentTraversal();
+                }
                 stopVariationPlayback();
                 chess.reset();
                 
@@ -2808,6 +3278,7 @@
                 updateTurnIndicators(index);
                 updateEvalGauge(index);
                 showMoveExplanation(index);
+                updateKeyMomentBadge();
                 
                 setTimeout(() => {
                     drawMoveArrows(index);
@@ -2953,6 +3424,7 @@
 
             // Variation Playback
             function playVariation(moveIndex, lineType = 'better') {
+                stopKeyMomentTraversal();
                 stopVariationPlayback();
                 const move = moves[moveIndex];
                 if (!move || !move.analysis) return;
@@ -3445,6 +3917,7 @@
             }
 
             function returnToGamePosition() {
+                stopKeyMomentTraversal();
                 stopVariationPlayback();
                 if (currentMoveIndex >= 0) {
                     goToMove(currentMoveIndex);

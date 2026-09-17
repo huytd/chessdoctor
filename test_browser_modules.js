@@ -62,6 +62,20 @@ const blackMoverScore = { cp: 200 };
 const whiteDisplayScore = { cp: -blackMoverScore.cp };
 assert.strictEqual(ChessEvaluator.formatScore(whiteDisplayScore, 'w'), '-2.00');
 
+// Key Moment identification tests
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'blunder' }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ detailed_quality: 'mistake' }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'inaccuracy' }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ detailed_quality: 'missed win' }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'miss' }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ detailed_quality: 'brilliant' }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ detailed_quality: 'great' }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'good move', win_prob_loss: 0.12 }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'good move', tags: ['Missed Attack on Queen'] }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'good move', tags: ['Tactical Fork'] }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'good move', detailed_quality: 'book' }), false);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'good move', detailed_quality: 'good', win_prob_loss: 0.01 }), false);
+
 console.log("✓ ChessEvaluator passed!");
 
 // 2. OpeningDetector tests
@@ -242,6 +256,84 @@ const hangBlunderDiag = SituationRecognizer.explainBlunderOrMistake({
 console.log("Generated hanging piece diagnosis:", hangBlunderDiag.explanation);
 assert(hangBlunderDiag.tags.includes("Hanging Piece"), "Should tag Hanging Piece");
 assert(hangBlunderDiag.explanation.includes("leaves the bishop hanging"), "Should explain hanging bishop");
+
+// 4. Missed attack on Queen test: White plays a3 instead of d4 (attacking enemy Queen on e5)
+console.log("Testing missed attack on Queen diagnosis...");
+const missedQAttackBefore = new Chess("r1b1kbnr/pppp1ppp/2n5/4q3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 3");
+const missedQAttackPlayed = new Chess("r1b1kbnr/pppp1ppp/2n5/4q3/4P3/P7/1PPP1PPP/RNBQKBNR b KQkq - 0 3");
+const missedQAttackDiag = SituationRecognizer.explainBlunderOrMistake({
+    boardBefore: missedQAttackBefore,
+    boardAfter: missedQAttackPlayed,
+    playedMove: { from: 'a2', to: 'a3' },
+    bestMove: { from: 'd2', to: 'd4' },
+    sanPlayed: 'a3',
+    sanBest: 'd4'
+});
+console.log("Generated missed Queen attack diagnosis:", missedQAttackDiag.explanation);
+assert(missedQAttackDiag.tags.includes("Missed Attack"), "Should tag Missed Attack");
+assert(missedQAttackDiag.tags.includes("Attack on Queen"), "Should tag Attack on Queen");
+assert(missedQAttackDiag.explanation.includes("Queen"), "Should mention Queen in explanation");
+assert(missedQAttackDiag.missedChance.includes("Queen"), "missedChance should explicitly mention Queen");
+assert(missedQAttackDiag.betterLine.includes("Queen"), "betterLine should mention Queen");
+
+// 5. Missed attack on undefended piece test: White plays h3 instead of b4 attacking undefended knight on a5
+console.log("Testing missed attack on undefended piece diagnosis...");
+const missedPieceAttackBefore = new Chess("r1b1kbnr/pppp1ppp/8/n3p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3");
+const missedPieceAttackPlayed = new Chess("r1b1kbnr/pppp1ppp/8/n3p3/4P3/5N1P/PPPP1PP1/RNBQKB1R b KQkq - 0 3");
+const missedPieceAttackDiag = SituationRecognizer.explainBlunderOrMistake({
+    boardBefore: missedPieceAttackBefore,
+    boardAfter: missedPieceAttackPlayed,
+    playedMove: { from: 'h2', to: 'h3' },
+    bestMove: { from: 'b2', to: 'b4' },
+    sanPlayed: 'h3',
+    sanBest: 'b4'
+});
+console.log("Generated missed piece attack diagnosis:", missedPieceAttackDiag.explanation);
+assert(missedPieceAttackDiag.tags.includes("Missed Attack"), "Should tag Missed Attack");
+assert(missedPieceAttackDiag.tags.includes("Attacking Piece"), "Should tag Attacking Piece");
+assert(missedPieceAttackDiag.explanation.includes("knight"), "Should mention knight in explanation");
+assert(missedPieceAttackDiag.missedChance.includes("knight"), "missedChance should mention knight");
+
+// 6. Multi-ply combination test: PV material gain winning Queen
+console.log("Testing combination PV material gain...");
+const comboBefore = new Chess("4k3/8/8/8/3q4/8/3R4/4K3 w - - 0 1");
+const comboPlayed = new Chess("4k3/8/8/8/3q4/8/3R4/5K2 b - - 1 1");
+const comboDiag = SituationRecognizer.explainBlunderOrMistake({
+    boardBefore: comboBefore,
+    boardAfter: comboPlayed,
+    playedMove: { from: 'e1', to: 'f1' },
+    bestMove: { from: 'd2', to: 'd4' },
+    sanPlayed: 'Kf1',
+    sanBest: 'Rxd4',
+    bestPv: ['d2d4']
+});
+console.log("Generated combination diagnosis:", comboDiag.explanation);
+assert(comboDiag.tags.includes("Winning Material"), "Should tag Winning Material");
+assert(comboDiag.tags.includes("Missed Tactic"), "Should tag Missed Tactic");
+assert(comboDiag.explanation.includes("Queen"), "Should mention Queen in explanation");
+assert(comboDiag.betterLine.includes("Queen"), "betterLine should mention winning the Queen");
+
+// 7. Board control dominance tests
+console.log("Testing board control dominance detection...");
+const pawnCenterBefore = new Chess("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1");
+const pawnCenterAfter = new Chess("rnbqkbnr/pppppppp/8/8/3PP3/8/PPP2PPP/RNBQKBNR b KQkq - 0 2");
+const centerDuo = SituationRecognizer.detectBoardControlDominance(pawnCenterBefore, pawnCenterAfter, { from: 'd2', to: 'd4' });
+assert(centerDuo !== null, "Should detect pawn center duo");
+assert.strictEqual(centerDuo.type, 'pawn_center_duo', "Should be pawn_center_duo");
+assert(centerDuo.tags.includes("Center Control"), "Should have Center Control tag");
+
+const rook7thBefore = new Chess("4k3/8/8/8/8/8/8/3R1K2 w - - 0 1");
+const rook7thAfter = new Chess("4k3/3R4/8/8/8/8/8/5K2 b - - 1 1");
+const rook7th = SituationRecognizer.detectBoardControlDominance(rook7thBefore, rook7thAfter, { from: 'd1', to: 'd7' });
+assert(rook7th !== null, "Should detect 7th rank infiltration");
+assert.strictEqual(rook7th.type, 'seventh_rank', "Should be seventh_rank");
+
+// 8. Structured breakdown properties verification
+console.log("Testing structured breakdown properties...");
+assert(userDiag.flaw !== undefined && userDiag.flaw !== null, "Should have flaw property");
+assert(userDiag.betterLine !== undefined && userDiag.betterLine !== null, "Should have betterLine property");
+assert(missedForkDiag.missedChance !== undefined && missedForkDiag.missedChance !== null, "Should have missedChance property");
+assert(missedForkDiag.betterLine !== undefined && missedForkDiag.betterLine !== null, "Should have betterLine property");
 
 console.log("✓ SituationRecognizer passed!");
 

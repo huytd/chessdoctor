@@ -543,6 +543,9 @@
                 // 4. Situation Recognition & Explanations
                 let explanation = '';
                 let tags = [];
+                let flaw = null;
+                let missedChance = null;
+                let betterLine = null;
 
                 if (typeof SituationRecognizer !== 'undefined') {
                     if (classification.uiQuality === 'blunder' || classification.uiQuality === 'mistake' || classification.uiQuality === 'inaccuracy') {
@@ -579,6 +582,9 @@
                         });
                         explanation = blunderExpl.explanation;
                         tags = blunderExpl.tags;
+                        flaw = blunderExpl.flaw;
+                        missedChance = blunderExpl.missedChance;
+                        betterLine = blunderExpl.betterLine;
 
                         if (opViolation && !tags.includes('Opening Principle')) {
                             tags.push('Opening Principle');
@@ -593,6 +599,9 @@
                         });
                         explanation = goodExpl.explanation;
                         tags = goodExpl.tags;
+                        flaw = goodExpl.flaw;
+                        missedChance = goodExpl.missedChance;
+                        betterLine = goodExpl.betterLine;
                     }
                 }
 
@@ -651,6 +660,9 @@
                     analysis: {
                         best_move: bestSan,
                         explanation: explanation,
+                        flaw: flaw,
+                        missed_chance: missedChance,
+                        better_line: betterLine,
                         best_evaluation: formattedBestEval,
                         principal_variation: bestPvFormatted,
                         tags: tags,

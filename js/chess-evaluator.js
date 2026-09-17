@@ -134,11 +134,36 @@
         }
     }
 
+    /**
+     * Determine if a move is a key moment in the game (blunder, mistake, inaccuracy, missed win, brilliant, great, or major tactical event).
+     * @param {object} move
+     * @returns {boolean}
+     */
+    function isKeyMoment(move) {
+        if (!move) return false;
+        const q = (move.detailed_quality || move.quality || '').toLowerCase();
+        if (['blunder', 'mistake', 'inaccuracy', 'missed win', 'miss', 'brilliant', 'great'].includes(q)) {
+            return true;
+        }
+        if (typeof move.win_prob_loss === 'number' && move.win_prob_loss >= 0.10) {
+            return true;
+        }
+        if (Array.isArray(move.tags) && move.tags.length > 0) {
+            const keyTag = move.tags.some(tag => {
+                const t = tag.toLowerCase();
+                return t.includes('miss') || t.includes('fork') || t.includes('hanging') || t.includes('tactic') || t.includes('checkmate') || t.includes('trapped');
+            });
+            if (keyTag) return true;
+        }
+        return false;
+    }
+
     return {
         MATE_SCORE_CP,
         scoreToCp,
         cpToWinProb,
         formatScore,
-        classifyMove
+        classifyMove,
+        isKeyMoment
     };
 }));

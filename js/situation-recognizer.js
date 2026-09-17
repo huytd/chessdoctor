@@ -1060,7 +1060,195 @@
     }
 
     /**
-     * Full dual-sided explanation for blunder or mistake.
+     * Detect attacks on valuable pieces or multiple threats.
+     */
+    function detectAttacksOnPieces(boardAfter, move) {
+        const piece = boardAfter.get(move.to);
+        if (!piece) return [];
+
+        const color = piece.color;
+        const oppColor = (color === 'w' ? 'b' : 'w');
+        const attacks = getPieceAttacks(boardAfter, move.to);
+        const attackerVal = PIECE_VALUES[piece.type] || 1;
+        const results = [];
+
+        for (const sq of attacks) {
+            const target = boardAfter.get(sq);
+            if (!target || target.color !== oppColor) continue;
+
+            const targetVal = PIECE_VALUES[target.type] || 1;
+            const isDefended = isSquareAttackedBy(boardAfter, oppColor, sq);
+            const targetName = PIECE_NAMES[target.type] || 'piece';
+
+            if (target.type === 'q') {
+                results.push({
+                    type: 'attack_queen',
+                    target: 'Queen',
+                    targetType: 'q',
+                    square: sq,
+                    isDefended,
+                    description: `attacks the enemy Queen on ${sq}`
+                });
+            } else if (target.type === 'r') {
+                if (!isDefended || attackerVal <= 3) {
+                    results.push({
+                        type: 'attack_rook',
+                        target: 'Rook',
+                        targetType: 'r',
+                        square: sq,
+                        isDefended,
+                        description: `attacks the Rook on ${sq}`
+                    });
+                }
+            } else if (!isDefended && target.type !== 'p') {
+                results.push({
+                    type: 'attack_undefended',
+                    target: targetName,
+                    targetType: target.type,
+                    square: sq,
+                    isDefended: false,
+                    description: `attacks the undefended ${targetName} on ${sq}`
+                });
+            } else if (targetVal > attackerVal) {
+                results.push({
+                    type: 'attack_tempo',
+                    target: targetName,
+                    targetType: target.type,
+                    square: sq,
+                    isDefended,
+                    description: `attacks the ${targetName} on ${sq} with tempo`
+                });
+            }
+        }
+        return results;
+    }
+
+    /**
+     * Detect if an enemy major or minor piece is trapped with no safe escape squares.
+     */
+    function detectTrappedPiece(boardAfter, move) {
+        const piece = boardAfter.get(move.to);
+        if (!piece) return null;
+
+        const color = piece.color;
+        const oppColor = (color === 'w' ? 'b' : 'w');
+        const attacks = getPieceAttacks(boardAfter, move.to);
+        const attackerVal = PIECE_VALUES[piece.type] || 1;
+
+        for (const sq of attacks) {
+            const target = boardAfter.get(sq);
+            if (!target || target.color !== oppColor) continue;
+            if (target.type !== 'q' && target.type !== 'r' && target.type !== 'b' && target.type !== 'n') continue;
+
+            const targetVal = PIECE_VALUES[target.type] || 0;
+            const isDefended = isSquareAttackedBy(boardAfter, oppColor, sq);
+            if (isDefended && targetVal <= attackerVal) continue;
+
+            const targetAttacks = getPieceAttacks(boardAfter, sq);
+            let hasSafeEscape = false;
+            for (const escSq of targetAttacks) {
+                const occ = boardAfter.get(escSq);
+                if (occ && occ.color === oppColor) continue;
+                if (escSq === move.to) {
+                    if (isSquareAttackedBy(boardAfter, color, escSq) && targetVal > attackerVal) {
+                        continue;
+                    }
+                    hasSafeEscape = true;
+                    break;
+                }
+                if (!isSquareAttackedBy(boardAfter, color, escSq)) {
+                    hasSafeEscape = true;
+                    break;
+                }
+            }
+
+            if (!hasSafeEscape) {
+                const name = PIECE_NAMES[target.type] || 'piece';
+                return {
+                    target: name,
+                    square: sq,
+                    description: `traps the enemy ${name} on ${sq}`
+                };
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Detect board control dominance (center duo, open file, 7th rank, outposts, diagonal).
+     */
+    function detectBoardControlDominance(boardBefore, boardAfter, move) {
+        const piece = boardAfter.get(move.to);
+        if (!piece) return null;
+
+        const color = piece.color;
+        const oppName = (color === 'w' ? 'Black' : 'White');
+        const toSq = move.to;
+        const rank = squareToRank(toSq);
+
+        // 1. Classical pawn center duo (e.g. e4 + d4 or e5 + d5)
+        if (piece.type === 'p') {
+            if ((color === 'w' && ((toSq === 'd4' && boardAfter.get('e4')?.type === 'p' && boardAfter.get('e4')?.color === 'w') ||
+                                   (toSq === 'e4' && boardAfter.get('d4')?.type === 'p' && boardAfter.get('d4')?.color === 'w'))) ||
+                (color === 'b' && ((toSq === 'd5' && boardAfter.get('e5')?.type === 'p' && boardAfter.get('e5')?.color === 'b') ||
+                                   (toSq === 'e5' && boardAfter.get('d5')?.type === 'p' && boardAfter.get('d5')?.color === 'b')))) {
+                return {
+                    type: 'pawn_center_duo',
+                    tags: ['Center Control', 'Pawn Center'],
+                    description: `establishes a commanding pawn center with ${toSq}, dominating the central squares`
+                };
+            }
+        }
+
+        // 2. 7th rank infiltration for Rook / Queen
+        if (piece.type === 'r' || piece.type === 'q') {
+            if ((color === 'w' && rank === 6) || (color === 'b' && rank === 1)) {
+                return {
+                    type: 'seventh_rank',
+                    tags: ['File Control', '7th Rank Infiltration'],
+                    description: `infiltrates the 7th rank to terrorize ${oppName}'s pawns and restrict the King`
+                };
+            }
+        }
+
+        // 3. Open file control
+        if (piece.type === 'r' || piece.type === 'q') {
+            const fc = detectFileControl(boardBefore, move);
+            if (fc && fc.includes('open file')) {
+                return {
+                    type: 'open_file',
+                    tags: ['File Control', 'Open File'],
+                    description: fc
+                };
+            }
+        }
+
+        // 4. Knight / Bishop outpost
+        if ((piece.type === 'n' || piece.type === 'b') && isTrueOutpost(boardAfter, toSq, color)) {
+            return {
+                type: 'outpost',
+                tags: ['Outpost', 'Board Control'],
+                description: `anchors the ${PIECE_NAMES[piece.type]} on a dominant outpost on ${toSq}`
+            };
+        }
+
+        // 5. Bishop diagonal control
+        if (piece.type === 'b') {
+            const attacks = getPieceAttacks(boardAfter, toSq);
+            if (attacks.length >= 7) {
+                return {
+                    type: 'diagonal_control',
+                    tags: ['Diagonal Control', 'Board Control'],
+                    description: `places the bishop on an expansive diagonal controlling key squares`
+                };
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Full dual-sided explanation for blunder, mistake, or miss.
      */
     function explainBlunderOrMistake(options) {
         const {
@@ -1125,60 +1313,150 @@
         // --- PART A: Analyze what Best Move achieves (or what player MISSED) ---
         let bestReason = null;
         let isMissedTactic = false;
+        let missedChance = null;
 
         if (bestMove && boardAfterBest) {
             // A1: Immediate Checkmate or Mate in N
             if (boardAfterBest.in_checkmate && boardAfterBest.in_checkmate()) {
                 tags.push('Missed Mate', 'Checkmate');
                 bestReason = 'delivers checkmate immediately';
+                missedChance = 'misses immediate checkmate';
                 isMissedTactic = true;
             } else if (bestScore && bestScore.mate && bestScore.mate > 0) {
                 tags.push('Missed Mate');
                 bestReason = `forces checkmate in ${bestScore.mate} moves`;
+                missedChance = `misses a forced checkmate in ${bestScore.mate} moves`;
                 isMissedTactic = true;
             }
 
-            // A2: Tactical Fork
+            // A2: Material Gain or Checkmate in Engine PV (multi-ply combination)
+            if (!bestReason && bestPv && bestPv.length > 0) {
+                const matGain = detectMaterialGainInPv(boardBefore, bestPv, color);
+                if (matGain) {
+                    if (matGain.type === 'checkmate') {
+                        tags.push('Missed Mate', 'Checkmate');
+                        bestReason = 'forces checkmate through a tactical sequence';
+                        missedChance = 'misses a forced checkmate sequence';
+                        isMissedTactic = true;
+                    } else if (matGain.type === 'win_queen') {
+                        tags.push('Missed Tactic', 'Winning Material');
+                        if (boardBefore.get(bestMove.to)) {
+                            bestReason = `captures on ${bestMove.to} and wins the enemy Queen`;
+                        } else {
+                            bestReason = 'wins the enemy Queen through a tactical sequence';
+                        }
+                        missedChance = 'misses winning the enemy Queen';
+                        isMissedTactic = true;
+                    } else if (matGain.type === 'win_rook') {
+                        tags.push('Missed Tactic', 'Winning Material');
+                        if (boardBefore.get(bestMove.to)) {
+                            bestReason = `captures on ${bestMove.to} and wins a Rook`;
+                        } else {
+                            bestReason = 'wins a Rook through a tactical sequence';
+                        }
+                        missedChance = 'misses winning a Rook';
+                        isMissedTactic = true;
+                    } else if (matGain.type === 'win_piece') {
+                        tags.push('Missed Tactic', 'Winning Material');
+                        if (boardBefore.get(bestMove.to)) {
+                            bestReason = `captures on ${bestMove.to} and ${matGain.description}`;
+                        } else {
+                            bestReason = matGain.description;
+                        }
+                        missedChance = 'misses winning a minor piece';
+                        isMissedTactic = true;
+                    }
+                }
+            }
+
+            // A3: Tactical Fork
             if (!bestReason) {
                 const fork = detectFork(boardAfterBest, bestMove);
                 if (fork) {
-                    tags.push('Missed Tactic', 'Tactical Fork');
+                    tags.push('Missed Tactic', 'Tactical Fork', 'Missed Fork');
                     bestReason = `forks the enemy ${fork.targets[0]} and ${fork.targets[1]}`;
+                    missedChance = `misses a tactical fork against the ${fork.targets[0]} and ${fork.targets[1]}`;
                     isMissedTactic = true;
                 }
             }
 
-            // A3: Pin
+            // A4: Pin
             if (!bestReason) {
                 const pin = detectPin(boardAfterBest, bestMove);
                 if (pin) {
-                    tags.push('Missed Tactic', 'Pin');
+                    tags.push('Missed Tactic', 'Pin', 'Missed Pin');
                     bestReason = pin.description;
+                    missedChance = `misses pinning the enemy ${pin.pinned}`;
                     isMissedTactic = true;
                 }
             }
 
-            // A4: Skewer
+            // A5: Skewer
             if (!bestReason) {
                 const skewer = detectSkewer(boardAfterBest, bestMove);
                 if (skewer) {
-                    tags.push('Missed Tactic', 'Skewer');
+                    tags.push('Missed Tactic', 'Skewer', 'Missed Skewer');
                     bestReason = skewer.description;
+                    missedChance = `misses skewering the ${skewer.front} and ${skewer.back}`;
                     isMissedTactic = true;
                 }
             }
 
-            // A5: Discovered Attack / Check
+            // A6: Discovered Attack / Check
             if (!bestReason) {
                 const disc = detectDiscoveredAttack(boardBefore, boardAfterBest, bestMove);
                 if (disc) {
-                    tags.push('Missed Tactic', 'Discovered Attack');
+                    tags.push('Missed Tactic', 'Discovered Attack', 'Missed Discovery');
                     bestReason = disc.description;
+                    missedChance = `misses a discovered attack on the ${disc.target}`;
                     isMissedTactic = true;
                 }
             }
 
-            // A6: Direct Capture of Free / Higher-Value Piece
+            // A7: Trapped Piece
+            if (!bestReason) {
+                const trapped = detectTrappedPiece(boardAfterBest, bestMove);
+                if (trapped) {
+                    tags.push('Missed Tactic', 'Trapped Piece');
+                    bestReason = trapped.description;
+                    missedChance = `misses the chance to trap ${oppName}'s ${trapped.target}`;
+                    isMissedTactic = true;
+                }
+            }
+
+            // A8: Direct Attack on Valuable Pieces (Queen / Rook / Undefended piece)
+            if (!bestReason) {
+                const attacks = detectAttacksOnPieces(boardAfterBest, bestMove);
+                if (attacks.length > 0) {
+                    const attQ = attacks.find(a => a.type === 'attack_queen');
+                    const attR = attacks.find(a => a.type === 'attack_rook');
+                    const attU = attacks.find(a => a.type === 'attack_undefended');
+
+                    if (attQ) {
+                        tags.push('Missed Attack', 'Attack on Queen');
+                        bestReason = `attacks the enemy Queen on ${attQ.square} with tempo`;
+                        missedChance = `misses a chance to attack the enemy Queen on ${attQ.square}`;
+                        isMissedTactic = true;
+                    } else if (attR) {
+                        tags.push('Missed Attack', 'Attack on Rook');
+                        bestReason = `attacks the Rook on ${attR.square}`;
+                        missedChance = `misses a chance to attack ${oppName}'s Rook on ${attR.square}`;
+                        isMissedTactic = true;
+                    } else if (attU) {
+                        tags.push('Missed Attack', 'Attacking Piece');
+                        bestReason = attU.description;
+                        missedChance = `misses an opportunity to attack the undefended ${attU.target} on ${attU.square}`;
+                        isMissedTactic = true;
+                    } else if (attacks[0]) {
+                        tags.push('Attack');
+                        bestReason = attacks[0].description;
+                        missedChance = `misses attacking the ${attacks[0].target} with tempo`;
+                        isMissedTactic = true;
+                    }
+                }
+            }
+
+            // A9: Direct Capture of Free / Higher-Value Piece
             if (!bestReason && boardBefore.get(bestMove.to)) {
                 const captured = boardBefore.get(bestMove.to);
                 const capturedName = PIECE_NAMES[captured.type] || 'piece';
@@ -1186,29 +1464,29 @@
                 const isDefended = isSquareAttackedBy(boardBefore, oppColor, bestMove.to);
 
                 if (!isDefended) {
-                    tags.push('Missed Tactic', 'Winning Material');
+                    tags.push('Missed Capture', 'Winning Material', 'Hanging Piece');
                     bestReason = `wins the undefended ${capturedName} on ${bestMove.to}`;
+                    missedChance = `misses capturing the free ${capturedName} on ${bestMove.to}`;
                     isMissedTactic = true;
                 } else if (PIECE_VALUES[captured.type] > (PIECE_VALUES[movingPiece?.type] || 0)) {
-                    tags.push('Missed Tactic', 'Winning Material');
-                    bestReason = `wins the ${capturedName} on ${bestMove.to}`;
+                    tags.push('Missed Capture', 'Winning Material');
+                    if (captured.type === 'r' && (movingPiece?.type === 'b' || movingPiece?.type === 'n')) {
+                        tags.push('Winning Exchange');
+                        bestReason = `wins the exchange on ${bestMove.to}`;
+                        missedChance = `misses winning the exchange on ${bestMove.to}`;
+                    } else {
+                        bestReason = `wins the ${capturedName} on ${bestMove.to}`;
+                        missedChance = `misses winning the ${capturedName} on ${bestMove.to}`;
+                    }
                     isMissedTactic = true;
                 } else {
+                    tags.push('Missed Capture');
                     bestReason = `captures the ${capturedName} on ${bestMove.to}`;
+                    missedChance = `misses capturing the ${capturedName} on ${bestMove.to}`;
                 }
             }
 
-            // A7: Material Gain in Engine Principal Variation
-            if (!bestReason && bestPv && bestPv.length > 0) {
-                const matGain = detectMaterialGainInPv(boardBefore, bestPv, color);
-                if (matGain && (matGain.type === 'win_queen' || matGain.type === 'win_rook' || matGain.type === 'win_piece' || matGain.type === 'checkmate')) {
-                    tags.push('Missed Tactic', 'Winning Material');
-                    bestReason = matGain.description;
-                    isMissedTactic = true;
-                }
-            }
-
-            // A8: Defensive Need (saving an attacked piece)
+            // A10: Defensive Need (saving an attacked piece)
             if (!bestReason) {
                 const defMove = detectDefensiveMove(boardBefore, boardAfterBest, bestMove);
                 if (defMove) {
@@ -1217,7 +1495,7 @@
                 }
             }
 
-            // A9: Castling & King Safety
+            // A11: Castling & King Safety
             if (!bestReason) {
                 if (sanBest === 'O-O' || sanBest === 'O-O-O') {
                     tags.push('King Safety');
@@ -1225,25 +1503,13 @@
                 }
             }
 
-            // A10: Knight Outpost
-            if (!bestReason && isTrueOutpost(boardAfterBest, bestMove.to, color)) {
-                tags.push('Outpost');
-                bestReason = `anchors the knight on a protected outpost on ${bestMove.to}`;
-            }
-
-            // A11: Open / Semi-open File Control
+            // A12: Board Control Dominance (Outpost, 7th rank, Open file, Center duo, Diagonal)
             if (!bestReason) {
-                const fc = detectFileControl(boardBefore, bestMove);
-                if (fc) {
-                    tags.push('File Control');
-                    bestReason = fc;
+                const bcd = detectBoardControlDominance(boardBefore, boardAfterBest, bestMove);
+                if (bcd) {
+                    tags.push(...bcd.tags);
+                    bestReason = bcd.description;
                 }
-            }
-
-            // A12: Passed Pawn
-            if (!bestReason && detectPassedPawn(boardAfterBest, bestMove)) {
-                tags.push('Passed Pawn');
-                bestReason = 'creates a dangerous passed pawn';
             }
 
             // A13: Center Strike / Center Control
@@ -1255,7 +1521,13 @@
                 }
             }
 
-            // A14: Minor Piece Development
+            // A14: Passed Pawn
+            if (!bestReason && detectPassedPawn(boardAfterBest, bestMove)) {
+                tags.push('Passed Pawn');
+                bestReason = 'creates a dangerous passed pawn';
+            }
+
+            // A15: Minor Piece Development
             const dev = detectMinorDevelopment(boardBefore, bestMove);
             if (dev) {
                 tags.push('Development');
@@ -1264,7 +1536,7 @@
                 }
             }
 
-            // A15: Prophylaxis vs opponent's refutation
+            // A16: Prophylaxis vs opponent's refutation
             if (!bestReason && refutationMove) {
                 const proph = detectProphylaxis(boardBefore, boardAfterBest, bestMove, refutationMove, sanRef);
                 if (proph) {
@@ -1272,7 +1544,7 @@
                 }
             }
 
-            // A16: Context-aware Fallback (never the old static text)
+            // A17: Specific Positional Fallback
             if (!bestReason) {
                 const p = boardBefore.get(bestMove.from);
                 if (p && p.type === 'p') {
@@ -1282,7 +1554,7 @@
                 } else if (p && (p.type === 'r' || p.type === 'q')) {
                     bestReason = 'activates the piece to control open lines';
                 } else {
-                    bestReason = 'improves piece activity and coordination';
+                    bestReason = 'improves piece activity and central coordination';
                 }
             }
         }
@@ -1290,12 +1562,14 @@
         // --- PART B: Analyze Flaw of Played Move & Opponent Refutation ---
         let blunderReason = null;
         let refutationEffect = null;
+        let flaw = null;
 
         // B1: Hanging Piece Blunder
         const hanging = detectHangingPieceBlunder(boardBefore, boardAfter, playedMove);
         if (hanging) {
             tags.push('Hanging Piece');
             blunderReason = hanging.description;
+            flaw = hanging.description;
         }
 
         // B2: King Safety Flaw
@@ -1304,35 +1578,59 @@
             if (ks) {
                 tags.push('King Safety');
                 blunderReason = ks;
+                flaw = ks;
             }
         }
 
-        // B3: Refutation Move Analysis
+        // B3: Refutation Move Analysis (No Early Stopping!)
         if (refutationMove) {
             const isCheckmate = !!(options.refutationIsCheckmate) || (boardAfterRef && boardAfterRef.in_checkmate && boardAfterRef.in_checkmate());
             if (isCheckmate) {
-                tags.push('Checkmate');
+                tags.push('Checkmate', 'Tactical Blunder');
                 refutationEffect = `allows ${sanRef || 'refutation'}# delivering checkmate`;
             } else if (boardAfterRef) {
-                // Tactical Fork
-                const fork = detectFork(boardAfterRef, refutationMove);
-                if (fork) {
-                    tags.push('Tactical Fork');
-                    refutationEffect = `allows ${sanRef || 'refutation'} ${fork.description}`;
+                // Check deep refutation material loss in PV first (avoids stopping at simple 1-ply capture)
+                if (refPv && refPv.length > 0) {
+                    const refGain = detectMaterialGainInPv(boardAfter, refPv, oppColor);
+                    if (refGain && (refGain.type === 'win_queen' || refGain.type === 'win_rook' || refGain.type === 'win_piece' || refGain.type === 'checkmate')) {
+                        tags.push('Tactical Blunder', 'Losing Material');
+                        if (refGain.type === 'checkmate') {
+                            refutationEffect = `allows ${sanRef || 'the refutation'}, leading to a forced checkmate`;
+                        } else if (boardAfter.get(refutationMove.to)) {
+                            const lossName = (refGain.type === 'win_queen' ? 'your Queen' : (refGain.type === 'win_rook' ? 'a Rook' : 'a piece'));
+                            refutationEffect = `allows ${sanRef || 'refutation'} capturing on ${refutationMove.to} and winning ${lossName}`;
+                        } else {
+                            refutationEffect = `allows ${sanRef || 'the punishment line'}, winning a ${refGain.description.replace('wins ', '')}`;
+                        }
+                    }
                 }
-                // Pin
-                else if (detectPin(boardAfterRef, refutationMove)) {
+
+                // Tactical Fork by refutation
+                if (!refutationEffect) {
+                    const fork = detectFork(boardAfterRef, refutationMove);
+                    if (fork) {
+                        tags.push('Tactical Fork');
+                        refutationEffect = `allows ${sanRef || 'refutation'} ${fork.description}`;
+                    }
+                }
+
+                // Pin by refutation
+                if (!refutationEffect && detectPin(boardAfterRef, refutationMove)) {
                     tags.push('Pin');
                     refutationEffect = `allows ${sanRef || 'refutation'} pinning your piece to the King`;
                 }
-                // Skewer
-                else if (detectSkewer(boardAfterRef, refutationMove)) {
-                    tags.push('Skewer');
+
+                // Skewer by refutation
+                if (!refutationEffect) {
                     const sk = detectSkewer(boardAfterRef, refutationMove);
-                    refutationEffect = `allows ${sanRef || 'refutation'} ${sk.description}`;
+                    if (sk) {
+                        tags.push('Skewer');
+                        refutationEffect = `allows ${sanRef || 'refutation'} ${sk.description}`;
+                    }
                 }
+
                 // Direct capture on any square
-                else if (boardAfter.get(refutationMove.to)) {
+                if (!refutationEffect && boardAfter.get(refutationMove.to)) {
                     const capturedPiece = boardAfter.get(refutationMove.to);
                     const capName = PIECE_NAMES[capturedPiece.type] || 'piece';
                     tags.push('Hanging Piece');
@@ -1340,14 +1638,6 @@
                         refutationEffect = `allows ${sanRef || 'refutation'} capturing the exposed ${capName}`;
                     } else {
                         refutationEffect = `allows ${sanRef || 'refutation'} capturing your undefended ${capName} on ${refutationMove.to}`;
-                    }
-                }
-                // Net Material loss in refutation line
-                else if (refPv && refPv.length > 0) {
-                    const refGain = detectMaterialGainInPv(boardAfter, refPv, oppColor);
-                    if (refGain && (refGain.type === 'win_queen' || refGain.type === 'win_rook' || refGain.type === 'win_piece')) {
-                        tags.push('Tactical Blunder');
-                        refutationEffect = `allows ${sanRef || 'the punishment line'}, winning a ${refGain.description.replace('wins ', '')}`;
                     }
                 }
 
@@ -1360,12 +1650,12 @@
                     }
                 }
 
-                // Threats created by refutation move (attacks queen/rook)
+                // Threats created by refutation move (attacks Queen/Rook/pieces)
                 if (!refutationEffect) {
-                    const threats = detectThreatsCreated(boardAfterRef, refutationMove);
-                    const majorThreat = threats.find(t => t.target === 'queen' || t.target === 'rook');
-                    if (majorThreat) {
-                        refutationEffect = `allows ${sanRef} attacking your ${majorThreat.target} with tempo`;
+                    const refAttacks = detectAttacksOnPieces(boardAfterRef, refutationMove);
+                    if (refAttacks.length > 0) {
+                        const refMajor = refAttacks.find(a => a.type === 'attack_queen' || a.type === 'attack_rook') || refAttacks[0];
+                        refutationEffect = `allows ${sanRef} attacking your ${refMajor.target} with tempo`;
                     }
                 }
 
@@ -1383,9 +1673,11 @@
                     refutationEffect = `allows a disruptive check with ${sanRef}`;
                 }
 
-                // Fallback
+                // Concrete piece activation fallback instead of generic text
                 if (!refutationEffect) {
-                    refutationEffect = `gives ${oppName} the initiative with ${sanRef || 'threats'}`;
+                    const refPiece = boardAfter.get(refutationMove.from);
+                    const pName = refPiece ? (PIECE_NAMES[refPiece.type] || 'piece') : 'piece';
+                    refutationEffect = `allows ${oppName} to play ${sanRef || 'an active reply'}, activating the ${pName}`;
                 }
             } else {
                 refutationEffect = `gives ${oppName} the initiative with ${sanRef || 'threats'}`;
@@ -1395,11 +1687,24 @@
         // --- PART C: Natural, Varied Phrasing Construction ---
         let explanation = '';
 
+        if (!flaw) {
+            if (blunderReason) {
+                flaw = blunderReason;
+            } else if (refutationEffect) {
+                flaw = refutationEffect;
+            } else if (missedChance) {
+                flaw = missedChance;
+            } else {
+                flaw = `concedes the advantage to ${oppName}`;
+            }
+        }
+
         if (isMissedTactic) {
             if (tags.includes('Missed Mate')) {
                 explanation = `${sanPlayed} misses checkmate! ${sanBest} would have finished the game immediately. Instead, ${sanPlayed} lets ${oppName} stay in the game.`;
             } else {
-                explanation = `${sanPlayed} overlooks a tactical opportunity. ${sanBest} was winning because it ${bestReason}. Instead, ${sanPlayed} ${refutationEffect || 'hands over the initiative'}.`;
+                const missExtra = missedChance ? ` and ${missedChance}` : '';
+                explanation = `${sanPlayed} overlooks a tactical opportunity${missExtra}. ${sanBest} was winning because it ${bestReason}. Instead, ${sanPlayed} ${refutationEffect || 'hands over the initiative'}.`;
             }
         } else if (blunderReason) {
             if (refutationEffect) {
@@ -1419,7 +1724,10 @@
 
         return {
             explanation,
-            tags: Array.from(new Set(tags))
+            tags: Array.from(new Set(tags)),
+            flaw,
+            missedChance,
+            betterLine: bestReason
         };
     }
 
@@ -1443,7 +1751,10 @@
             tags.push('Checkmate');
             return {
                 explanation: `Checkmate! ${san} delivers mate and finishes the game.`,
-                tags
+                tags,
+                flaw: null,
+                missedChance: null,
+                betterLine: 'delivers checkmate immediately'
             };
         }
 
@@ -1481,6 +1792,26 @@
             reasons.push(disc.description);
         }
 
+        const attacks = detectAttacksOnPieces(boardAfter, move);
+        if (attacks.length > 0) {
+            const attQ = attacks.find(a => a.type === 'attack_queen');
+            if (attQ) {
+                tags.push('Attack on Queen');
+                reasons.push(attQ.description);
+            } else if (attacks[0].type === 'attack_rook') {
+                tags.push('Attack on Rook');
+                reasons.push(attacks[0].description);
+            } else if (attacks[0].type === 'attack_undefended') {
+                reasons.push(attacks[0].description);
+            }
+        }
+
+        const bcd = detectBoardControlDominance(boardBefore, boardAfter, move);
+        if (bcd) {
+            tags.push(...bcd.tags);
+            reasons.push(bcd.description);
+        }
+
         const fileCtrl = detectFileControl(boardBefore, move);
         if (fileCtrl) {
             tags.push('File Control');
@@ -1507,15 +1838,22 @@
         }
 
         const prefix = isBest ? 'Best move! ' : 'Strong move. ';
-        if (reasons.length > 0) {
+        const reasonsDedup = Array.from(new Set(reasons));
+        if (reasonsDedup.length > 0) {
             return {
-                explanation: `${prefix}${san} ${reasons.join(', and ')}.`,
-                tags: Array.from(new Set(tags))
+                explanation: `${prefix}${san} ${reasonsDedup.join(', and ')}.`,
+                tags: Array.from(new Set(tags)),
+                flaw: null,
+                missedChance: null,
+                betterLine: reasonsDedup.join(', and ')
             };
         }
         return {
             explanation: `${prefix}${san} maintains a solid position and harmonious coordination.`,
-            tags: Array.from(new Set(tags))
+            tags: Array.from(new Set(tags)),
+            flaw: null,
+            missedChance: null,
+            betterLine: 'maintains solid piece coordination'
         };
     }
 
@@ -1527,6 +1865,9 @@
         getAttackers,
         isPieceSafe,
         detectThreatsCreated,
+        detectAttacksOnPieces,
+        detectTrappedPiece,
+        detectBoardControlDominance,
         detectFork,
         detectPin,
         detectSkewer,
