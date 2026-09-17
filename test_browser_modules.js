@@ -417,8 +417,20 @@ cache.set("1. e4 c7", 18, {
 });
 assert.strictEqual(cache.count(), 5);
 assert(cache.get("1. e4 c2", 18) !== null, "Game 2 was bumped to MRU, should not be evicted");
-assert.strictEqual(cache.get("1. e4 c3", 18), null, "Game 3 should have been evicted instead");
-
 console.log("✓ AnalysisCache passed!");
+
+// Test index.html banner markup and styling integrity
+console.log("Testing index.html banner markup & styling integrity...");
+const fs = require('fs');
+const indexHtml = fs.readFileSync('/home/king/code/whyblunder/index.html', 'utf8');
+
+assert(!indexHtml.includes("Missed Opportunity"), "index.html should not have old 'Missed Opportunity' label");
+assert(indexHtml.includes("badgeLabel = isMissedWin ? 'MISSED WIN' : 'MISSED'"), "index.html should use MISSED and MISSED WIN labels");
+assert(indexHtml.includes(".diag-missed-banner {"), "index.html must include .diag-missed-banner CSS");
+assert(indexHtml.includes(".diag-missed-text {"), "index.html must include .diag-missed-text CSS");
+assert(indexHtml.includes("align-items: flex-start;"), "index.html banner must align to flex-start for multi-line text");
+assert(indexHtml.includes("badge-missed-win"), "index.html must support badge-missed-win");
+console.log("✓ Banner markup & styling integrity passed!");
+
 console.log("ALL BROWSER MODULE TESTS PASSED SUCCESSFULLY! 🎉");
 

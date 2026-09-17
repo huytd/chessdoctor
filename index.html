@@ -523,7 +523,8 @@
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 6px 8px;
+            line-height: 1.4;
         }
         .badge-better {
             background: var(--lic-green);
@@ -532,6 +533,10 @@
             border-radius: 3px;
             font-size: var(--lic-fs-base);
             font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
         }
 
         /* Threats Alert Box */
@@ -541,6 +546,13 @@
             border-radius: 4px;
             padding: 9px 12px;
             margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        .threat-alert-box.opponent-threat {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         .threat-item {
             font-size: var(--lic-fs-sm);
@@ -551,6 +563,8 @@
             border-radius: 3px;
             display: inline-flex;
             align-items: center;
+            word-break: break-word;
+            max-width: 100%;
         }
         .threat-refutation-badge {
             background: var(--lic-red);
@@ -559,6 +573,10 @@
             border-radius: 3px;
             font-size: var(--lic-fs-base);
             font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
         }
 
         /* Diagnosis Text */
@@ -574,25 +592,42 @@
         }
         .diag-missed-banner {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 8px;
-            padding: 5px 9px;
+            padding: 6px 10px;
             background: rgba(239, 68, 68, 0.12);
             border: 1px solid rgba(239, 68, 68, 0.3);
             border-radius: 4px;
             font-size: var(--lic-fs-sm);
             color: #fca5a5;
             font-weight: 500;
+            line-height: 1.45;
         }
         .diag-missed-badge {
             background: #ef4444;
             color: #fff;
-            padding: 1px 6px;
+            padding: 2px 7px;
             border-radius: 3px;
             font-weight: 700;
             font-size: 11px;
             letter-spacing: 0.5px;
             text-transform: uppercase;
+            flex-shrink: 0;
+            white-space: nowrap;
+            margin-top: 1px;
+            line-height: 1.25;
+            display: inline-flex;
+            align-items: center;
+        }
+        .diag-missed-badge.badge-missed-win {
+            background: #dc2626;
+        }
+        .diag-missed-text {
+            flex: 1 1 auto;
+            min-width: 0;
+            word-break: break-word;
+            line-height: 1.45;
+            color: #fecaca;
         }
         .diag-highlight-move {
             font-family: monospace;
@@ -601,6 +636,10 @@
             background: rgba(255, 255, 255, 0.1);
             padding: 1px 5px;
             border-radius: 3px;
+        }
+        .diag-body {
+            line-height: 1.55;
+            word-break: break-word;
         }
 
         /* Variation Boxes */
@@ -2690,12 +2729,21 @@
                     // Explanation / Why
                     if (move.analysis.explanation) {
                         let cardContent = '';
-                        if (move.analysis.missed_chance) {
-                            const missTitle = move.analysis.missed_chance.charAt(0).toUpperCase() + move.analysis.missed_chance.slice(1);
+                        const isMissedWin = (move.detailed_quality === 'missed win') || 
+                            (Array.isArray(move.tags) && move.tags.some(t => {
+                                const lower = t.toLowerCase();
+                                return lower.includes('missed win') || lower.includes('missed mate');
+                            }));
+                        const missChanceText = move.analysis.missed_chance || (isMissedWin ? 'Misses a forced winning advantage' : null);
+                        if (missChanceText) {
+                            const missTitle = missChanceText.charAt(0).toUpperCase() + missChanceText.slice(1);
+                            const badgeLabel = isMissedWin ? 'MISSED WIN' : 'MISSED';
+                            const badgeIcon = isMissedWin ? 'bi-trophy-fill' : 'bi-crosshair';
+                            const badgeClass = isMissedWin ? 'diag-missed-badge badge-missed-win' : 'diag-missed-badge';
                             cardContent += `
                                 <div class="diag-missed-banner mb-2">
-                                    <span class="diag-missed-badge"><i class="bi bi-crosshair me-1"></i>Missed Opportunity</span>
-                                    <span>${escapeHtml(missTitle)}</span>
+                                    <span class="${badgeClass}"><i class="bi ${badgeIcon} me-1"></i>${badgeLabel}</span>
+                                    <span class="diag-missed-text">${escapeHtml(missTitle)}</span>
                                 </div>`;
                         }
 
@@ -3098,8 +3146,8 @@
 
                 targetKeyIndex = nextKeyIndex;
 
-                // If instant jump or adjacent move, immediately go to destination
-                if (animationSpeed === 0 || nextKeyIndex === currentMoveIndex + 1) {
+                // If instant jump (speed 0), immediately go to destination
+                if (animationSpeed === 0) {
                     goToMove(nextKeyIndex);
                     return;
                 }
@@ -3121,7 +3169,7 @@
                     if (!isTraversingKeyMoments) return;
 
                     stepIndex++;
-                    if (stepIndex < targetKeyIndex) {
+                    if (stepIndex <= targetKeyIndex) {
                         try {
                             chess.move(moves[stepIndex].move);
                             board.position(chess.fen(), true);
@@ -3132,10 +3180,27 @@
                         } catch (e) {
                             console.error('Error during key moment step:', e);
                         }
-                        keyMomentTimeout = setTimeout(step, stepDelay);
-                    } else {
-                        stopKeyMomentTraversal();
-                        goToMove(targetKeyIndex);
+
+                        if (stepIndex < targetKeyIndex) {
+                            keyMomentTimeout = setTimeout(step, stepDelay);
+                        } else {
+                            // Reached destination key moment!
+                            const dest = targetKeyIndex;
+                            stopKeyMomentTraversal();
+                            currentMoveIndex = dest;
+                            updateMoveHighlight();
+                            updateTurnIndicators(dest);
+                            updateEvalGauge(dest);
+                            showMoveExplanation(dest);
+                            updateKeyMomentBadge();
+                            setTimeout(() => {
+                                drawMoveArrows(dest);
+                            }, 80);
+                            const currentMove = document.getElementById(`move-${dest}`);
+                            if (currentMove) {
+                                currentMove.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }
+                        }
                     }
                 }
 
