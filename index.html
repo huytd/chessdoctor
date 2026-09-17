@@ -745,6 +745,46 @@
             box-shadow: 0 0 6px var(--lic-green);
         }
 
+        /* Material Advantage & Captured Pieces Display */
+        .player-material-display {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            margin-left: 6px;
+            font-size: var(--lic-fs-sm);
+            line-height: 1;
+            vertical-align: middle;
+            user-select: none;
+        }
+        .material-pieces-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .material-piece-cluster {
+            display: inline-flex;
+            align-items: center;
+        }
+        .material-piece-icon {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+            vertical-align: middle;
+            pointer-events: none;
+        }
+        .material-piece-cluster .material-piece-icon + .material-piece-icon {
+            margin-left: -6px;
+        }
+        .material-score-badge {
+            font-size: var(--lic-fs-sm);
+            font-weight: 700;
+            color: var(--lic-text-secondary);
+            margin-left: 3px;
+            letter-spacing: -0.01em;
+            font-family: 'Inter', sans-serif;
+            line-height: 1;
+        }
+
         /* Board Row with Vertical Eval Bar */
         .board-with-eval {
             display: flex;
@@ -1582,6 +1622,7 @@
                             <span class="player-avatar black-avatar"><i class="bi bi-person-fill"></i></span>
                             <span class="player-name-text" id="topPlayerName">Black</span>
                             <span class="text-muted small" id="topPlayerMeta"></span>
+                            <div class="player-material-display" id="topMaterialDisplay"></div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <span class="player-turn-dot" id="topPlayerTurn"></span>
@@ -1623,6 +1664,7 @@
                             <span class="player-avatar white-avatar"><i class="bi bi-person-fill"></i></span>
                             <span class="player-name-text" id="bottomPlayerName">White</span>
                             <span class="text-muted small" id="bottomPlayerMeta"></span>
+                            <div class="player-material-display" id="bottomMaterialDisplay"></div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <span class="player-turn-dot" id="bottomPlayerTurn"></span>
@@ -1761,9 +1803,11 @@
             const topPlayerName = document.getElementById('topPlayerName');
             const topPlayerMeta = document.getElementById('topPlayerMeta');
             const topPlayerTurn = document.getElementById('topPlayerTurn');
+            const topMaterialDisplay = document.getElementById('topMaterialDisplay');
             const bottomPlayerName = document.getElementById('bottomPlayerName');
             const bottomPlayerMeta = document.getElementById('bottomPlayerMeta');
             const bottomPlayerTurn = document.getElementById('bottomPlayerTurn');
+            const bottomMaterialDisplay = document.getElementById('bottomMaterialDisplay');
 
             // Eval Gauge DOM elements
             const evalGaugeWhite = document.getElementById('evalGaugeWhite');
@@ -2335,6 +2379,109 @@
                     const bottomAvatar = document.querySelector('#playerBarBottom .player-avatar');
                     if (topAvatar) topAvatar.className = 'player-avatar black-avatar';
                     if (bottomAvatar) bottomAvatar.className = 'player-avatar white-avatar';
+                }
+
+                updateMaterialDifference();
+            }
+
+            function calculateMaterialDifference(fen) {
+                if (typeof ChessEvaluator !== 'undefined' && typeof ChessEvaluator.calculateMaterialDifference === 'function') {
+                    return ChessEvaluator.calculateMaterialDifference(fen);
+                }
+                const pieceValues = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+                const counts = {
+                    w: { p: 0, n: 0, b: 0, r: 0, q: 0, total: 0 },
+                    b: { p: 0, n: 0, b: 0, r: 0, q: 0, total: 0 }
+                };
+
+                if (!fen || fen === 'start') {
+                    return {
+                        whiteScore: 39,
+                        blackScore: 39,
+                        scoreDiff: 0,
+                        whitePieces: [],
+                        blackPieces: []
+                    };
+                }
+
+                const boardPart = fen.split(' ')[0];
+                for (const char of boardPart) {
+                    if ((char >= '1' && char <= '8') || char === '/') continue;
+                    const isWhite = (char === char.toUpperCase());
+                    const type = char.toLowerCase();
+                    if (pieceValues[type] !== undefined) {
+                        const side = isWhite ? 'w' : 'b';
+                        counts[side][type]++;
+                        counts[side].total += pieceValues[type];
+                    }
+                }
+
+                const pieceTypes = ['p', 'n', 'b', 'r', 'q'];
+                const whitePieces = [];
+                const blackPieces = [];
+
+                pieceTypes.forEach(type => {
+                    const diff = counts.w[type] - counts.b[type];
+                    if (diff > 0) {
+                        whitePieces.push({ type, count: diff });
+                    } else if (diff < 0) {
+                        blackPieces.push({ type, count: Math.abs(diff) });
+                    }
+                });
+
+                const scoreDiff = counts.w.total - counts.b.total;
+
+                return {
+                    whiteScore: counts.w.total,
+                    blackScore: counts.b.total,
+                    scoreDiff,
+                    whitePieces,
+                    blackPieces
+                };
+            }
+
+            function updateMaterialDifference(fen) {
+                if (!topMaterialDisplay || !bottomMaterialDisplay) return;
+
+                const currentFen = (fen && fen !== 'start') ? fen : (fen === 'start' ? 'start' : (typeof chess !== 'undefined' ? chess.fen() : 'start'));
+                const material = calculateMaterialDifference(currentFen);
+                const isFlipped = (typeof board !== 'undefined' && board && board.orientation) ? (board.orientation() === 'black') : false;
+
+                function renderMaterialHtml(pieces, pieceColorPrefix, scoreAdvantage) {
+                    if ((!pieces || pieces.length === 0) && !scoreAdvantage) {
+                        return '';
+                    }
+                    let html = '<div class="material-pieces-group">';
+                    if (pieces && pieces.length > 0) {
+                        pieces.forEach(pGroup => {
+                            html += '<span class="material-piece-cluster">';
+                            for (let i = 0; i < pGroup.count; i++) {
+                                const pieceName = `${pieceColorPrefix}${pGroup.type.toUpperCase()}`;
+                                html += `<img src="img/chesspieces/lichess/${pieceName}.svg" class="material-piece-icon" alt="${pGroup.type}" title="${pGroup.type.toUpperCase()}" />`;
+                            }
+                            html += '</span>';
+                        });
+                    }
+                    if (scoreAdvantage > 0) {
+                        html += `<span class="material-score-badge">+${scoreAdvantage}</span>`;
+                    }
+                    html += '</div>';
+                    return html;
+                }
+
+                const whiteScoreAdv = material.scoreDiff > 0 ? material.scoreDiff : 0;
+                const blackScoreAdv = material.scoreDiff < 0 ? Math.abs(material.scoreDiff) : 0;
+
+                // In White's bar, show captured Black pieces ('b'); in Black's bar, show captured White pieces ('w')
+                const whiteHtml = renderMaterialHtml(material.whitePieces, 'b', whiteScoreAdv);
+                const blackHtml = renderMaterialHtml(material.blackPieces, 'w', blackScoreAdv);
+
+                if (isFlipped) {
+                    topMaterialDisplay.innerHTML = whiteHtml;
+                    bottomMaterialDisplay.innerHTML = blackHtml;
+                } else {
+                    topMaterialDisplay.innerHTML = blackHtml;
+                    bottomMaterialDisplay.innerHTML = whiteHtml;
                 }
             }
 
@@ -3177,6 +3324,7 @@
                             updateMoveHighlight();
                             updateTurnIndicators(stepIndex);
                             updateEvalGauge(stepIndex);
+                            updateMaterialDifference(chess.fen());
                         } catch (e) {
                             console.error('Error during key moment step:', e);
                         }
@@ -3191,6 +3339,7 @@
                             updateMoveHighlight();
                             updateTurnIndicators(dest);
                             updateEvalGauge(dest);
+                            updateMaterialDifference(chess.fen());
                             showMoveExplanation(dest);
                             updateKeyMomentBadge();
                             setTimeout(() => {
@@ -3235,6 +3384,7 @@
                 updateMoveHighlight();
                 updateTurnIndicators(-1);
                 updateEvalGauge(-1);
+                updateMaterialDifference('start');
                 clearArrows();
                 clearSquareAnnotations();
                 updateKeyMomentBadge();
@@ -3296,6 +3446,7 @@
                 updateMoveHighlight();
                 updateTurnIndicators(index);
                 updateEvalGauge(index);
+                updateMaterialDifference(chess.fen());
                 showMoveExplanation(index);
                 updateKeyMomentBadge();
                 
@@ -3514,6 +3665,7 @@
                 isInVariationMode = true;
                 chess.load(startingFen);
                 board.position(startingFen);
+                updateMaterialDifference(startingFen);
                 
                 if (boardContainer) {
                     boardContainer.classList.add('variation-mode');
@@ -3549,6 +3701,7 @@
                                 promotion: moveData.promotion || 'q'
                             });
                             board.position(chess.fen(), true);
+                            updateMaterialDifference(chess.fen());
                             clearArrows();
                             clearSquareAnnotations();
 
@@ -3607,6 +3760,7 @@
                 isInVariationMode = true;
                 chess.load(startingFen);
                 board.position(startingFen);
+                updateMaterialDifference(startingFen);
                 
                 if (boardContainer) {
                     boardContainer.classList.add('variation-mode');
@@ -3636,6 +3790,7 @@
                             promotion: betterMoveData.promotion || 'q'
                         });
                         board.position(chess.fen(), true);
+                        updateMaterialDifference(chess.fen());
                         clearArrows();
                         clearSquareAnnotations();
 
@@ -3896,6 +4051,7 @@
 
             function onVariationComplete(move, isRefutation, startingFen, variationMoves) {
                 isPlayingVariation = false;
+                updateMaterialDifference(chess.fen());
                 
                 const lastMove = (variationMoves && variationMoves.length > 0) ? variationMoves[variationMoves.length - 1] : null;
                 clearArrows();
@@ -3933,6 +4089,7 @@
                 }
                 clearArrows();
                 clearSquareAnnotations();
+                updateMaterialDifference();
             }
 
             function returnToGamePosition() {

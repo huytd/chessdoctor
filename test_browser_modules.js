@@ -432,5 +432,82 @@ assert(indexHtml.includes("align-items: flex-start;"), "index.html banner must a
 assert(indexHtml.includes("badge-missed-win"), "index.html must support badge-missed-win");
 console.log("✓ Banner markup & styling integrity passed!");
 
+// 5. Material Difference Calculation & UI Integrity tests
+console.log("Testing Material Difference Calculation & UI Integrity...");
+
+// Start position
+const matStart = ChessEvaluator.calculateMaterialDifference('start');
+assert.strictEqual(matStart.whiteScore, 39);
+assert.strictEqual(matStart.blackScore, 39);
+assert.strictEqual(matStart.scoreDiff, 0);
+assert.deepStrictEqual(matStart.whitePieces, []);
+assert.deepStrictEqual(matStart.blackPieces, []);
+
+// Position with White up a pawn: 1. e4 d5 2. exd5
+const fenWhiteUpPawn = 'rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2';
+const matWhiteUpPawn = ChessEvaluator.calculateMaterialDifference(fenWhiteUpPawn);
+assert.strictEqual(matWhiteUpPawn.whiteScore, 39);
+assert.strictEqual(matWhiteUpPawn.blackScore, 38);
+assert.strictEqual(matWhiteUpPawn.scoreDiff, 1);
+assert.deepStrictEqual(matWhiteUpPawn.whitePieces, [{ type: 'p', count: 1 }]);
+assert.deepStrictEqual(matWhiteUpPawn.blackPieces, []);
+
+// Position with piece imbalance: White has Bishop (+3), Black has Knight (+3)
+// 8 pawns, 2 rooks, 1 queen each; White: 2 Bishops, 1 Knight; Black: 1 Bishop, 2 Knights
+const fenImbalance = 'rn1qkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKB1R w KQkq - 0 1';
+const matImbalance = ChessEvaluator.calculateMaterialDifference(fenImbalance);
+assert.strictEqual(matImbalance.scoreDiff, 0);
+assert.deepStrictEqual(matImbalance.whitePieces, [{ type: 'b', count: 1 }]);
+assert.deepStrictEqual(matImbalance.blackPieces, [{ type: 'n', count: 1 }]);
+
+// Position with Black up a Queen:
+const fenBlackUpQueen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNB1KBNR w KQkq - 0 1'; // White missing queen
+const matBlackUpQueen = ChessEvaluator.calculateMaterialDifference(fenBlackUpQueen);
+assert.strictEqual(matBlackUpQueen.whiteScore, 30);
+assert.strictEqual(matBlackUpQueen.blackScore, 39);
+assert.strictEqual(matBlackUpQueen.scoreDiff, -9);
+assert.deepStrictEqual(matBlackUpQueen.whitePieces, []);
+assert.deepStrictEqual(matBlackUpQueen.blackPieces, [{ type: 'q', count: 1 }]);
+
+// Position with multiple extra pawns and a promoted queen
+const fenPromoted = '2q1k3/8/8/8/8/8/8/2Q1K3 w - - 0 1'; // White 1Q, Black 1Q, King each
+const matEqualKingsQueens = ChessEvaluator.calculateMaterialDifference(fenPromoted);
+assert.strictEqual(matEqualKingsQueens.whiteScore, 9);
+assert.strictEqual(matEqualKingsQueens.blackScore, 9);
+assert.strictEqual(matEqualKingsQueens.scoreDiff, 0);
+
+// Test variation step sequence: 1. e4 e5 2. Qh5 Nc6 3. Qxf7# (Scholar's mate)
+const simChess = new Chess();
+assert.strictEqual(ChessEvaluator.calculateMaterialDifference(simChess.fen()).scoreDiff, 0);
+simChess.move('e4');
+assert.strictEqual(ChessEvaluator.calculateMaterialDifference(simChess.fen()).scoreDiff, 0);
+simChess.move('e5');
+assert.strictEqual(ChessEvaluator.calculateMaterialDifference(simChess.fen()).scoreDiff, 0);
+simChess.move('Qh5');
+assert.strictEqual(ChessEvaluator.calculateMaterialDifference(simChess.fen()).scoreDiff, 0);
+simChess.move('Nc6');
+assert.strictEqual(ChessEvaluator.calculateMaterialDifference(simChess.fen()).scoreDiff, 0);
+simChess.move('Bc4');
+assert.strictEqual(ChessEvaluator.calculateMaterialDifference(simChess.fen()).scoreDiff, 0);
+simChess.move('Nf6');
+assert.strictEqual(ChessEvaluator.calculateMaterialDifference(simChess.fen()).scoreDiff, 0);
+// Queen captures pawn on f7
+simChess.move('Qxf7#');
+const matMate = ChessEvaluator.calculateMaterialDifference(simChess.fen());
+assert.strictEqual(matMate.scoreDiff, 1);
+assert.deepStrictEqual(matMate.whitePieces, [{ type: 'p', count: 1 }]);
+assert.deepStrictEqual(matMate.blackPieces, []);
+
+// HTML & CSS markup integrity for material difference
+assert(indexHtml.includes('id="topMaterialDisplay"'), "index.html must include #topMaterialDisplay DOM element");
+assert(indexHtml.includes('id="bottomMaterialDisplay"'), "index.html must include #bottomMaterialDisplay DOM element");
+assert(indexHtml.includes('.player-material-display'), "index.html must include .player-material-display CSS");
+assert(indexHtml.includes('.material-piece-icon'), "index.html must include .material-piece-icon CSS");
+assert(indexHtml.includes('.material-score-badge'), "index.html must include .material-score-badge CSS");
+assert(indexHtml.includes('updateMaterialDifference(chess.fen())'), "index.html must call updateMaterialDifference on board move changes");
+assert(indexHtml.includes('updateMaterialDifference(startingFen)'), "index.html must call updateMaterialDifference on variation start");
+assert(indexHtml.includes('updateMaterialDifference()'), "index.html must call updateMaterialDifference on orientation flip");
+console.log("✓ Material difference tests passed!");
+
 console.log("ALL BROWSER MODULE TESTS PASSED SUCCESSFULLY! 🎉");
 

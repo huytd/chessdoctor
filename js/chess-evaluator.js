@@ -163,12 +163,77 @@
         return false;
     }
 
+    /**
+     * Calculate material counts and advantage difference from a FEN string.
+     * @param {string} fen
+     * @returns {{
+     *   whiteScore: number,
+     *   blackScore: number,
+     *   scoreDiff: number,
+     *   whitePieces: Array<{ type: string, count: number }>,
+     *   blackPieces: Array<{ type: string, count: number }>
+     * }}
+     */
+    function calculateMaterialDifference(fen) {
+        const pieceValues = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+        const counts = {
+            w: { p: 0, n: 0, b: 0, r: 0, q: 0, total: 0 },
+            b: { p: 0, n: 0, b: 0, r: 0, q: 0, total: 0 }
+        };
+
+        if (!fen || fen === 'start') {
+            return {
+                whiteScore: 39,
+                blackScore: 39,
+                scoreDiff: 0,
+                whitePieces: [],
+                blackPieces: []
+            };
+        }
+
+        const boardPart = fen.split(' ')[0];
+        for (const char of boardPart) {
+            if ((char >= '1' && char <= '8') || char === '/') continue;
+            const isWhite = (char === char.toUpperCase());
+            const type = char.toLowerCase();
+            if (pieceValues[type] !== undefined) {
+                const side = isWhite ? 'w' : 'b';
+                counts[side][type]++;
+                counts[side].total += pieceValues[type];
+            }
+        }
+
+        const pieceTypes = ['p', 'n', 'b', 'r', 'q'];
+        const whitePieces = [];
+        const blackPieces = [];
+
+        pieceTypes.forEach(type => {
+            const diff = counts.w[type] - counts.b[type];
+            if (diff > 0) {
+                whitePieces.push({ type, count: diff });
+            } else if (diff < 0) {
+                blackPieces.push({ type, count: Math.abs(diff) });
+            }
+        });
+
+        const scoreDiff = counts.w.total - counts.b.total;
+
+        return {
+            whiteScore: counts.w.total,
+            blackScore: counts.b.total,
+            scoreDiff,
+            whitePieces,
+            blackPieces
+        };
+    }
+
     return {
         MATE_SCORE_CP,
         scoreToCp,
         cpToWinProb,
         formatScore,
         classifyMove,
-        isKeyMoment
+        isKeyMoment,
+        calculateMaterialDifference
     };
 }));
