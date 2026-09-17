@@ -332,7 +332,44 @@ const rook7th = SituationRecognizer.detectBoardControlDominance(rook7thBefore, r
 assert(rook7th !== null, "Should detect 7th rank infiltration");
 assert.strictEqual(rook7th.type, 'seventh_rank', "Should be seventh_rank");
 
-// 8. Structured breakdown properties verification
+// 8. King safety & castling rights detection tests
+console.log("Testing king safety & castling rights logic...");
+const startPos = new Chess();
+assert.strictEqual(SituationRecognizer.hasCastlingRights(startPos, 'w'), true, "White should have castling rights at start");
+assert.strictEqual(SituationRecognizer.hasCastlingRights(startPos, 'b'), true, "Black should have castling rights at start");
+
+// King forfeiting castling rights on move 2: 1. e4 e5 2. Ke2
+const fenBeforeKe2 = new Chess("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
+const fenAfterKe2 = new Chess("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPPKPPP/RNBQ1BNR b kq - 1 2");
+const forfeitFlaw = SituationRecognizer.detectKingSafetyFlaw(fenBeforeKe2, fenAfterKe2, { from: 'e1', to: 'e2' });
+assert(forfeitFlaw !== null && forfeitFlaw.includes("forfeiting castling rights"), "Should detect forfeiting castling rights when king moves from e1 with rights available");
+
+// King move in endgame (move 49 Kf4??) where castling is long gone:
+const endgameBefore = new Chess('4k3/8/8/5RK1/1r2n3/6P1/8/8 w - - 0 49');
+const endgameAfter = new Chess('4k3/8/8/5R2/1r2nK2/6P1/8/8 b - - 1 49');
+assert.strictEqual(SituationRecognizer.hasCastlingRights(endgameBefore, 'w'), false, "White should not have castling rights in endgame");
+const endgameFlaw = SituationRecognizer.detectKingSafetyFlaw(endgameBefore, endgameAfter, { from: 'g5', to: 'f4' });
+assert.strictEqual(endgameFlaw, null, "King move in endgame must NOT be flagged as forfeiting castling rights");
+
+const endgameDiag = SituationRecognizer.explainBlunderOrMistake({
+    boardBefore: endgameBefore,
+    boardAfter: endgameAfter,
+    playedMove: { from: 'g5', to: 'f4' },
+    bestMove: { from: 'g5', to: 'g4' },
+    refutationMove: { from: 'e4', to: 'd6' },
+    sanPlayed: 'Kf4',
+    sanBest: 'Kg4',
+    sanRef: 'Nd6+',
+    refPv: ['e4d6', 'f4e5', 'd6f5']
+});
+console.log("Endgame diagnosis explanation:", endgameDiag.explanation);
+assert(!endgameDiag.explanation.includes("castling"), "Endgame diagnosis must not mention castling");
+assert(!endgameDiag.explanation.includes("a a Rook"), "Must not have duplicate 'a a' article");
+assert(!endgameDiag.tags.includes("King Safety"), "Endgame blunder must not have King Safety tag");
+assert(endgameDiag.tags.includes("Losing Material"), "Should tag Losing Material");
+assert(endgameDiag.tags.includes("Discovered Attack"), "Should tag Discovered Attack");
+
+// 9. Structured breakdown properties verification
 console.log("Testing structured breakdown properties...");
 assert(userDiag.flaw !== undefined && userDiag.flaw !== null, "Should have flaw property");
 assert(userDiag.betterLine !== undefined && userDiag.betterLine !== null, "Should have betterLine property");

@@ -1022,6 +1022,24 @@
     }
 
     /**
+     * Check if a color has castling rights available in the board position.
+     * @param {object} board - chess.js instance
+     * @param {string} color - 'w' or 'b'
+     * @returns {boolean}
+     */
+    function hasCastlingRights(board, color) {
+        if (!board || typeof board.fen !== 'function') return false;
+        const fen = board.fen();
+        const castling = (fen.split(' ')[2]) || '';
+        if (color === 'w') {
+            return castling.includes('K') || castling.includes('Q');
+        } else if (color === 'b') {
+            return castling.includes('k') || castling.includes('q');
+        }
+        return false;
+    }
+
+    /**
      * Detect king safety flaw.
      */
     function detectKingSafetyFlaw(boardBefore, boardAfter, move) {
@@ -1031,13 +1049,16 @@
 
         // King moves without castling when castling rights were available
         if (piece.type === 'k') {
-            const fromRank = squareToRank(move.from);
-            const toRank = squareToRank(move.to);
+            const homeSquare = (color === 'w' ? 'e1' : 'e8');
             const fromFile = squareToFile(move.from);
             const toFile = squareToFile(move.to);
             const isCastling = Math.abs(toFile - fromFile) === 2;
-            if (!isCastling) {
-                // If king stepped away
+
+            if (!isCastling && move.from === homeSquare && hasCastlingRights(boardBefore, color)) {
+                // If king stepped away forfeiting castling rights
+                if (boardBefore.in_check && boardBefore.in_check()) {
+                    return 'losing castling rights by moving the King under check';
+                }
                 return 'forfeiting castling rights and leaving the king in the center';
             }
         }
@@ -1600,16 +1621,17 @@
                             const lossName = (refGain.type === 'win_queen' ? 'your Queen' : (refGain.type === 'win_rook' ? 'a Rook' : 'a piece'));
                             refutationEffect = `allows ${sanRef || 'refutation'} capturing on ${refutationMove.to} and winning ${lossName}`;
                         } else {
-                            refutationEffect = `allows ${sanRef || 'the punishment line'}, winning a ${refGain.description.replace('wins ', '')}`;
+                            const cleanDesc = refGain.description.replace(/^wins\s+/i, '');
+                            refutationEffect = `allows ${sanRef || 'the punishment line'}, winning ${cleanDesc}`;
                         }
                     }
                 }
 
                 // Tactical Fork by refutation
-                if (!refutationEffect) {
-                    const fork = detectFork(boardAfterRef, refutationMove);
-                    if (fork) {
-                        tags.push('Tactical Fork');
+                const fork = detectFork(boardAfterRef, refutationMove);
+                if (fork) {
+                    tags.push('Tactical Fork');
+                    if (!refutationEffect) {
                         refutationEffect = `allows ${sanRef || 'refutation'} ${fork.description}`;
                     }
                 }
@@ -1626,6 +1648,15 @@
                     if (sk) {
                         tags.push('Skewer');
                         refutationEffect = `allows ${sanRef || 'refutation'} ${sk.description}`;
+                    }
+                }
+
+                // Discovered Attack by refutation
+                const disc = detectDiscoveredAttack(boardAfter, boardAfterRef, refutationMove);
+                if (disc) {
+                    tags.push('Discovered Attack');
+                    if (!refutationEffect) {
+                        refutationEffect = `allows ${sanRef || 'refutation'} ${disc.description}`;
                     }
                 }
 
@@ -1712,7 +1743,7 @@
             } else {
                 explanation = `${sanPlayed} blunders by ${blunderReason}. ${sanBest} was necessary because it ${bestReason}.`;
             }
-        } else if (tags.includes('Tactical Fork') || tags.includes('Pin') || tags.includes('Skewer') || tags.includes('Hanging Piece') || tags.includes('Checkmate')) {
+        } else if (tags.includes('Tactical Fork') || tags.includes('Pin') || tags.includes('Skewer') || tags.includes('Hanging Piece') || tags.includes('Checkmate') || tags.includes('Tactical Blunder') || tags.includes('Losing Material')) {
             explanation = `${sanPlayed} runs into tactical trouble: it ${refutationEffect}. ${sanBest} was much safer because it ${bestReason}.`;
         } else if (openingPrincipleViolation) {
             explanation = `${sanPlayed} violates opening principles by ${openingPrincipleViolation}. ${sanBest} was stronger because it ${bestReason}.`;
@@ -1756,6 +1787,11 @@
                 missedChance: null,
                 betterLine: 'delivers checkmate immediately'
             };
+        }
+
+        if (san === 'O-O' || san === 'O-O-O') {
+            tags.push('King Safety');
+            reasons.push('castles to bring the King to safety and connect the rooks');
         }
 
         if (san.includes('+')) {
@@ -1881,6 +1917,7 @@
         isTrueOutpost,
         detectFileControl,
         detectPassedPawn,
+        hasCastlingRights,
         detectKingSafetyFlaw,
         explainBlunderOrMistake,
         explainGoodMove
