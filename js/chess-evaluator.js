@@ -135,23 +135,28 @@
     }
 
     /**
-     * Determine if a move is a key moment in the game (blunder, mistake, inaccuracy, missed win, brilliant, great, or major tactical event).
+     * Determine if a move is a key moment in the game (blunder, missed win, miss, brilliant, great).
+     * Skips mistakes and inaccuracies to focus on major turning points.
      * @param {object} move
      * @returns {boolean}
      */
     function isKeyMoment(move) {
         if (!move) return false;
         const q = (move.detailed_quality || move.quality || '').toLowerCase();
-        if (['blunder', 'mistake', 'inaccuracy', 'missed win', 'miss', 'brilliant', 'great'].includes(q)) {
+        // Skip mistakes and inaccuracies to focus on game-defining moments
+        if (q === 'mistake' || q === 'inaccuracy') {
+            return false;
+        }
+        if (['blunder', 'missed win', 'miss', 'brilliant', 'great'].includes(q)) {
             return true;
         }
-        if (typeof move.win_prob_loss === 'number' && move.win_prob_loss >= 0.10) {
+        if (typeof move.win_prob_loss === 'number' && move.win_prob_loss >= 0.20) {
             return true;
         }
         if (Array.isArray(move.tags) && move.tags.length > 0) {
             const keyTag = move.tags.some(tag => {
                 const t = tag.toLowerCase();
-                return t.includes('miss') || t.includes('fork') || t.includes('hanging') || t.includes('tactic') || t.includes('checkmate') || t.includes('trapped');
+                return t.includes('missed win') || t.includes('missed mate') || t.includes('checkmate');
             });
             if (keyTag) return true;
         }

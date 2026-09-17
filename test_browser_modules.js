@@ -62,17 +62,21 @@ const blackMoverScore = { cp: 200 };
 const whiteDisplayScore = { cp: -blackMoverScore.cp };
 assert.strictEqual(ChessEvaluator.formatScore(whiteDisplayScore, 'w'), '-2.00');
 
-// Key Moment identification tests
+// Key Moment identification tests (auto-next skips mistake and inaccuracy)
 assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'blunder' }), true);
-assert.strictEqual(ChessEvaluator.isKeyMoment({ detailed_quality: 'mistake' }), true);
-assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'inaccuracy' }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ detailed_quality: 'blunder' }), true);
 assert.strictEqual(ChessEvaluator.isKeyMoment({ detailed_quality: 'missed win' }), true);
 assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'miss' }), true);
 assert.strictEqual(ChessEvaluator.isKeyMoment({ detailed_quality: 'brilliant' }), true);
 assert.strictEqual(ChessEvaluator.isKeyMoment({ detailed_quality: 'great' }), true);
-assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'good move', win_prob_loss: 0.12 }), true);
-assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'good move', tags: ['Missed Attack on Queen'] }), true);
-assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'good move', tags: ['Tactical Fork'] }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'blunder', win_prob_loss: 0.25 }), true);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'good move', tags: ['Checkmate'] }), true);
+// Mistakes and inaccuracies MUST be skipped
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'mistake' }), false);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ detailed_quality: 'mistake' }), false);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'inaccuracy' }), false);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ detailed_quality: 'inaccuracy' }), false);
+assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'mistake', win_prob_loss: 0.14 }), false);
 assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'good move', detailed_quality: 'book' }), false);
 assert.strictEqual(ChessEvaluator.isKeyMoment({ quality: 'good move', detailed_quality: 'good', win_prob_loss: 0.01 }), false);
 

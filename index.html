@@ -2752,42 +2752,7 @@
                     html += '<div class="diagnosis-text text-muted mb-0"><i class="bi bi-check2-circle text-success me-1"></i>This move is considered solid by the engine.</div>';
                 }
 
-                // Key Moment review footer strip
-                const keyIndices = (typeof getKeyMomentIndices === 'function') ? getKeyMomentIndices() : [];
-                if (keyIndices.length > 0) {
-                    const isCurKey = (typeof isKeyMoment === 'function') && isKeyMoment(move);
-                    const curKeyIdx = keyIndices.indexOf(index);
-                    const statusText = (curKeyIdx !== -1)
-                        ? `<span class="badge bg-warning text-dark me-1 fw-bold">Moment ${curKeyIdx + 1} of ${keyIndices.length}</span><span class="text-warning small fw-semibold">Critical position</span>`
-                        : `<span class="text-muted small">Between key moments (${keyIndices.filter(k => k <= index).length} of ${keyIndices.length} reached)</span>`;
-
-                    html += `
-                        <div class="key-moment-bar d-flex align-items-center justify-content-between flex-wrap gap-2">
-                            <div class="d-flex align-items-center gap-1 small">
-                                <i class="bi bi-stars text-warning"></i>
-                                ${statusText}
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="lic-btn lic-btn-secondary py-1 px-2 btn-prev-key-action" title="Previous Key Moment (P)">
-                                    <i class="bi bi-rewind-fill me-1"></i>Prev
-                                </button>
-                                <button type="button" class="lic-btn lic-btn-warning py-1 px-3 btn-next-key-action" title="Next Key Moment (Space or N)">
-                                    <span>Next Key Moment</span> <i class="bi bi-fast-forward-fill ms-1"></i>
-                                </button>
-                            </div>
-                        </div>`;
-                }
-                
                 moveExplanation.innerHTML = html;
-                
-                const nextKeyActionBtn = moveExplanation.querySelector('.btn-next-key-action');
-                if (nextKeyActionBtn) {
-                    nextKeyActionBtn.addEventListener('click', goToNextKeyMoment);
-                }
-                const prevKeyActionBtn = moveExplanation.querySelector('.btn-prev-key-action');
-                if (prevKeyActionBtn) {
-                    prevKeyActionBtn.addEventListener('click', goToPrevKeyMoment);
-                }
                 
                 moveExplanation.querySelectorAll('.principal-variation.clickable').forEach(el => {
                     el.addEventListener('click', function() {
@@ -2999,16 +2964,20 @@
                     return ChessEvaluator.isKeyMoment(move);
                 }
                 const q = (move.detailed_quality || move.quality || '').toLowerCase();
-                if (['blunder', 'mistake', 'inaccuracy', 'missed win', 'miss', 'brilliant', 'great'].includes(q)) {
+                // Skip mistakes and inaccuracies to focus on game-defining moments
+                if (q === 'mistake' || q === 'inaccuracy') {
+                    return false;
+                }
+                if (['blunder', 'missed win', 'miss', 'brilliant', 'great'].includes(q)) {
                     return true;
                 }
-                if (typeof move.win_prob_loss === 'number' && move.win_prob_loss >= 0.10) {
+                if (typeof move.win_prob_loss === 'number' && move.win_prob_loss >= 0.20) {
                     return true;
                 }
                 if (Array.isArray(move.tags) && move.tags.length > 0) {
                     return move.tags.some(tag => {
                         const t = tag.toLowerCase();
-                        return t.includes('miss') || t.includes('fork') || t.includes('hanging') || t.includes('tactic') || t.includes('checkmate') || t.includes('trapped');
+                        return t.includes('missed win') || t.includes('missed mate') || t.includes('checkmate');
                     });
                 }
                 return false;
@@ -3205,26 +3174,11 @@
                 clearSquareAnnotations();
                 updateKeyMomentBadge();
 
-                const keyIndices = (typeof getKeyMomentIndices === 'function') ? getKeyMomentIndices() : [];
-                const keyCount = keyIndices.length;
-
                 moveExplanation.innerHTML = `
                     <div class="diagnosis-empty">
                         <i class="bi bi-search"></i>
                         <span>Select any move in the list to view engine diagnosis, tactical tags, threats, and alternative variations.</span>
-                        ${keyCount > 0 ? `
-                            <div class="mt-3">
-                                <button type="button" class="lic-btn lic-btn-warning px-3 py-2 btn-start-key-review">
-                                    <i class="bi bi-fast-forward-fill me-1"></i> Start Review (${keyCount} Key Moments)
-                                </button>
-                            </div>
-                        ` : ''}
                     </div>`;
-
-                const startReviewBtn = moveExplanation.querySelector('.btn-start-key-review');
-                if (startReviewBtn) {
-                    startReviewBtn.addEventListener('click', goToNextKeyMoment);
-                }
             }
 
             function goToPrevMove() {
