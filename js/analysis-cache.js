@@ -86,30 +86,6 @@
         return null;
     }
 
-    /**
-     * Extracts Chess.com numeric game ID from URL or raw ID, stripping trailing /white, #move, query params.
-     */
-    function extractChessComId(candidate) {
-        if (!candidate || typeof candidate !== 'string') return null;
-        const trimmed = candidate.trim();
-        // If it clearly contains standard multi-line PGN and does not start with http/chess.com
-        if ((trimmed.includes('[Event ') || trimmed.includes('1. e4') || trimmed.includes('1. d4')) && !trimmed.startsWith('http') && !trimmed.includes('chess.com')) {
-            return null;
-        }
-        // Match chess.com URL: chess.com/(?:analysis/)?(?:game/)?(?:live|daily)/(\d+) or similar
-        const urlMatch = trimmed.match(/chess\.com\/(?:[a-zA-Z0-9_.-]+\/)*(?:live|daily|game)\/(\d+)/i);
-        if (urlMatch) return urlMatch[1];
-        // Match query or hash param: ?game=123 or #game=123 or #chesscom=123
-        const paramMatch = trimmed.match(/[#?&](?:game=|id=|chesscom=|cc=)?\/?(\d{8,14})/i);
-        if (paramMatch) return paramMatch[1];
-        // Standalone numeric ID (8 to 14 digits)
-        const cleanId = trimmed.split(/[/\\?#]/)[0];
-        if (/^\d{8,14}$/.test(cleanId)) {
-            return cleanId;
-        }
-        return null;
-    }
-
     class AnalysisCache {
         constructor(storage = null, maxEntries = MAX_ENTRIES) {
             this.storage = storage || getStorage();
@@ -168,13 +144,9 @@
 
             const fingerprint = extractPgnFingerprint(pgn);
             const lichessId = extractLichessId(pgn);
-            const chessComId = extractChessComId(pgn);
 
             const matchIndex = entries.findIndex(entry => {
                 if (lichessId && entry.lichessId && entry.lichessId.toLowerCase() === lichessId.toLowerCase()) {
-                    return true;
-                }
-                if (chessComId && entry.chessComId && entry.chessComId === chessComId) {
                     return true;
                 }
                 if (fingerprint && entry.fingerprint && entry.fingerprint === fingerprint) {
@@ -206,7 +178,7 @@
          * @param {string} pgn - PGN text
          * @param {number} depth - Analysis depth
          * @param {object} analysisResult - { game_info, moves }
-         * @param {string} [sourceId] - Optional lichess or chess.com ID
+         * @param {string} [sourceId] - Optional lichess ID
          */
         set(pgn, depth, analysisResult, sourceId = null) {
             if (!pgn || !analysisResult || !analysisResult.moves || analysisResult.moves.length === 0) {
@@ -216,14 +188,10 @@
             const entries = this.getAll();
             const fingerprint = extractPgnFingerprint(pgn);
             const resolvedLichessId = extractLichessId(sourceId) || extractLichessId(pgn);
-            const resolvedChessComId = extractChessComId(sourceId) || extractChessComId(pgn);
 
             // Filter out existing matching entry
             const filtered = entries.filter(entry => {
                 if (resolvedLichessId && entry.lichessId && entry.lichessId.toLowerCase() === resolvedLichessId.toLowerCase()) {
-                    return false;
-                }
-                if (resolvedChessComId && entry.chessComId && entry.chessComId === resolvedChessComId) {
                     return false;
                 }
                 if (fingerprint && entry.fingerprint && entry.fingerprint === fingerprint) {
@@ -236,7 +204,6 @@
                 id: hashKey(fingerprint + '_' + depth),
                 fingerprint: fingerprint,
                 lichessId: resolvedLichessId || null,
-                chessComId: resolvedChessComId || null,
                 depth: depth || 18,
                 timestamp: Date.now(),
                 game_info: analysisResult.game_info || {},
@@ -269,7 +236,6 @@
     defaultInstance.AnalysisCache = AnalysisCache;
     defaultInstance.extractPgnFingerprint = extractPgnFingerprint;
     defaultInstance.extractLichessId = extractLichessId;
-    defaultInstance.extractChessComId = extractChessComId;
 
     return defaultInstance;
 }));
