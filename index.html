@@ -2177,24 +2177,9 @@
                         <button type="button" class="lic-chip-btn" data-sample="chesscom"><i class="bi bi-shield-check me-1"></i>Magnus Blitz</button>
                     </div>
                 </div>
-                <div class="row g-2 mb-2">
-                    <div class="col-12 col-md-7">
-                        <div class="input-group">
-                            <span class="input-group-text bg-dark border-secondary text-secondary" style="font-size:var(--lic-fs-base);"><i class="bi bi-shield-check"></i></span>
-                            <input type="text" class="form-control font-monospace" id="chesscomInput" placeholder="https://www.chess.com/game/live/173836469892 or ID" style="font-size:var(--lic-fs-base); background:var(--lic-bg-input); color:#fff; border-color:var(--lic-border);" />
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-5">
-                        <div class="input-group">
-                            <span class="input-group-text bg-dark border-secondary text-secondary" style="font-size:var(--lic-fs-sm);"><i class="bi bi-person me-1"></i>Player:</span>
-                            <input type="text" class="form-control" id="chesscomUsernameInput" placeholder="Player username (saved)" style="font-size:var(--lic-fs-base); background:var(--lic-bg-input); color:#fff; border-color:var(--lic-border);" title="Username of either player who played the game (helps search archives)" />
-                        </div>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center justify-content-between">
-                    <span class="small text-muted" style="font-size:11px;">
-                        <i class="bi bi-info-circle me-1"></i>Enter either player's Chess.com username to locate the game in public archives. Saved for future imports.
-                    </span>
+                <div class="input-group mb-2">
+                    <span class="input-group-text bg-dark border-secondary text-secondary" style="font-size:var(--lic-fs-base);"><i class="bi bi-shield-check"></i></span>
+                    <input type="text" class="form-control font-monospace" id="chesscomInput" placeholder="https://www.chess.com/game/live/173836469892 or ID" style="font-size:var(--lic-fs-base); background:var(--lic-bg-input); color:#fff; border-color:var(--lic-border);" />
                 </div>
             </div>
 
@@ -2523,7 +2508,6 @@
             const pgnDrawer = document.getElementById('pgnDrawer');
             const lichessInput = document.getElementById('lichessInput');
             const chesscomInput = document.getElementById('chesscomInput');
-            const chesscomUsernameInput = document.getElementById('chesscomUsernameInput');
             const tabPanelLichess = document.getElementById('tabPanelLichess');
             const tabPanelChesscom = document.getElementById('tabPanelChesscom');
             const tabPanelPgn = document.getElementById('tabPanelPgn');
@@ -2748,21 +2732,6 @@
                 });
             }
 
-            if (chesscomUsernameInput) {
-                try {
-                    const savedUser = localStorage.getItem('whyblunder_chesscom_username') || '';
-                    if (savedUser) chesscomUsernameInput.value = savedUser;
-                } catch (e) {}
-                chesscomUsernameInput.addEventListener('input', function() {
-                    try {
-                        localStorage.setItem('whyblunder_chesscom_username', this.value.trim());
-                    } catch (e) {}
-                });
-                chesscomUsernameInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') { e.preventDefault(); analyzeGame(); }
-                });
-            }
-
             // Restore saved import tab on startup
             switchImportTab(currentImportTab, false);
 
@@ -2792,7 +2761,6 @@
 1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0`,
                 lichess: 'https://lichess.org/Qa7FJNk2',
                 chesscom: 'https://www.chess.com/game/live/173836469892',
-                chesscom_user: 'MagnusCarlsen',
                 chesscom_pgn: `[Event "Live Chess"]
 [Site "Chess.com"]
 [Date "2026.09.01"]
@@ -2820,10 +2788,6 @@
                     } else if (key === 'chesscom') {
                         switchImportTab('chesscom', false);
                         if (chesscomInput) chesscomInput.value = sampleGames.chesscom;
-                        if (chesscomUsernameInput) {
-                            chesscomUsernameInput.value = sampleGames.chesscom_user;
-                            try { localStorage.setItem('whyblunder_chesscom_username', sampleGames.chesscom_user); } catch (e) {}
-                        }
                         toggleDrawer(false);
                         analyzeGame(sampleGames.chesscom);
                     } else if (sampleGames[key]) {
@@ -3163,56 +3127,6 @@
                 return pgn.trim();
             }
 
-            // Fetch game PGN from Chess.com public archives by player username and Game ID
-            async function fetchChessComGamePgn(gameId, username) {
-                if (!gameId) throw new Error('No Chess.com game ID provided.');
-                if (!username || !username.trim()) {
-                    throw new Error('Please enter either player\'s Chess.com username to locate this game in public archives.');
-                }
-
-                const cleanUser = encodeURIComponent(username.trim().toLowerCase());
-                const archUrl = `https://api.chess.com/pub/player/${cleanUser}/games/archives`;
-
-                const archRes = await fetch(archUrl);
-                if (!archRes.ok) {
-                    if (archRes.status === 404) {
-                        throw new Error(`Player "${username}" was not found on Chess.com.`);
-                    }
-                    throw new Error(`Failed to query Chess.com archives (${archRes.status}: ${archRes.statusText || 'Error'})`);
-                }
-
-                const archData = await archRes.json();
-                const archives = archData.archives || [];
-                if (archives.length === 0) {
-                    throw new Error(`No games found in archives for "${username}".`);
-                }
-
-                // Search recent monthly archives in reverse chronological order (up to 6 months)
-                const monthsToSearch = Math.min(6, archives.length);
-                for (let i = archives.length - 1; i >= archives.length - monthsToSearch; i--) {
-                    const monthUrl = archives[i];
-                    try {
-                        const mRes = await fetch(monthUrl);
-                        if (mRes.ok) {
-                            const mData = await mRes.json();
-                            const games = mData.games || [];
-                            const match = games.find(g => {
-                                if (g.url && (g.url.endsWith(`/${gameId}`) || g.url.includes(`/${gameId}`))) return true;
-                                if (g.uuid && g.uuid === gameId) return true;
-                                return false;
-                            });
-                            if (match && match.pgn) {
-                                return match.pgn.trim();
-                            }
-                        }
-                    } catch (e) {
-                        console.warn(`Error searching archive ${monthUrl}:`, e);
-                    }
-                }
-
-                throw new Error(`Game ${gameId} was not found in recent archives for "${username}". Please verify the username of either player who played the game, or copy PGN directly from Chess.com (Share → PGN).`);
-            }
-
             // Analyze Game with In-Browser WASM (supports Lichess, Chess.com, or Raw PGN)
             async function analyzeGame(customPgn, forceRefresh = false) {
                 let pgn = '';
@@ -3337,6 +3251,13 @@
                 // 3. Fetch from Chess.com if Chess.com ID detected
                 if (chessComId) {
                     try {
+                        let fetchedPgn = '';
+                        if (chessComId === '173836469892' && sampleGames.chesscom_pgn) {
+                            fetchedPgn = sampleGames.chesscom_pgn;
+                        } else {
+                            throw new Error('Chess.com does not support direct game fetching by ID without PGN. Please copy and paste the game PGN in the PGN tab (Chess.com: Share → PGN).');
+                        }
+
                         toggleDrawer(false);
                         analysisProgressContainer.classList.add('show');
                         progressBar.style.width = '0%';
@@ -3345,28 +3266,6 @@
                         if (analysisStatusBadge) {
                             analysisStatusBadge.className = 'badge bg-info text-dark';
                             analysisStatusBadge.textContent = 'FETCHING...';
-                        }
-
-                        let playerUser = chesscomUsernameInput ? chesscomUsernameInput.value.trim() : '';
-                        if (!playerUser) {
-                            try { playerUser = localStorage.getItem('whyblunder_chesscom_username') || ''; } catch (e) {}
-                        }
-
-                        let fetchedPgn = '';
-                        if (chessComId === '173836469892' && sampleGames.chesscom_pgn) {
-                            fetchedPgn = sampleGames.chesscom_pgn;
-                        } else {
-                            if (!playerUser) {
-                                const promptUser = prompt('Please enter either player\'s Chess.com username to locate this game in public archives:');
-                                if (promptUser && promptUser.trim()) {
-                                    playerUser = promptUser.trim();
-                                    if (chesscomUsernameInput) chesscomUsernameInput.value = playerUser;
-                                    try { localStorage.setItem('whyblunder_chesscom_username', playerUser); } catch (e) {}
-                                } else {
-                                    throw new Error('A Chess.com player username is required to query public game archives.');
-                                }
-                            }
-                            fetchedPgn = await fetchChessComGamePgn(chessComId, playerUser);
                         }
 
                         pgn = fetchedPgn;

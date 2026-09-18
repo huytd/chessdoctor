@@ -792,7 +792,7 @@ assert(indexHtml.includes('id="tabPanelChesscom"'), "index.html must include #ta
 assert(indexHtml.includes('id="tabPanelPgn"'), "index.html must include #tabPanelPgn");
 assert(indexHtml.includes('id="lichessInput"'), "index.html must include #lichessInput");
 assert(indexHtml.includes('id="chesscomInput"'), "index.html must include #chesscomInput");
-assert(indexHtml.includes('id="chesscomUsernameInput"'), "index.html must include #chesscomUsernameInput");
+assert(!indexHtml.includes('id="chesscomUsernameInput"'), "index.html must not include #chesscomUsernameInput (player name import removed)");
 assert(indexHtml.includes('id="pgnInput"'), "index.html must include #pgnInput");
 
 // Verify empty-state container action button updated
@@ -803,7 +803,7 @@ assert(indexHtml.includes('Import Game</span>') || indexHtml.includes('Import Ga
 assert(indexHtml.includes('function switchImportTab('), "index.html must include switchImportTab function");
 assert(indexHtml.includes('function extractChessComGameId('), "index.html must include extractChessComGameId function");
 assert(indexHtml.includes('function extractGameSource('), "index.html must include extractGameSource function");
-assert(indexHtml.includes('function fetchChessComGamePgn('), "index.html must include fetchChessComGamePgn function");
+assert(!indexHtml.includes('function fetchChessComGamePgn('), "index.html must not include fetchChessComGamePgn function");
 assert(indexHtml.includes('function checkUrlForGame('), "index.html must include checkUrlForGame function");
 
 // Verify Chess.com sample game config
