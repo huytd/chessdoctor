@@ -660,21 +660,61 @@
         }
 
         .principal-variation {
-            font-family: monospace;
+            font-family: var(--lic-font-mono);
             font-size: var(--lic-fs-base);
-            line-height: 1.5;
+            line-height: 1.6;
             color: #e5e5e5;
             padding: 6px 8px;
-            border-radius: 3px;
+            border-radius: 4px;
             background: var(--lic-bg-input);
             word-break: break-word;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 2px;
         }
-        .principal-variation.clickable {
+        .var-move-num {
+            color: var(--lic-text-muted);
+            font-size: var(--lic-fs-sm);
+            margin-left: 3px;
+            margin-right: 1px;
+            user-select: none;
+        }
+        .var-move-btn {
+            display: inline-flex;
+            align-items: center;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            color: var(--lic-text-bright);
+            font-family: inherit;
+            font-size: var(--lic-fs-base);
+            font-weight: 500;
+            padding: 1px 5px;
             cursor: pointer;
-            transition: background 0.12s;
+            transition: all 0.12s ease;
+            line-height: 1.3;
+            user-select: none;
         }
-        .principal-variation.clickable:hover {
+        .var-move-btn:hover {
             background: var(--lic-bg-surface-hover);
+            color: #ffffff;
+            border-color: var(--lic-border);
+        }
+        .var-move-btn.active {
+            font-weight: 700;
+        }
+        .var-move-btn.var-btn-refutation.active {
+            background: rgba(204, 51, 51, 0.28);
+            color: #fca5a5;
+            border-color: rgba(204, 51, 51, 0.65);
+            box-shadow: 0 0 6px rgba(204, 51, 51, 0.25);
+        }
+        .var-move-btn.var-btn-better.active {
+            background: rgba(98, 153, 36, 0.28);
+            color: #86efac;
+            border-color: rgba(98, 153, 36, 0.65);
+            box-shadow: 0 0 6px rgba(98, 153, 36, 0.25);
         }
 
         /* COLUMN 2: CHESS BOARD (CENTER) */
@@ -974,7 +1014,7 @@
             background: var(--lic-bg-surface);
             border: 1px solid var(--lic-border-subtle);
             border-radius: 4px;
-            padding: 8px 12px;
+            padding: 6px 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -1010,6 +1050,47 @@
         .var-status-text {
             font-size: var(--lic-fs-base);
             color: var(--lic-text-bright);
+        }
+
+        .var-nav-btn-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            background: var(--lic-bg-input);
+            padding: 2px;
+            border-radius: 4px;
+            border: 1px solid var(--lic-border-subtle);
+        }
+        .var-nav-btn-group .btn-lic-tool {
+            height: 28px;
+            width: 28px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            font-size: 13px;
+            background: transparent;
+            border: none;
+            color: var(--lic-text-primary);
+            cursor: pointer;
+            transition: all 0.12s ease;
+        }
+        .var-nav-btn-group .btn-lic-tool:hover {
+            background: var(--lic-bg-surface-hover);
+            color: #ffffff;
+        }
+        .var-nav-btn-group .btn-lic-tool:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .var-nav-btn-group .btn-lic-tool.btn-lic-play {
+            color: var(--lic-accent-blue);
+        }
+        .var-nav-btn-group .btn-lic-tool.btn-lic-play:hover {
+            color: #ffffff;
+            background: rgba(56, 189, 248, 0.2);
         }
 
         /* Variation Outcome Explanation Card */
@@ -1649,13 +1730,22 @@
 
                     <!-- Return to Game Box (shown during/after alt line play) -->
                     <div id="variationBanner" class="variation-under-board d-none">
-                        <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                        <div class="d-flex align-items-center gap-2 text-truncate me-1">
                             <span id="variationTypeBadge" class="var-type-badge refutation">Punishing Line</span>
                             <span id="variationStatusText" class="var-status-text text-truncate">Playing variation...</span>
                         </div>
-                        <button type="button" id="btnReturnMainLine" class="lic-btn lic-btn-primary py-1 px-2" title="Return to original position (Space)">
-                            <i class="bi bi-arrow-return-left"></i> Return to Game
-                        </button>
+                        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                            <div class="var-nav-btn-group" id="varNavBtnGroup">
+                                <button type="button" id="btnVarFirst" class="btn-lic-tool" title="Start of variation (Home)"><i class="bi bi-skip-start-fill"></i></button>
+                                <button type="button" id="btnVarPrev" class="btn-lic-tool" title="Previous variation move (←)"><i class="bi bi-chevron-left"></i></button>
+                                <button type="button" id="btnVarPlay" class="btn-lic-tool btn-lic-play" title="Play/Pause animation (P)"><i class="bi bi-play-fill" id="btnVarPlayIcon"></i></button>
+                                <button type="button" id="btnVarNext" class="btn-lic-tool" title="Next variation move (→)"><i class="bi bi-chevron-right"></i></button>
+                                <button type="button" id="btnVarLast" class="btn-lic-tool" title="End of variation (End)"><i class="bi bi-skip-end-fill"></i></button>
+                            </div>
+                            <button type="button" id="btnReturnMainLine" class="lic-btn lic-btn-primary py-1 px-2" title="Return to Game (Space or Esc)">
+                                <i class="bi bi-arrow-return-left"></i> <span class="d-none d-sm-inline ms-1">Return</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Bottom Player Strip (White) -->
@@ -1759,6 +1849,7 @@
             let moveHistory = [];
             let isPlayingVariation = false;
             let isInVariationMode = false;
+            let activeVariation = null;
             let isTraversingKeyMoments = false;
             let keyMomentTimeout = null;
             let targetKeyIndex = -1;
@@ -1796,6 +1887,12 @@
             const variationBanner = document.getElementById('variationBanner');
             const variationTypeBadge = document.getElementById('variationTypeBadge');
             const variationStatusText = document.getElementById('variationStatusText');
+            const btnVarFirst = document.getElementById('btnVarFirst');
+            const btnVarPrev = document.getElementById('btnVarPrev');
+            const btnVarPlay = document.getElementById('btnVarPlay');
+            const btnVarPlayIcon = document.getElementById('btnVarPlayIcon');
+            const btnVarNext = document.getElementById('btnVarNext');
+            const btnVarLast = document.getElementById('btnVarLast');
             const btnReturnMainLine = document.getElementById('btnReturnMainLine');
             const analysisStatusBadge = document.getElementById('analysisStatusBadge');
             
@@ -1950,13 +2047,56 @@
             }
 
             // Board navigation buttons
-            btnFirst.addEventListener('click', goToFirstMove);
-            btnPrev.addEventListener('click', goToPrevMove);
-            if (btnPrevKey) btnPrevKey.addEventListener('click', goToPrevKeyMoment);
-            if (btnNextKey) btnNextKey.addEventListener('click', goToNextKeyMoment);
-            btnNext.addEventListener('click', goToNextMove);
-            btnLast.addEventListener('click', goToLastMove);
+            btnFirst.addEventListener('click', function() {
+                if (isInVariationMode && activeVariation) {
+                    stepVariationFirst();
+                } else {
+                    goToFirstMove();
+                }
+            });
+            btnPrev.addEventListener('click', function() {
+                if (isInVariationMode && activeVariation) {
+                    stepVariationBackward();
+                } else {
+                    goToPrevMove();
+                }
+            });
+            if (btnPrevKey) btnPrevKey.addEventListener('click', function() {
+                if (isInVariationMode || isPlayingVariation) {
+                    returnToGamePosition();
+                } else {
+                    goToPrevKeyMoment();
+                }
+            });
+            if (btnNextKey) btnNextKey.addEventListener('click', function() {
+                if (isInVariationMode || isPlayingVariation) {
+                    returnToGamePosition();
+                } else {
+                    goToNextKeyMoment();
+                }
+            });
+            btnNext.addEventListener('click', function() {
+                if (isInVariationMode && activeVariation) {
+                    stepVariationForward();
+                } else {
+                    goToNextMove();
+                }
+            });
+            btnLast.addEventListener('click', function() {
+                if (isInVariationMode && activeVariation) {
+                    stepVariationLast();
+                } else {
+                    goToLastMove();
+                }
+            });
             analyzeBtn.addEventListener('click', analyzeGame);
+
+            // Under-board Variation Stepping & Playback Buttons
+            if (btnVarFirst) btnVarFirst.addEventListener('click', stepVariationFirst);
+            if (btnVarPrev) btnVarPrev.addEventListener('click', stepVariationBackward);
+            if (btnVarPlay) btnVarPlay.addEventListener('click', toggleVariationPlayPause);
+            if (btnVarNext) btnVarNext.addEventListener('click', stepVariationForward);
+            if (btnVarLast) btnVarLast.addEventListener('click', stepVariationLast);
             
             if (cancelAnalyzeBtn) {
                 cancelAnalyzeBtn.addEventListener('click', function() {
@@ -1989,16 +2129,32 @@
                 }
                 if (e.key === 'ArrowLeft') {
                     e.preventDefault();
-                    goToPrevMove();
+                    if (isInVariationMode && activeVariation) {
+                        stepVariationBackward();
+                    } else {
+                        goToPrevMove();
+                    }
                 } else if (e.key === 'ArrowRight') {
                     e.preventDefault();
-                    goToNextMove();
+                    if (isInVariationMode && activeVariation) {
+                        stepVariationForward();
+                    } else {
+                        goToNextMove();
+                    }
                 } else if (e.key === 'Home') {
                     e.preventDefault();
-                    goToFirstMove();
+                    if (isInVariationMode && activeVariation) {
+                        stepVariationFirst();
+                    } else {
+                        goToFirstMove();
+                    }
                 } else if (e.key === 'End') {
                     e.preventDefault();
-                    goToLastMove();
+                    if (isInVariationMode && activeVariation) {
+                        stepVariationLast();
+                    } else {
+                        goToLastMove();
+                    }
                 } else if (e.key === 'f' || e.key === 'F') {
                     e.preventDefault();
                     if (btnFlip) btnFlip.click();
@@ -2011,7 +2167,9 @@
                     }
                 } else if (e.key === 'p' || e.key === 'P') {
                     e.preventDefault();
-                    if (isInVariationMode || isPlayingVariation) {
+                    if (isInVariationMode && activeVariation) {
+                        toggleVariationPlayPause();
+                    } else if (isInVariationMode || isPlayingVariation) {
                         returnToGamePosition();
                     } else {
                         goToPrevKeyMoment();
@@ -2655,15 +2813,16 @@
                 const bestMoveFigurine = formatSanWithFigurines(bestMoveSan, move.is_white);
                 const bestMoveHeader = bestMoveSan ? `${bestMoveFigurine} was best.` : '';
 
-                const pvLine = move.analysis.principal_variation || '';
+                const varData = getVariationData(moveIndex, 'better');
+                const renderedPv = varData && varData.moves.length > 0 ? renderVariationLineHtml(varData) : '';
                 
                 return `
-                    <div class="inline-analysis-card ${cardClass}" data-move-index="${moveIndex}" title="Click to play recommended variation">
+                    <div class="inline-analysis-card ${cardClass}" data-move-index="${moveIndex}" title="Click card to play variation">
                         <div class="inline-diag-header">
                             <span class="inline-diag-title">${qualityTitle}.</span>
                             ${bestMoveHeader ? `<span class="inline-diag-best">${bestMoveHeader}</span>` : ''}
                         </div>
-                        ${pvLine ? `<div class="inline-pv-line" data-index="${moveIndex}">${escapeHtml(pvLine)}</div>` : ''}
+                        ${renderedPv ? `<div class="inline-pv-line" data-index="${moveIndex}">${renderedPv}</div>` : ''}
                     </div>
                 `;
             }
@@ -2770,10 +2929,24 @@
                     });
                 });
 
-                analysisContainer.querySelectorAll('.inline-analysis-card, .inline-pv-line').forEach(item => {
-                    item.addEventListener('click', function(e) {
+                analysisContainer.querySelectorAll('.inline-pv-line .var-move-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
                         e.stopPropagation();
-                        const moveIndex = parseInt(this.dataset.index || this.dataset.moveIndex);
+                        const moveIdx = parseInt(this.dataset.moveIdx);
+                        const lineType = this.dataset.type || 'better';
+                        const step = parseInt(this.dataset.step);
+                        if (!isNaN(moveIdx) && !isNaN(step)) {
+                            goToMove(moveIdx);
+                            jumpToVariationStep(moveIdx, lineType, step, false);
+                        }
+                    });
+                });
+
+                analysisContainer.querySelectorAll('.inline-analysis-card').forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        if (e.target.closest('.var-move-btn')) return;
+                        e.stopPropagation();
+                        const moveIndex = parseInt(this.dataset.moveIndex || this.dataset.index);
                         if (!isNaN(moveIndex)) {
                             goToMove(moveIndex);
                             playVariation(moveIndex, 'better');
@@ -2906,38 +3079,46 @@
                     }
 
                     // Variations: Punishing Line & Recommended Line
-                    if (move.quality !== 'good move' && move.analysis.refutation_variation) {
+                    const refVarData = (move.quality !== 'good move') ? getVariationData(index, 'refutation') : null;
+                    if (refVarData && refVarData.moves.length > 0) {
+                        const isCurrentVarActive = (isInVariationMode && activeVariation && activeVariation.moveIndex === index && activeVariation.lineType === 'refutation');
+                        const activeStep = isCurrentVarActive ? activeVariation.stepIndex : -1;
                         html += `
-                            <div class="variation-box box-refutation">
+                            <div class="variation-box box-refutation" id="varBox-refutation-${index}">
                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                     <span class="text-danger fw-semibold small">
                                         <i class="bi bi-shield-slash me-1"></i>Punishing line (why this is bad):
                                     </span>
+                                    <span class="text-muted font-monospace small">${refVarData.moves.length} moves</span>
                                 </div>
-                                <div class="principal-variation refutation-line clickable" data-index="${index}" data-type="refutation" title="Click to view variation on board">
-                                    ${move.analysis.refutation_variation}
+                                <div class="principal-variation refutation-line" data-index="${index}" data-type="refutation">
+                                    ${renderVariationLineHtml(refVarData, activeStep)}
                                 </div>
                                 <div class="mt-2 d-flex align-items-center gap-2">
-                                    <button class="lic-btn lic-btn-danger py-1 px-2 play-refutation-button" data-index="${index}">
+                                    <button type="button" class="lic-btn lic-btn-danger py-1 px-2 play-refutation-button" data-index="${index}">
                                         <i class="bi bi-play-fill"></i> Play punishment line
                                     </button>
                                 </div>
                             </div>`;
                     }
 
-                    if (move.analysis.principal_variation) {
+                    const betterVarData = getVariationData(index, 'better');
+                    if (betterVarData && betterVarData.moves.length > 0) {
+                        const isCurrentVarActive = (isInVariationMode && activeVariation && activeVariation.moveIndex === index && activeVariation.lineType === 'better');
+                        const activeStep = isCurrentVarActive ? activeVariation.stepIndex : -1;
                         html += `
-                            <div class="variation-box box-better">
+                            <div class="variation-box box-better" id="varBox-better-${index}">
                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                     <span class="text-success fw-semibold small">
                                         <i class="bi bi-check-circle me-1"></i>Recommended line:
                                     </span>
+                                    <span class="text-muted font-monospace small">${betterVarData.moves.length} moves</span>
                                 </div>
-                                <div class="principal-variation clickable" data-index="${index}" data-type="better" title="Click to view variation on board">
-                                    ${move.analysis.principal_variation}
+                                <div class="principal-variation" data-index="${index}" data-type="better">
+                                    ${renderVariationLineHtml(betterVarData, activeStep)}
                                 </div>
                                 <div class="mt-2 d-flex align-items-center gap-2">
-                                    <button class="lic-btn lic-btn-success py-1 px-2 play-button" data-index="${index}">
+                                    <button type="button" class="lic-btn lic-btn-success py-1 px-2 play-button" data-index="${index}">
                                         <i class="bi bi-play-fill"></i> Play better line
                                     </button>
                                 </div>
@@ -2949,17 +3130,22 @@
 
                 moveExplanation.innerHTML = html;
                 
-                moveExplanation.querySelectorAll('.principal-variation.clickable').forEach(el => {
-                    el.addEventListener('click', function() {
-                        const idx = parseInt(this.dataset.index);
+                moveExplanation.querySelectorAll('.var-move-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const moveIdx = parseInt(this.dataset.moveIdx);
                         const type = this.dataset.type || 'better';
-                        playVariation(idx, type);
+                        const step = parseInt(this.dataset.step);
+                        if (!isNaN(moveIdx) && !isNaN(step)) {
+                            jumpToVariationStep(moveIdx, type, step, false);
+                        }
                     });
                 });
                 
                 const playBtn = moveExplanation.querySelector('.play-button');
                 if (playBtn) {
-                    playBtn.addEventListener('click', function() {
+                    playBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
                         const idx = parseInt(this.dataset.index);
                         playVariation(idx, 'better');
                     });
@@ -2967,7 +3153,8 @@
 
                 const playRefutationBtn = moveExplanation.querySelector('.play-refutation-button');
                 if (playRefutationBtn) {
-                    playRefutationBtn.addEventListener('click', function() {
+                    playRefutationBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
                         const idx = parseInt(this.dataset.index);
                         playVariation(idx, 'refutation');
                     });
@@ -3505,7 +3692,16 @@
             function parsePrincipalVariation(pvString, startingFen) {
                 if (!pvString) return [];
                 const tempChess = new Chess(startingFen);
-                let cleanPV = pvString.replace(/\s+/g, ' ').trim();
+                let cleanPV = pvString
+                    .replace(/[♔♚]/g, 'K')
+                    .replace(/[♕♛]/g, 'Q')
+                    .replace(/[♖♜]/g, 'R')
+                    .replace(/[♗♝]/g, 'B')
+                    .replace(/[♘♞]/g, 'N')
+                    .replace(/[♙♟]/g, '')
+                    .replace(/[\u2654-\u265F]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
                 const tokens = cleanPV.split(' ');
                 const movesList = [];
                 const potentialMoves = [];
@@ -3524,18 +3720,28 @@
                 }
 
                 for (let i = 0; i < potentialMoves.length; i++) {
-                    const moveText = potentialMoves[i];
+                    const rawMoveText = potentialMoves[i].replace(/[?!+#]+$/, '');
                     let move = null;
+                    const fenBefore = tempChess.fen();
+                    const isWhite = tempChess.turn() === 'w';
+                    const moveNum = parseInt(fenBefore.split(' ')[5], 10) || 1;
+
                     try {
-                        move = tempChess.move(moveText);
+                        move = tempChess.move(potentialMoves[i]);
                     } catch (e) {}
+
+                    if (!move && rawMoveText) {
+                        try {
+                            move = tempChess.move(rawMoveText);
+                        } catch (e) {}
+                    }
                     
-                    if (!move && moveText.length >= 4) {
+                    if (!move && rawMoveText.length >= 4) {
                         try {
                             move = tempChess.move({
-                                from: moveText.substring(0, 2),
-                                to: moveText.substring(2, 4),
-                                promotion: moveText.length > 4 ? moveText[4] : undefined
+                                from: rawMoveText.substring(0, 2),
+                                to: rawMoveText.substring(2, 4),
+                                promotion: rawMoveText.length > 4 ? rawMoveText[4] : undefined
                             });
                         } catch (e) {}
                     }
@@ -3546,11 +3752,155 @@
                             to: move.to,
                             promotion: move.promotion,
                             san: move.san,
-                            fen: tempChess.fen()
+                            fen: tempChess.fen(),
+                            fenBefore: fenBefore,
+                            isWhite: isWhite,
+                            moveNumber: moveNum,
+                            stepIndex: movesList.length
                         });
                     }
                 }
                 return movesList;
+            }
+
+            function getVariationData(moveIndex, lineType = 'better') {
+                if (moveIndex < 0 || moveIndex >= moves.length) return null;
+                const move = moves[moveIndex];
+                if (!move || !move.analysis) return null;
+                
+                const isRefutation = (lineType === 'refutation');
+                
+                let startingFen = 'start';
+                if (isRefutation) {
+                    if (moveIndex + 1 < moveHistory.length && moveHistory[moveIndex + 1]) {
+                        startingFen = moveHistory[moveIndex + 1].fen;
+                    } else {
+                        const tempChess = new Chess();
+                        for (let i = 0; i <= moveIndex; i++) {
+                            try { tempChess.move(moves[i].move); } catch (e) {}
+                        }
+                        startingFen = tempChess.fen();
+                    }
+                } else {
+                    if (moveIndex < moveHistory.length && moveHistory[moveIndex]) {
+                        startingFen = moveHistory[moveIndex].fen;
+                    } else if (moveIndex > 0) {
+                        const tempChess = new Chess();
+                        for (let i = 0; i < moveIndex; i++) {
+                            try { tempChess.move(moves[i].move); } catch (e) {}
+                        }
+                        startingFen = tempChess.fen();
+                    }
+                }
+                
+                const rawVariation = isRefutation ? move.analysis.refutation_variation : move.analysis.principal_variation;
+                let variationMoves = rawVariation ? parsePrincipalVariation(rawVariation, startingFen) : [];
+
+                if (variationMoves.length === 0 && isRefutation && move.analysis.refutation_from && move.analysis.refutation_to) {
+                    const tempChess = new Chess(startingFen);
+                    try {
+                        const fenBefore = tempChess.fen();
+                        const isWhite = tempChess.turn() === 'w';
+                        const moveNum = parseInt(fenBefore.split(' ')[5], 10) || 1;
+                        const executed = tempChess.move({
+                            from: move.analysis.refutation_from,
+                            to: move.analysis.refutation_to,
+                            promotion: 'q'
+                        });
+                        if (executed) {
+                            variationMoves = [{
+                                from: executed.from,
+                                to: executed.to,
+                                promotion: executed.promotion,
+                                san: executed.san || move.analysis.refutation || '',
+                                fen: tempChess.fen(),
+                                fenBefore: fenBefore,
+                                isWhite: isWhite,
+                                moveNumber: moveNum,
+                                stepIndex: 0
+                            }];
+                        }
+                    } catch (e) {}
+                }
+
+                if (variationMoves.length === 0 && !isRefutation) {
+                    const tempChess = new Chess(startingFen);
+                    const fenBefore = tempChess.fen();
+                    const isWhite = tempChess.turn() === 'w';
+                    const moveNum = parseInt(fenBefore.split(' ')[5], 10) || 1;
+                    let executed = null;
+
+                    if (move.betterMoveData) {
+                        try {
+                            executed = tempChess.move({
+                                from: move.betterMoveData.from,
+                                to: move.betterMoveData.to,
+                                promotion: move.betterMoveData.promotion || 'q'
+                            });
+                        } catch (e) {}
+                    }
+                    if (!executed && move.analysis.best_move) {
+                        try {
+                            const cleanBest = move.analysis.best_move
+                                .replace(/[♔♚]/g, 'K')
+                                .replace(/[♕♛]/g, 'Q')
+                                .replace(/[♖♜]/g, 'R')
+                                .replace(/[♗♝]/g, 'B')
+                                .replace(/[♘♞]/g, 'N')
+                                .replace(/[♙♟]/g, '')
+                                .replace(/[\u2654-\u265F?!+#]/g, '')
+                                .trim();
+                            executed = tempChess.move(cleanBest);
+                        } catch (e) {}
+                    }
+                    if (executed) {
+                        variationMoves = [{
+                            from: executed.from,
+                            to: executed.to,
+                            promotion: executed.promotion,
+                            san: executed.san || move.analysis.best_move || '',
+                            fen: tempChess.fen(),
+                            fenBefore: fenBefore,
+                            isWhite: isWhite,
+                            moveNumber: moveNum,
+                            stepIndex: 0
+                        }];
+                    }
+                }
+
+                return {
+                    moveIndex,
+                    move,
+                    lineType,
+                    isRefutation,
+                    startingFen,
+                    moves: variationMoves
+                };
+            }
+
+            function renderVariationLineHtml(varData, activeStepIndex = -1) {
+                if (!varData || !varData.moves || varData.moves.length === 0) {
+                    return '<span class="text-muted small">No moves available</span>';
+                }
+
+                let html = '';
+                varData.moves.forEach((m, idx) => {
+                    const isActive = (activeStepIndex === idx);
+                    const activeClass = isActive ? ' active' : '';
+                    const colorType = varData.isRefutation ? 'refutation' : 'better';
+
+                    let numLabel = '';
+                    if (m.isWhite) {
+                        numLabel = `<span class="var-move-num">${m.moveNumber}.</span>`;
+                    } else if (idx === 0 || varData.moves[idx - 1]?.isWhite) {
+                        numLabel = `<span class="var-move-num">${m.moveNumber}...</span>`;
+                    }
+
+                    const sanFormatted = formatSanWithFigurines(m.san, m.isWhite);
+                    html += `${numLabel}<button type="button" class="var-move-btn var-btn-${colorType}${activeClass}" data-move-idx="${varData.moveIndex}" data-type="${varData.lineType}" data-step="${idx}" title="Jump to move ${idx + 1}">${sanFormatted}</button> `;
+                });
+
+                return html.trim();
             }
 
             function findKingSquare(chessInstance, color) {
@@ -3592,219 +3942,184 @@
                 return threats;
             }
 
-            // Variation Playback
+            // Variation Navigation & Playback Engine
+            function jumpToVariationStep(moveIndex, lineType = 'better', stepIndex = 0, autoPlay = false) {
+                stopKeyMomentTraversal();
+                if (animationTimeout) {
+                    clearTimeout(animationTimeout);
+                    animationTimeout = null;
+                }
+
+                if (!activeVariation || activeVariation.moveIndex !== moveIndex || activeVariation.lineType !== lineType) {
+                    const varData = getVariationData(moveIndex, lineType);
+                    if (!varData || varData.moves.length === 0) {
+                        if (lineType === 'refutation') alert('No punishment line available.');
+                        else alert('No alternative moves available.');
+                        return;
+                    }
+                    activeVariation = varData;
+                }
+
+                const varMoves = activeVariation.moves;
+                if (varMoves.length === 0) return;
+
+                // Clamp stepIndex
+                stepIndex = Math.max(-1, Math.min(stepIndex, varMoves.length - 1));
+                activeVariation.stepIndex = stepIndex;
+                activeVariation.isPlaying = autoPlay;
+                isPlayingVariation = autoPlay;
+                isInVariationMode = true;
+
+                // Determine target position
+                const targetFen = (stepIndex === -1) ? activeVariation.startingFen : varMoves[stepIndex].fen;
+                chess.load(targetFen);
+                board.position(targetFen, true);
+                updateMaterialDifference(targetFen);
+
+                if (boardContainer) {
+                    boardContainer.classList.add('variation-mode');
+                }
+
+                // Clear & draw arrows
+                clearArrows();
+                clearSquareAnnotations();
+                const arrowStyle = activeVariation.isRefutation ? 'opponent-threat' : 'better';
+
+                if (stepIndex >= 0) {
+                    const currentMoveData = varMoves[stepIndex];
+                    drawArrow(currentMoveData.from, currentMoveData.to, arrowStyle);
+
+                    const moveThreats = getMoveThreats(chess, currentMoveData);
+                    if (moveThreats.length > 0) {
+                        moveThreats.slice(0, 3).forEach(threat => {
+                            drawArrow(threat.from, threat.to, 'threat');
+                        });
+                    }
+                } else if (stepIndex === -1 && varMoves.length > 0) {
+                    drawArrow(varMoves[0].from, varMoves[0].to, arrowStyle);
+                }
+
+                // Update under-board banner
+                if (variationBanner) {
+                    variationBanner.classList.remove('d-none');
+                    if (variationTypeBadge) {
+                        variationTypeBadge.className = `var-type-badge ${activeVariation.isRefutation ? 'refutation' : 'better'}`;
+                        variationTypeBadge.textContent = activeVariation.isRefutation ? 'Punishing Line' : 'Recommended Line';
+                    }
+                    if (variationStatusText) {
+                        if (stepIndex === -1) {
+                            variationStatusText.innerHTML = `Start position (0/${varMoves.length})`;
+                        } else {
+                            const curSan = varMoves[stepIndex].san;
+                            variationStatusText.innerHTML = `Move ${stepIndex + 1}/${varMoves.length}: <strong class="text-info font-monospace">${curSan}</strong>`;
+                        }
+                    }
+                }
+
+                // Update Play/Pause Icon
+                if (btnVarPlayIcon) {
+                    btnVarPlayIcon.className = autoPlay ? 'bi bi-pause-fill' : 'bi bi-play-fill';
+                }
+
+                // Update Prev/Next button states in under-board banner
+                if (btnVarPrev) btnVarPrev.disabled = (stepIndex <= -1);
+                if (btnVarNext) btnVarNext.disabled = (stepIndex >= varMoves.length - 1);
+
+                // Update highlight on move buttons in the Move Analysis panel
+                document.querySelectorAll(`.var-move-btn[data-move-idx="${moveIndex}"][data-type="${lineType}"]`).forEach(btn => {
+                    const step = parseInt(btn.dataset.step);
+                    if (step === stepIndex) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+
+                // If reached the end of variation
+                if (stepIndex === varMoves.length - 1) {
+                    if (autoPlay) {
+                        onVariationComplete(activeVariation.move, activeVariation.isRefutation, activeVariation.startingFen, varMoves);
+                    } else {
+                        const outcome = getVariationOutcome(activeVariation.move, activeVariation.isRefutation, activeVariation.startingFen, varMoves, chess);
+                        if (variationStatusText) {
+                            variationStatusText.innerHTML = `<span class="text-${activeVariation.isRefutation ? 'danger' : 'success'} fw-semibold">${activeVariation.isRefutation ? 'Punishment: ' : 'Outcome: '}</span> <span>${outcome.punchline}</span>`;
+                        }
+                    }
+                }
+
+                // Auto-advance if playing
+                if (autoPlay) {
+                    if (stepIndex + 1 < varMoves.length) {
+                        animationTimeout = setTimeout(() => {
+                            if (isPlayingVariation && activeVariation && activeVariation.isPlaying) {
+                                jumpToVariationStep(moveIndex, lineType, stepIndex + 1, true);
+                            }
+                        }, animationSpeed);
+                    } else {
+                        activeVariation.isPlaying = false;
+                        isPlayingVariation = false;
+                        if (btnVarPlayIcon) btnVarPlayIcon.className = 'bi bi-play-fill';
+                    }
+                }
+            }
+
+            function stepVariationForward() {
+                if (!activeVariation || !isInVariationMode) return;
+                stopVariationAnimationTimer();
+                if (activeVariation.stepIndex < activeVariation.moves.length - 1) {
+                    jumpToVariationStep(activeVariation.moveIndex, activeVariation.lineType, activeVariation.stepIndex + 1, false);
+                }
+            }
+
+            function stepVariationBackward() {
+                if (!activeVariation || !isInVariationMode) return;
+                stopVariationAnimationTimer();
+                if (activeVariation.stepIndex > -1) {
+                    jumpToVariationStep(activeVariation.moveIndex, activeVariation.lineType, activeVariation.stepIndex - 1, false);
+                }
+            }
+
+            function stepVariationFirst() {
+                if (!activeVariation || !isInVariationMode) return;
+                stopVariationAnimationTimer();
+                jumpToVariationStep(activeVariation.moveIndex, activeVariation.lineType, -1, false);
+            }
+
+            function stepVariationLast() {
+                if (!activeVariation || !isInVariationMode) return;
+                stopVariationAnimationTimer();
+                jumpToVariationStep(activeVariation.moveIndex, activeVariation.lineType, activeVariation.moves.length - 1, false);
+            }
+
+            function stopVariationAnimationTimer() {
+                isPlayingVariation = false;
+                if (activeVariation) activeVariation.isPlaying = false;
+                if (animationTimeout) {
+                    clearTimeout(animationTimeout);
+                    animationTimeout = null;
+                }
+                if (btnVarPlayIcon) {
+                    btnVarPlayIcon.className = 'bi bi-play-fill';
+                }
+            }
+
+            function toggleVariationPlayPause() {
+                if (!activeVariation || !isInVariationMode) return;
+                if (isPlayingVariation || (activeVariation && activeVariation.isPlaying)) {
+                    stopVariationAnimationTimer();
+                } else {
+                    if (activeVariation.stepIndex >= activeVariation.moves.length - 1) {
+                        jumpToVariationStep(activeVariation.moveIndex, activeVariation.lineType, 0, true);
+                    } else {
+                        jumpToVariationStep(activeVariation.moveIndex, activeVariation.lineType, activeVariation.stepIndex + 1, true);
+                    }
+                }
+            }
+
             function playVariation(moveIndex, lineType = 'better') {
                 stopKeyMomentTraversal();
                 stopVariationPlayback();
-                const move = moves[moveIndex];
-                if (!move || !move.analysis) return;
-                
-                const isRefutation = (lineType === 'refutation');
-                
-                let startingFen = 'start';
-                if (isRefutation) {
-                    if (moveIndex + 1 < moveHistory.length && moveHistory[moveIndex + 1]) {
-                        startingFen = moveHistory[moveIndex + 1].fen;
-                    } else {
-                        const tempChess = new Chess();
-                        for (let i = 0; i <= moveIndex; i++) {
-                            try { tempChess.move(moves[i].move); } catch (e) {}
-                        }
-                        startingFen = tempChess.fen();
-                    }
-                } else {
-                    if (moveIndex < moveHistory.length && moveHistory[moveIndex]) {
-                        startingFen = moveHistory[moveIndex].fen;
-                    } else if (moveIndex > 0) {
-                        const tempChess = new Chess();
-                        for (let i = 0; i < moveIndex; i++) {
-                            try { tempChess.move(moves[i].move); } catch (e) {}
-                        }
-                        startingFen = tempChess.fen();
-                    }
-                }
-                
-                const rawVariation = isRefutation ? move.analysis.refutation_variation : move.analysis.principal_variation;
-                const arrowStyle = isRefutation ? 'opponent-threat' : 'better';
-
-                if (!rawVariation) {
-                    if (isRefutation) {
-                        if (!move.analysis.refutation_from || !move.analysis.refutation_to) {
-                            alert('No punishment line available.');
-                            return;
-                        }
-                    } else {
-                        if (move.analysis.best_move && move.betterMoveData) {
-                            showBetterMoveOnly(moveIndex, move.betterMoveData);
-                        } else {
-                            alert('No alternative moves available.');
-                        }
-                        return;
-                    }
-                }
-                
-                let variationMoves = rawVariation ? parsePrincipalVariation(rawVariation, startingFen) : [];
-                if (variationMoves.length === 0 && isRefutation && move.analysis.refutation_from && move.analysis.refutation_to) {
-                    variationMoves = [{
-                        from: move.analysis.refutation_from,
-                        to: move.analysis.refutation_to,
-                        san: move.analysis.refutation || ''
-                    }];
-                }
-
-                if (variationMoves.length === 0) {
-                    if (!isRefutation && move.analysis.best_move && move.betterMoveData) {
-                        showBetterMoveOnly(moveIndex, move.betterMoveData);
-                        return;
-                    }
-                    alert('Unable to parse variation moves.');
-                    return;
-                }
-                
-                isPlayingVariation = true;
-                isInVariationMode = true;
-                chess.load(startingFen);
-                board.position(startingFen);
-                updateMaterialDifference(startingFen);
-                
-                if (boardContainer) {
-                    boardContainer.classList.add('variation-mode');
-                }
-
-                if (variationBanner) {
-                    variationBanner.classList.remove('d-none');
-                    if (variationTypeBadge) {
-                        variationTypeBadge.className = `var-type-badge ${isRefutation ? 'refutation' : 'better'}`;
-                        variationTypeBadge.textContent = isRefutation ? 'Punishing Line' : 'Recommended Line';
-                    }
-                    if (variationStatusText) {
-                        variationStatusText.textContent = `Starting variation (0 of ${variationMoves.length})`;
-                    }
-                }
-
-                let currentVarMoveIndex = 0;
-                clearArrows();
-                clearSquareAnnotations();
-                if (variationMoves.length > 0) {
-                    drawArrow(variationMoves[0].from, variationMoves[0].to, arrowStyle);
-                }
-                
-                function playNextMove() {
-                    if (!isPlayingVariation) return;
-                    if (currentVarMoveIndex < variationMoves.length) {
-                        const moveData = variationMoves[currentVarMoveIndex];
-                        let executedMove = null;
-                        try {
-                            executedMove = chess.move({
-                                from: moveData.from,
-                                to: moveData.to,
-                                promotion: moveData.promotion || 'q'
-                            });
-                            board.position(chess.fen(), true);
-                            updateMaterialDifference(chess.fen());
-                            clearArrows();
-                            clearSquareAnnotations();
-
-                            const moveThreats = getMoveThreats(chess, moveData);
-                            if (moveThreats.length > 0) {
-                                moveThreats.slice(0, 3).forEach(threat => {
-                                    drawArrow(threat.from, threat.to, 'threat');
-                                });
-                            }
-
-                            if (currentVarMoveIndex + 1 < variationMoves.length) {
-                                const nextMove = variationMoves[currentVarMoveIndex + 1];
-                                drawArrow(nextMove.from, nextMove.to, arrowStyle);
-                            }
-
-                            if (variationStatusText) {
-                                const moveNotation = executedMove ? executedMove.san : (moveData.san || '');
-                                variationStatusText.innerHTML = `Move ${currentVarMoveIndex + 1}/${variationMoves.length}: <strong class="text-info font-monospace">${moveNotation}</strong>`;
-                            }
-                            
-                            currentVarMoveIndex++;
-                            if (currentVarMoveIndex < variationMoves.length) {
-                                animationTimeout = setTimeout(playNextMove, animationSpeed);
-                            } else {
-                                onVariationComplete(move, isRefutation, startingFen, variationMoves);
-                            }
-                        } catch (e) {
-                            console.error('Error playing variation:', e);
-                            stopVariationPlayback();
-                        }
-                    }
-                }
-                
-                setTimeout(() => {
-                    if (isPlayingVariation) playNextMove();
-                }, 600);
-            }
-
-            function showBetterMoveOnly(moveIndex, betterMoveData) {
-                stopVariationPlayback();
-                const move = moves[moveIndex];
-                if (!move) return;
-                
-                let startingFen = 'start';
-                if (moveIndex < moveHistory.length && moveHistory[moveIndex]) {
-                    startingFen = moveHistory[moveIndex].fen;
-                } else if (moveIndex > 0) {
-                    const tempChess = new Chess();
-                    for (let i = 0; i < moveIndex; i++) {
-                        try { tempChess.move(moves[i].move); } catch (e) {}
-                    }
-                    startingFen = tempChess.fen();
-                }
-                
-                isPlayingVariation = true;
-                isInVariationMode = true;
-                chess.load(startingFen);
-                board.position(startingFen);
-                updateMaterialDifference(startingFen);
-                
-                if (boardContainer) {
-                    boardContainer.classList.add('variation-mode');
-                }
-
-                if (variationBanner) {
-                    variationBanner.classList.remove('d-none');
-                    if (variationTypeBadge) {
-                        variationTypeBadge.className = 'var-type-badge better';
-                        variationTypeBadge.textContent = 'Recommended Move';
-                    }
-                    if (variationStatusText) {
-                        variationStatusText.textContent = `Playing ${betterMoveData.san || move.analysis.best_move}`;
-                    }
-                }
-
-                clearArrows();
-                clearSquareAnnotations();
-                drawArrow(betterMoveData.from, betterMoveData.to, 'better');
-                
-                animationTimeout = setTimeout(() => {
-                    if (!isPlayingVariation) return;
-                    try {
-                        chess.move({
-                            from: betterMoveData.from,
-                            to: betterMoveData.to,
-                            promotion: betterMoveData.promotion || 'q'
-                        });
-                        board.position(chess.fen(), true);
-                        updateMaterialDifference(chess.fen());
-                        clearArrows();
-                        clearSquareAnnotations();
-
-                        const moveThreats = getMoveThreats(chess, betterMoveData);
-                        if (moveThreats.length > 0) {
-                            moveThreats.slice(0, 3).forEach(threat => {
-                                drawArrow(threat.from, threat.to, 'threat');
-                            });
-                        }
-                        onVariationComplete(move, false, startingFen, [betterMoveData]);
-                    } catch (e) {
-                        console.error('Error executing better move:', e);
-                    }
-                }, 600);
+                jumpToVariationStep(moveIndex, lineType, 0, true);
             }
 
             function getMaterialScore(fen) {
@@ -3994,6 +4309,11 @@
             function renderVariationOutcomeCard(outcome, move, isRefutation) {
                 if (!moveExplanation) return;
                 
+                const lineType = isRefutation ? 'refutation' : 'better';
+                const varData = activeVariation || getVariationData(currentMoveIndex, lineType);
+                const activeStep = varData && varData.moves ? varData.moves.length - 1 : -1;
+                const renderedPv = varData ? renderVariationLineHtml(varData, activeStep) : '';
+
                 let html = `
                     <div class="variation-outcome-card">
                         <div class="outcome-banner-box ${isRefutation ? 'refutation' : 'better'}">
@@ -4003,6 +4323,13 @@
                             </div>
                             <div class="outcome-subtitle">${outcome.subtitle}</div>
                         </div>
+
+                        ${renderedPv ? `
+                        <div class="variation-box ${isRefutation ? 'box-refutation' : 'box-better'} mb-0">
+                            <div class="principal-variation ${isRefutation ? 'refutation-line' : ''}" data-index="${currentMoveIndex}" data-type="${lineType}">
+                                ${renderedPv}
+                            </div>
+                        </div>` : ''}
 
                         <div class="outcome-diff-grid">
                             <div class="outcome-diff-cell">
@@ -4043,6 +4370,18 @@
 
                 moveExplanation.innerHTML = html;
 
+                moveExplanation.querySelectorAll('.var-move-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const moveIdx = parseInt(this.dataset.moveIdx);
+                        const type = this.dataset.type || 'better';
+                        const step = parseInt(this.dataset.step);
+                        if (!isNaN(moveIdx) && !isNaN(step)) {
+                            jumpToVariationStep(moveIdx, type, step, false);
+                        }
+                    });
+                });
+
                 const returnBtn = document.getElementById('outcomeReturnBtn');
                 if (returnBtn) {
                     returnBtn.addEventListener('click', returnToGamePosition);
@@ -4077,9 +4416,13 @@
             function stopVariationPlayback() {
                 isPlayingVariation = false;
                 isInVariationMode = false;
+                activeVariation = null;
                 if (animationTimeout) {
                     clearTimeout(animationTimeout);
                     animationTimeout = null;
+                }
+                if (btnVarPlayIcon) {
+                    btnVarPlayIcon.className = 'bi bi-play-fill';
                 }
                 if (boardContainer) {
                     boardContainer.classList.remove('variation-mode');

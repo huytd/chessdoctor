@@ -542,9 +542,156 @@ assert(indexHtml.includes('.player-material-display'), "index.html must include 
 assert(indexHtml.includes('.material-piece-icon'), "index.html must include .material-piece-icon CSS");
 assert(indexHtml.includes('.material-score-badge'), "index.html must include .material-score-badge CSS");
 assert(indexHtml.includes('updateMaterialDifference(chess.fen())'), "index.html must call updateMaterialDifference on board move changes");
-assert(indexHtml.includes('updateMaterialDifference(startingFen)'), "index.html must call updateMaterialDifference on variation start");
+assert(indexHtml.includes('updateMaterialDifference(targetFen)'), "index.html must call updateMaterialDifference on variation step change");
 assert(indexHtml.includes('updateMaterialDifference()'), "index.html must call updateMaterialDifference on orientation flip");
 console.log("✓ Material difference tests passed!");
 
+// 6. Interactive Variation Navigation & Alt Line Integrity tests
+console.log("Testing Variation Navigation & Interactive Alt Lines...");
+
+// Test PV parser function directly
+function parsePrincipalVariationTest(pvString, startingFen) {
+    if (!pvString || typeof pvString !== 'string') return [];
+    const cleanPv = pvString
+        .replace(/[♔♚]/g, 'K')
+        .replace(/[♕♛]/g, 'Q')
+        .replace(/[♖♜]/g, 'R')
+        .replace(/[♗♝]/g, 'B')
+        .replace(/[♘♞]/g, 'N')
+        .replace(/[♙♟]/g, '')
+        .replace(/[\u2654-\u265F]/g, '')
+        .trim();
+    const testChess = new Chess(startingFen);
+    const tokens = cleanPv.split(/\s+/);
+    const moves = [];
+
+    let currentMoveNum = 1;
+    if (startingFen && startingFen !== 'start') {
+        const parts = startingFen.split(' ');
+        if (parts.length >= 6) {
+            currentMoveNum = parseInt(parts[5], 10) || 1;
+        }
+    }
+
+    for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        if (!token) continue;
+        if (/^\d+\.+$/.test(token) || /^\d+\.\.\.$/.test(token)) {
+            const numMatch = token.match(/^(\d+)/);
+            if (numMatch) currentMoveNum = parseInt(numMatch[1], 10);
+            continue;
+        }
+
+        const isWhite = (testChess.turn() === 'w');
+        const moveNum = currentMoveNum;
+        const fenBefore = testChess.fen();
+
+        let cleanSan = token
+            .replace(/[♔♚]/g, 'K')
+            .replace(/[♕♛]/g, 'Q')
+            .replace(/[♖♜]/g, 'R')
+            .replace(/[♗♝]/g, 'B')
+            .replace(/[♘♞]/g, 'N')
+            .replace(/[♙♟]/g, '')
+            .replace(/[\u2654-\u265F?!+#]/g, '')
+            .trim();
+        let moveRes = null;
+        try {
+            moveRes = testChess.move(cleanSan);
+        } catch (e) {
+            try {
+                moveRes = testChess.move(token);
+            } catch (e2) {}
+        }
+
+        if (moveRes) {
+            moves.push({
+                from: moveRes.from,
+                to: moveRes.to,
+                promotion: moveRes.promotion,
+                san: moveRes.san || token,
+                fen: testChess.fen(),
+                fenBefore: fenBefore,
+                isWhite: isWhite,
+                moveNumber: moveNum,
+                stepIndex: moves.length
+            });
+            if (!isWhite) currentMoveNum++;
+        }
+    }
+    return moves;
+}
+
+// Test parsing standard PV string
+const startFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+const parsedPv = parsePrincipalVariationTest("1. e4 e5 2. Nf3 Nc6 3. Bb5 a6", startFen);
+assert.strictEqual(parsedPv.length, 6);
+assert.strictEqual(parsedPv[0].san, 'e4');
+assert.strictEqual(parsedPv[0].isWhite, true);
+assert.strictEqual(parsedPv[0].moveNumber, 1);
+assert.strictEqual(parsedPv[0].stepIndex, 0);
+
+assert.strictEqual(parsedPv[1].san, 'e5');
+assert.strictEqual(parsedPv[1].isWhite, false);
+assert.strictEqual(parsedPv[1].moveNumber, 1);
+assert.strictEqual(parsedPv[1].stepIndex, 1);
+
+assert.strictEqual(parsedPv[5].san, 'a6');
+assert.strictEqual(parsedPv[5].isWhite, false);
+assert.strictEqual(parsedPv[5].moveNumber, 3);
+assert.strictEqual(parsedPv[5].stepIndex, 5);
+
+// Test parsing PV with unicode figurines (ensure stripping works seamlessly)
+const pvWithFigurines = "1. ♘f3 d5 2. d4 ♞f6";
+const parsedFigurines = parsePrincipalVariationTest(pvWithFigurines, startFen);
+assert.strictEqual(parsedFigurines.length, 4);
+assert.strictEqual(parsedFigurines[0].san, 'Nf3');
+assert.strictEqual(parsedFigurines[1].san, 'd5');
+assert.strictEqual(parsedFigurines[2].san, 'd4');
+assert.strictEqual(parsedFigurines[3].san, 'Nf6');
+
+// Test HTML and CSS markup in index.html for variation navigation
+assert(indexHtml.includes('.var-move-btn'), "index.html must include .var-move-btn CSS");
+assert(indexHtml.includes('.var-move-num'), "index.html must include .var-move-num CSS");
+assert(indexHtml.includes('.var-btn-refutation'), "index.html must include .var-btn-refutation CSS");
+assert(indexHtml.includes('.var-btn-better'), "index.html must include .var-btn-better CSS");
+assert(indexHtml.includes('.var-nav-btn-group'), "index.html must include .var-nav-btn-group CSS");
+
+// Test Under-board banner controls markup
+assert(indexHtml.includes('id="variationBanner"'), "index.html must include #variationBanner");
+assert(indexHtml.includes('id="btnVarFirst"'), "index.html must include #btnVarFirst");
+assert(indexHtml.includes('id="btnVarPrev"'), "index.html must include #btnVarPrev");
+assert(indexHtml.includes('id="btnVarPlay"'), "index.html must include #btnVarPlay");
+assert(indexHtml.includes('id="btnVarNext"'), "index.html must include #btnVarNext");
+assert(indexHtml.includes('id="btnVarLast"'), "index.html must include #btnVarLast");
+assert(indexHtml.includes('id="btnReturnMainLine"'), "index.html must include #btnReturnMainLine");
+
+// Test JavaScript variation engine functions
+assert(indexHtml.includes('function parsePrincipalVariation('), "index.html must include parsePrincipalVariation");
+assert(indexHtml.includes('function getVariationData('), "index.html must include getVariationData");
+assert(indexHtml.includes('function renderVariationLineHtml('), "index.html must include renderVariationLineHtml");
+assert(indexHtml.includes('function jumpToVariationStep('), "index.html must include jumpToVariationStep");
+assert(indexHtml.includes('function stepVariationForward('), "index.html must include stepVariationForward");
+assert(indexHtml.includes('function stepVariationBackward('), "index.html must include stepVariationBackward");
+assert(indexHtml.includes('function stepVariationFirst('), "index.html must include stepVariationFirst");
+assert(indexHtml.includes('function stepVariationLast('), "index.html must include stepVariationLast");
+assert(indexHtml.includes('function toggleVariationPlayPause('), "index.html must include toggleVariationPlayPause");
+assert(indexHtml.includes('function stopVariationAnimationTimer('), "index.html must include stopVariationAnimationTimer");
+assert(indexHtml.includes('function playVariation('), "index.html must include playVariation");
+
+// Verify event listener bindings for manual vs auto-play separation
+assert(indexHtml.includes('jumpToVariationStep(moveIdx, type, step, false)'), "Clicking move tokens must jump directly without auto-play");
+assert(indexHtml.includes("playVariation(idx, 'better')") && indexHtml.includes("playVariation(idx, 'refutation')"), "Clicking play button must trigger playVariation");
+
+// Verify keyboard navigation delegation
+assert(indexHtml.includes('if (isInVariationMode && activeVariation) {') && indexHtml.includes('stepVariationBackward()'), "Left arrow must step backward in variation mode");
+assert(indexHtml.includes('if (isInVariationMode && activeVariation) {') && indexHtml.includes('stepVariationForward()'), "Right arrow must step forward in variation mode");
+assert(indexHtml.includes('if (isInVariationMode && activeVariation) {') && indexHtml.includes('stepVariationFirst()'), "Home key must jump to first step in variation mode");
+assert(indexHtml.includes('if (isInVariationMode && activeVariation) {') && indexHtml.includes('stepVariationLast()'), "End key must jump to last step in variation mode");
+assert(indexHtml.includes('toggleVariationPlayPause()'), "P key and toolbar play button must toggle play/pause in variation mode");
+
+console.log("✓ Variation Navigation & Interactive Alt Lines passed!");
+
 console.log("ALL BROWSER MODULE TESTS PASSED SUCCESSFULLY! 🎉");
+
 
