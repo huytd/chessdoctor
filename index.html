@@ -1559,7 +1559,286 @@
             border: 1px solid var(--lic-border-subtle);
         }
 
-        /* RESPONSIVE LAYOUT */
+        /* RESPONSIVE LAYOUT & MOBILE COMPONENTS */
+        .mobile-eval-bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            height: 14px;
+            background: #181613;
+            border: 1px solid var(--lic-border-subtle);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 2px 0 3px 0;
+        }
+        .mobile-eval-track {
+            width: 100%;
+            height: 100%;
+            background: #141311;
+            position: relative;
+        }
+        .mobile-eval-fill-white {
+            height: 100%;
+            background: #f0f0f0;
+            transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .mobile-eval-pill {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: monospace;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0 6px;
+            border-radius: 8px;
+            z-index: 2;
+            pointer-events: none;
+            line-height: 14px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #cbd5e1;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* 1-Line Game Move List (Mobile Ticker) */
+        .mobile-move-ticker {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            background: var(--lic-bg-surface-header);
+            border: 1px solid var(--lic-border-subtle);
+            border-radius: 4px;
+            padding: 2px 4px;
+            margin-top: 3px;
+            height: 38px;
+            min-height: 38px;
+            position: relative;
+            overflow: hidden;
+        }
+        .ticker-nav-btn {
+            background: var(--lic-bg-surface);
+            border: 1px solid var(--lic-border-subtle);
+            color: var(--lic-text-secondary);
+            border-radius: 3px;
+            width: 24px;
+            height: 28px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.12s;
+            z-index: 2;
+        }
+        .ticker-nav-btn:hover {
+            background: var(--lic-bg-surface-hover);
+            color: var(--lic-text-bright);
+        }
+        .ticker-scroll {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            padding: 0 4px;
+            width: 100%;
+        }
+        .ticker-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .ticker-move-num {
+            color: var(--lic-text-muted);
+            font-size: 0.72rem;
+            font-family: monospace;
+            padding: 0 2px;
+            user-select: none;
+        }
+        .ticker-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--lic-bg-surface);
+            border: 1px solid var(--lic-border-subtle);
+            color: var(--lic-text-primary);
+            border-radius: 4px;
+            padding: 2px 7px;
+            font-size: 0.78rem;
+            font-family: monospace;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            flex-shrink: 0;
+            min-height: 28px;
+            line-height: 1;
+        }
+        .ticker-chip:hover {
+            background: var(--lic-bg-surface-hover);
+            color: #ffffff;
+            border-color: var(--lic-border-strong);
+        }
+        .ticker-chip.active {
+            background: #2a4b6c;
+            color: #ffffff;
+            border-color: #3b82f6;
+            font-weight: 700;
+            box-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
+        }
+        .ticker-badge {
+            font-size: 0.62rem;
+            font-weight: 700;
+            padding: 1px 3px;
+            border-radius: 2px;
+            line-height: 1;
+        }
+        .ticker-badge-blunder { background: #cc3333; color: #fff; }
+        .ticker-badge-mistake { background: #d97706; color: #fff; }
+        .ticker-badge-inaccuracy { background: #c9a000; color: #161512; }
+        .ticker-badge-book { color: #a78bfa; }
+        .ticker-badge-best { color: #60a5fa; }
+        .ticker-badge-brilliant { color: #2dd4bf; }
+
+        /* Large Bottom Navigation Toolbar */
+        .mobile-nav-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--lic-bg-surface-header);
+            border-top: 1px solid var(--lic-border-strong);
+            padding: 6px 10px;
+            padding-bottom: max(6px, env(safe-area-inset-bottom));
+            gap: 6px;
+            width: 100%;
+            z-index: 1020;
+        }
+        .mobile-nav-tool-btn {
+            background: var(--lic-bg-surface);
+            border: 1px solid var(--lic-border);
+            color: var(--lic-text-secondary);
+            border-radius: 8px;
+            height: 46px;
+            min-width: 44px;
+            padding: 4px 8px;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.12s ease;
+        }
+        .mobile-nav-tool-btn:hover, .mobile-nav-tool-btn:active {
+            background: var(--lic-bg-surface-hover);
+            color: var(--lic-text-bright);
+            border-color: var(--lic-border-strong);
+        }
+        .mobile-tool-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            line-height: 1;
+        }
+        .mobile-nav-key-btn {
+            position: relative;
+        }
+        .mobile-key-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #f59e0b;
+            color: #1a1815;
+            font-size: 0.62rem;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 8px;
+            font-family: monospace;
+            line-height: 1;
+        }
+
+        .mobile-nav-capsule {
+            display: flex;
+            align-items: center;
+            background: var(--lic-bg-surface);
+            border: 1px solid var(--lic-border);
+            border-radius: 26px;
+            padding: 2px 4px;
+            gap: 4px;
+            flex: 1;
+            max-width: 250px;
+            height: 46px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+        }
+        .mobile-nav-arrow-btn {
+            background: transparent;
+            border: none;
+            color: var(--lic-text-primary);
+            width: 44px;
+            height: 40px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            flex-shrink: 0;
+        }
+        .mobile-nav-arrow-btn:hover, .mobile-nav-arrow-btn:active {
+            background: var(--lic-bg-surface-hover);
+            color: #ffffff;
+        }
+        .mobile-nav-next-btn {
+            background: var(--lic-green) !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 5px rgba(98, 153, 36, 0.45);
+        }
+        .mobile-nav-next-btn:hover, .mobile-nav-next-btn:active {
+            background: var(--lic-green-hover) !important;
+        }
+        .mobile-nav-step-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.15;
+            overflow: hidden;
+            text-align: center;
+        }
+        .mobile-nav-move-san {
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--lic-text-bright);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        .mobile-nav-move-count {
+            font-size: 0.65rem;
+            color: var(--lic-text-secondary);
+            font-family: monospace;
+        }
+
+        /* Offcanvas Move Sheet */
+        .mobile-moves-offcanvas {
+            background-color: var(--lic-bg-surface) !important;
+            color: var(--lic-text-primary) !important;
+            border-top: 1px solid var(--lic-border-strong) !important;
+            height: 72vh !important;
+        }
+        .mobile-moves-offcanvas .move-list-table {
+            max-height: calc(72vh - 65px);
+            overflow-y: auto;
+        }
+
         @media (max-width: 1200px) {
             .studio-grid {
                 grid-template-columns: 360px 1fr 300px;
@@ -1568,29 +1847,208 @@
         }
 
         @media (max-width: 991px) {
-            .studio-grid {
+            html, body {
+                height: 100%;
+                height: 100dvh;
+                overflow: hidden !important;
+            }
+            body {
                 display: flex;
                 flex-direction: column;
-                gap: 14px;
             }
+            .lic-header {
+                flex-shrink: 0;
+                height: 42px;
+                padding: 0 10px;
+            }
+            .studio-container {
+                flex: 1;
+                min-height: 0;
+                padding: 4px 6px 0 6px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            .studio-grid {
+                flex: 1;
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                overflow: hidden;
+            }
+
+            /* 1. CHESS BOARD (Top of screen) */
             .col-board {
                 order: 1;
+                flex-shrink: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
             }
+            .board-container-card {
+                width: 100%;
+                max-width: min(100%, calc(100dvh - 315px));
+                gap: 2px;
+            }
+            .board-with-eval {
+                width: 100%;
+                gap: 0;
+            }
+            .eval-gauge {
+                display: none !important;
+            }
+            .lic-player-bar {
+                padding: 3px 8px;
+                font-size: 0.75rem;
+                min-height: 22px;
+                border-radius: 3px;
+            }
+            .player-avatar {
+                width: 18px;
+                height: 18px;
+                font-size: 0.65rem;
+            }
+            .player-material-display {
+                margin-left: 4px;
+            }
+            .material-piece-icon {
+                width: 13px;
+                height: 13px;
+            }
+
+            /* 2. MOVE DIAGNOSTIC AREA (Scrollable, takes all remaining space) */
             .col-analysis {
                 order: 2;
+                flex: 1;
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
+                width: 100%;
                 position: static;
                 max-height: none;
+                overflow: hidden;
             }
-            .col-moves {
-                order: 3;
-                position: static;
-                max-height: none;
+            .col-analysis .lic-panel {
+                flex: 1;
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
+                border: 1px solid var(--lic-border-subtle);
+                border-radius: 4px;
+                background: var(--lic-bg-surface);
+                overflow: hidden;
             }
-            .analysis-container {
-                max-height: 280px;
+            .col-analysis .lic-panel-header {
+                flex-shrink: 0;
+                padding: 3px 8px;
+                font-size: 0.74rem;
+                background: var(--lic-bg-surface-header);
+                border-bottom: 1px solid var(--lic-border-subtle);
             }
             .col-analysis .lic-panel-body {
+                flex: 1;
+                min-height: 0;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch;
+                padding: 8px 10px;
                 max-height: none;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+            .col-analysis .lic-panel-body::-webkit-scrollbar {
+                width: 4px;
+            }
+            .col-analysis .lic-panel-body::-webkit-scrollbar-thumb {
+                background: var(--lic-border-strong);
+                border-radius: 2px;
+            }
+
+            /* Mobile diagnostic content density */
+            .diagnosis-header {
+                padding-bottom: 4px;
+                margin-bottom: 3px;
+                gap: 4px;
+            }
+            .move-title-wrap {
+                gap: 6px;
+            }
+            .move-san {
+                font-size: 1.05rem;
+            }
+            .badge-q {
+                font-size: 0.68rem;
+                padding: 1px 6px;
+            }
+            .eval-tag, .eval-best-tag, .metric-chip {
+                font-size: 0.68rem;
+                padding: 1px 5px;
+            }
+            .tags-cluster {
+                gap: 3px;
+                margin-bottom: 3px;
+            }
+            .diag-tag {
+                font-size: 0.65rem;
+                padding: 1px 5px;
+            }
+            .better-move-strip {
+                padding: 4px 8px;
+                margin-bottom: 3px;
+                font-size: 0.75rem;
+            }
+            .threat-alert-box {
+                padding: 4px 8px;
+                margin-bottom: 3px;
+                font-size: 0.72rem;
+            }
+            .diagnosis-text {
+                padding: 6px 8px;
+                margin-bottom: 3px;
+                font-size: 0.78rem;
+                line-height: 1.4;
+            }
+            .variation-box {
+                padding: 6px 8px;
+                margin-top: 3px;
+            }
+            .variation-box .lic-btn {
+                padding: 3px 8px;
+                font-size: 0.75rem;
+            }
+
+            /* 3. HIDE DESKTOP MOVE COLUMN */
+            .col-moves {
+                display: none !important;
+            }
+
+            /* Mobile PGN drawer overlay */
+            .pgn-drawer {
+                position: fixed;
+                top: 42px;
+                left: 0;
+                right: 0;
+                z-index: 1050;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+            }
+            .pgn-drawer.open {
+                max-height: calc(100dvh - 50px);
+                overflow-y: auto;
+            }
+
+            .variation-under-board {
+                padding: 4px 6px;
+                font-size: 0.75rem;
+            }
+            .var-type-badge {
+                font-size: 0.65rem;
+                padding: 1px 4px;
+            }
+            .var-nav-btn-group .btn-lic-tool {
+                height: 26px;
+                width: 26px;
             }
         }
     </style>
@@ -1710,6 +2168,14 @@
                         </div>
                     </div>
 
+                    <!-- Mobile Horizontal Evaluation Bar (Screenshot 1 & 2 style) -->
+                    <div class="mobile-eval-bar d-lg-none" id="mobileEvalBar">
+                        <div class="mobile-eval-track">
+                            <div class="mobile-eval-fill-white" id="mobileEvalWhite" style="width: 50%;"></div>
+                        </div>
+                        <span class="mobile-eval-pill" id="mobileEvalPill">0.0</span>
+                    </div>
+
                     <!-- Chessboard with Left Lichess Eval Bar -->
                     <div class="board-with-eval">
                         <!-- Lichess Vertical Eval Bar -->
@@ -1759,6 +2225,19 @@
                         <div class="d-flex align-items-center gap-2">
                             <span class="player-turn-dot" id="bottomPlayerTurn"></span>
                         </div>
+                    </div>
+
+                    <!-- Single-Line Game Move List (Mobile only, right below chessboard) -->
+                    <div class="mobile-move-ticker d-lg-none" id="mobileMoveTicker">
+                        <button type="button" class="ticker-nav-btn ticker-nav-left" id="tickerNavLeft" aria-label="Scroll moves left">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <div class="ticker-scroll" id="tickerScroll">
+                            <div class="ticker-empty-text text-muted small px-2">Load a game to see moves...</div>
+                        </div>
+                        <button type="button" class="ticker-nav-btn ticker-nav-right" id="tickerNavRight" aria-label="Scroll moves right">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1828,6 +2307,58 @@
 
         </div>
     </main>
+
+    <!-- Large Mobile Move Navigation Controller (Docked below screen) -->
+    <nav class="mobile-nav-toolbar d-lg-none" id="mobileNavToolbar" aria-label="Mobile Game Navigation">
+        <!-- Left utilities: Moves Sheet Drawer + Next Key Moment -->
+        <div class="d-flex align-items-center gap-1">
+            <button type="button" id="mobileBtnMovesSheet" class="mobile-nav-tool-btn" title="Full Move Sheet" data-bs-toggle="offcanvas" data-bs-target="#mobileMovesOffcanvas" aria-controls="mobileMovesOffcanvas">
+                <i class="bi bi-list-nested"></i>
+                <span class="mobile-tool-label">Moves</span>
+            </button>
+            <button type="button" id="mobileBtnKey" class="mobile-nav-tool-btn mobile-nav-key-btn" title="Next Key Moment">
+                <i class="bi bi-lightning-charge-fill text-warning"></i>
+                <span id="mobileKeyBadge" class="mobile-key-badge d-none">0/0</span>
+            </button>
+        </div>
+
+        <!-- Center: Large Nav Capsule with Prev, Current Move, Next -->
+        <div class="mobile-nav-capsule">
+            <button type="button" id="mobileBtnPrev" class="mobile-nav-arrow-btn" title="Previous Move" aria-label="Previous Move">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <div class="mobile-nav-step-info" id="mobileNavStepInfo">
+                <span class="mobile-nav-move-san" id="mobileNavSan">—</span>
+                <span class="mobile-nav-move-count" id="mobileNavCount">0 of 0</span>
+            </div>
+            <button type="button" id="mobileBtnNext" class="mobile-nav-arrow-btn mobile-nav-next-btn" title="Next Move" aria-label="Next Move">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Right utilities: Flip board -->
+        <div class="d-flex align-items-center gap-1">
+            <button type="button" id="mobileBtnFlip" class="mobile-nav-tool-btn" title="Flip Board" aria-label="Flip Board">
+                <i class="bi bi-arrow-left-right"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Full Move Sheet Offcanvas Drawer -->
+    <div class="offcanvas offcanvas-bottom mobile-moves-offcanvas" tabindex="-1" id="mobileMovesOffcanvas" aria-labelledby="mobileMovesOffcanvasLabel">
+        <div class="offcanvas-header py-2 px-3 border-bottom border-secondary border-opacity-25">
+            <div class="d-flex align-items-center gap-2">
+                <h6 class="offcanvas-title fw-bold mb-0 text-light" id="mobileMovesOffcanvasLabel">
+                    <i class="bi bi-list-nested me-1 text-info"></i> Full Game Moves
+                </h6>
+                <span id="mobileSheetMoveCount" class="badge bg-secondary bg-opacity-25 text-light font-monospace" style="font-size:var(--lic-fs-sm);">0 moves</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-2" id="mobileMovesOffcanvasBody">
+            <div class="text-center text-muted py-4 small">Load a game to see full move sheet.</div>
+        </div>
+    </div>
 
     <!-- Dependencies -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -1919,6 +2450,24 @@
             const pillPlayedEval = document.getElementById('pillPlayedEval');
             const pillBetterSan = document.getElementById('pillBetterSan');
             const pillBetterEval = document.getElementById('pillBetterEval');
+
+            // Mobile UI Rework DOM elements
+            const mobileEvalWhite = document.getElementById('mobileEvalWhite');
+            const mobileEvalPill = document.getElementById('mobileEvalPill');
+            const mobileMoveTicker = document.getElementById('mobileMoveTicker');
+            const tickerScroll = document.getElementById('tickerScroll');
+            const tickerNavLeft = document.getElementById('tickerNavLeft');
+            const tickerNavRight = document.getElementById('tickerNavRight');
+            const mobileNavToolbar = document.getElementById('mobileNavToolbar');
+            const mobileBtnPrev = document.getElementById('mobileBtnPrev');
+            const mobileBtnNext = document.getElementById('mobileBtnNext');
+            const mobileBtnKey = document.getElementById('mobileBtnKey');
+            const mobileKeyBadge = document.getElementById('mobileKeyBadge');
+            const mobileNavSan = document.getElementById('mobileNavSan');
+            const mobileNavCount = document.getElementById('mobileNavCount');
+            const mobileBtnFlip = document.getElementById('mobileBtnFlip');
+            const mobileMovesOffcanvasBody = document.getElementById('mobileMovesOffcanvasBody');
+            const mobileSheetMoveCount = document.getElementById('mobileSheetMoveCount');
 
             // Initialize Chessboard
             const boardConfig = {
@@ -2090,6 +2639,50 @@
                 }
             });
             analyzeBtn.addEventListener('click', analyzeGame);
+
+            // Mobile Navigation & Ticker Event Listeners
+            if (mobileBtnPrev) {
+                mobileBtnPrev.addEventListener('click', function() {
+                    if (isInVariationMode && activeVariation) {
+                        stepVariationBackward();
+                    } else {
+                        goToPrevMove();
+                    }
+                });
+            }
+            if (mobileBtnNext) {
+                mobileBtnNext.addEventListener('click', function() {
+                    if (isInVariationMode && activeVariation) {
+                        stepVariationForward();
+                    } else {
+                        goToNextMove();
+                    }
+                });
+            }
+            if (mobileBtnKey) {
+                mobileBtnKey.addEventListener('click', function() {
+                    if (isInVariationMode || isPlayingVariation) {
+                        returnToGamePosition();
+                    } else {
+                        goToNextKeyMoment();
+                    }
+                });
+            }
+            if (mobileBtnFlip) {
+                mobileBtnFlip.addEventListener('click', function() {
+                    if (btnFlip) btnFlip.click();
+                });
+            }
+            if (tickerNavLeft && tickerScroll) {
+                tickerNavLeft.addEventListener('click', function() {
+                    tickerScroll.scrollBy({ left: -140, behavior: 'smooth' });
+                });
+            }
+            if (tickerNavRight && tickerScroll) {
+                tickerNavRight.addEventListener('click', function() {
+                    tickerScroll.scrollBy({ left: 140, behavior: 'smooth' });
+                });
+            }
 
             // Under-board Variation Stepping & Playback Buttons
             if (btnVarFirst) btnVarFirst.addEventListener('click', stepVariationFirst);
@@ -2644,12 +3237,16 @@
             }
 
             function updateEvalGauge(index) {
-                if (!evalGaugeWhite) return;
-
                 if (index < 0 || index >= moves.length) {
-                    evalGaugeWhite.style.height = '50%';
+                    if (evalGaugeWhite) evalGaugeWhite.style.height = '50%';
                     if (evalGaugeTop) evalGaugeTop.textContent = '';
                     if (evalGaugeBottom) evalGaugeBottom.textContent = '';
+                    if (mobileEvalWhite) mobileEvalWhite.style.width = '50%';
+                    if (mobileEvalPill) {
+                        mobileEvalPill.textContent = '0.0';
+                        mobileEvalPill.style.background = 'rgba(0, 0, 0, 0.75)';
+                        mobileEvalPill.style.color = '#cbd5e1';
+                    }
                     return;
                 }
 
@@ -2675,10 +3272,21 @@
                 whiteWp = Math.max(0.04, Math.min(0.96, whiteWp));
                 const whitePct = Math.round(whiteWp * 100);
 
-                if (isFlipped) {
-                    evalGaugeWhite.style.height = `${100 - whitePct}%`;
-                } else {
-                    evalGaugeWhite.style.height = `${whitePct}%`;
+                if (evalGaugeWhite) {
+                    if (isFlipped) {
+                        evalGaugeWhite.style.height = `${100 - whitePct}%`;
+                    } else {
+                        evalGaugeWhite.style.height = `${whitePct}%`;
+                    }
+                }
+
+                // Update Mobile Horizontal Eval Bar
+                if (mobileEvalWhite) {
+                    if (isFlipped) {
+                        mobileEvalWhite.style.width = `${100 - whitePct}%`;
+                    } else {
+                        mobileEvalWhite.style.width = `${whitePct}%`;
+                    }
                 }
 
                 if (evalText && !evalText.startsWith('+') && !evalText.startsWith('-') && !evalText.startsWith('M') && !evalText.startsWith('-M')) {
@@ -2691,6 +3299,20 @@
                 } else {
                     if (evalGaugeTop) evalGaugeTop.textContent = evalText;
                     if (evalGaugeBottom) evalGaugeBottom.textContent = '';
+                }
+
+                if (mobileEvalPill) {
+                    mobileEvalPill.textContent = evalText || '0.0';
+                    if (whiteWp > 0.55) {
+                        mobileEvalPill.style.background = 'rgba(240, 240, 240, 0.95)';
+                        mobileEvalPill.style.color = '#111';
+                    } else if (whiteWp < 0.45) {
+                        mobileEvalPill.style.background = 'rgba(20, 20, 20, 0.95)';
+                        mobileEvalPill.style.color = '#eee';
+                    } else {
+                        mobileEvalPill.style.background = 'rgba(0, 0, 0, 0.75)';
+                        mobileEvalPill.style.color = '#cbd5e1';
+                    }
                 }
             }
 
@@ -2953,6 +3575,93 @@
                         }
                     });
                 });
+
+                renderMobileMoveTicker(movesList);
+                syncMobileOffcanvas(movesList);
+            }
+
+            function renderMobileMoveTicker(movesList) {
+                if (!tickerScroll) return;
+                if (!movesList || movesList.length === 0) {
+                    tickerScroll.innerHTML = '<div class="ticker-empty-text text-muted small px-2">Load a game to see moves...</div>';
+                    return;
+                }
+
+                let html = '';
+                movesList.forEach((move, index) => {
+                    if (move.is_white) {
+                        html += `<span class="ticker-move-num">${move.move_number}.</span>`;
+                    }
+                    const qualityClass = getMoveQualityClass(move);
+                    const baseSan = (move.move || '').replace(/[?!]+$/, '');
+                    const sanFigurine = formatSanWithFigurines(baseSan, move.is_white);
+                    const isKey = (typeof isKeyMoment === 'function') && isKeyMoment(move);
+                    const keyClass = isKey ? 'is-key-moment' : '';
+
+                    let badgeText = '';
+                    let badgeCls = '';
+                    if (qualityClass.includes('blunder')) {
+                        badgeText = '??';
+                        badgeCls = 'ticker-badge-blunder';
+                    } else if (qualityClass.includes('mistake')) {
+                        badgeText = '?';
+                        badgeCls = 'ticker-badge-mistake';
+                    } else if (qualityClass.includes('inaccuracy')) {
+                        badgeText = '?!';
+                        badgeCls = 'ticker-badge-inaccuracy';
+                    } else if (qualityClass.includes('book')) {
+                        badgeText = '<i class="bi bi-book-fill"></i>';
+                        badgeCls = 'ticker-badge-book';
+                    } else if (qualityClass.includes('great') || qualityClass.includes('best')) {
+                        badgeText = '<i class="bi bi-star-fill"></i>';
+                        badgeCls = 'ticker-badge-best';
+                    } else if (qualityClass.includes('brilliant')) {
+                        badgeText = '!!';
+                        badgeCls = 'ticker-badge-brilliant';
+                    }
+
+                    html += `
+                        <button type="button" class="ticker-chip ${qualityClass} ${keyClass}" data-index="${index}" id="ticker-move-${index}">
+                            <span class="ticker-chip-san">${sanFigurine}</span>
+                            ${badgeText ? `<span class="ticker-badge ${badgeCls}">${badgeText}</span>` : ''}
+                        </button>`;
+                });
+
+                tickerScroll.innerHTML = html;
+
+                tickerScroll.querySelectorAll('.ticker-chip[data-index]').forEach(chip => {
+                    chip.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.index);
+                        if (!isNaN(idx)) {
+                            goToMove(idx);
+                        }
+                    });
+                });
+            }
+
+            function syncMobileOffcanvas(movesList) {
+                if (!mobileMovesOffcanvasBody) return;
+                if (!movesList || movesList.length === 0) {
+                    mobileMovesOffcanvasBody.innerHTML = '<div class="text-center text-muted py-4 small">Load a game to see full move sheet.</div>';
+                    return;
+                }
+                mobileMovesOffcanvasBody.innerHTML = analysisContainer.innerHTML;
+                mobileMovesOffcanvasBody.querySelectorAll('.move-cell[data-index]').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.index);
+                        if (!isNaN(idx)) {
+                            goToMove(idx);
+                            const offcanvasEl = document.getElementById('mobileMovesOffcanvas');
+                            if (offcanvasEl && window.bootstrap && bootstrap.Offcanvas) {
+                                const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+                                if (bsOffcanvas) bsOffcanvas.hide();
+                            }
+                        }
+                    });
+                });
+                if (mobileSheetMoveCount) {
+                    mobileSheetMoveCount.textContent = `${movesList.length} moves`;
+                }
             }
 
             // Show Comprehensive Move Explanation in Left Column
@@ -3422,6 +4131,21 @@
                     }
                 }
 
+                if (mobileKeyBadge) {
+                    if (total === 0) {
+                        mobileKeyBadge.classList.add('d-none');
+                    } else {
+                        mobileKeyBadge.classList.remove('d-none');
+                        const currentKeyPos = keyIndices.findIndex(idx => idx === currentMoveIndex);
+                        if (currentKeyPos !== -1) {
+                            mobileKeyBadge.textContent = `${currentKeyPos + 1}/${total}`;
+                        } else {
+                            const passed = keyIndices.filter(idx => idx <= currentMoveIndex).length;
+                            mobileKeyBadge.textContent = `${passed}/${total}`;
+                        }
+                    }
+                }
+
                 if (!badge) return;
 
                 if (total === 0) {
@@ -3652,18 +4376,34 @@
                 document.querySelectorAll('.move-cell').forEach(item => {
                     item.classList.remove('active');
                 });
+                document.querySelectorAll('.ticker-chip').forEach(item => {
+                    item.classList.remove('active');
+                });
 
                 if (currentMoveIndex >= 0 && currentMoveIndex < moves.length) {
                     const currentMoveEl = document.getElementById(`move-${currentMoveIndex}`);
                     if (currentMoveEl) currentMoveEl.classList.add('active');
 
+                    // Highlight and center mobile ticker chip
+                    const currentTickerEl = document.getElementById(`ticker-move-${currentMoveIndex}`);
+                    if (currentTickerEl) {
+                        currentTickerEl.classList.add('active');
+                        currentTickerEl.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+                    }
+
                     const move = moves[currentMoveIndex];
+                    const playedGlyph = getMoveGlyph(move);
+                    const playedBase = (move.move || '').replace(/[?!]+$/, '');
+                    const movePrefix = move.is_white ? `${move.move_number}. ` : `${move.move_number}... `;
+
+                    // Update mobile navigation toolbar status
+                    if (mobileNavSan && mobileNavCount) {
+                        mobileNavSan.innerHTML = `${movePrefix}${formatSanWithFigurines(playedBase + playedGlyph, move.is_white)}`;
+                        mobileNavCount.textContent = `${currentMoveIndex + 1} of ${moves.length}`;
+                    }
+
                     if (variationPreviewBar && pillPlayedSan && pillPlayedEval) {
                         variationPreviewBar.classList.remove('d-none');
-                        
-                        const playedGlyph = getMoveGlyph(move);
-                        const playedBase = (move.move || '').replace(/[?!]+$/, '');
-                        const movePrefix = move.is_white ? `${move.move_number}. ` : `${move.move_number}... `;
                         pillPlayedSan.innerHTML = `${movePrefix}${formatSanWithFigurines(playedBase + playedGlyph, move.is_white)}`;
                         pillPlayedEval.textContent = formatEvalForMoveList(move.evaluation);
 
@@ -3682,9 +4422,20 @@
                             }
                         }
                     }
+
+                    // Sync offcanvas active cell if open
+                    if (mobileMovesOffcanvasBody) {
+                        mobileMovesOffcanvasBody.querySelectorAll('.move-cell').forEach(cell => cell.classList.remove('active'));
+                        const offCell = mobileMovesOffcanvasBody.querySelector(`.move-cell[data-index="${currentMoveIndex}"]`);
+                        if (offCell) offCell.classList.add('active');
+                    }
                 } else {
                     if (variationPreviewBar) {
                         variationPreviewBar.classList.add('d-none');
+                    }
+                    if (mobileNavSan && mobileNavCount) {
+                        mobileNavSan.textContent = moves.length > 0 ? 'Start of game' : '—';
+                        mobileNavCount.textContent = moves.length > 0 ? `0 of ${moves.length}` : '0 of 0';
                     }
                 }
             }

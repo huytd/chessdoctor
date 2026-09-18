@@ -692,6 +692,44 @@ assert(indexHtml.includes('toggleVariationPlayPause()'), "P key and toolbar play
 
 console.log("✓ Variation Navigation & Interactive Alt Lines passed!");
 
+// -------------------------------------------------------------
+// 10. Mobile UI Rework & Layout Integrity Tests
+// -------------------------------------------------------------
+console.log("Testing Mobile UI Rework & Layout Integrity...");
+
+// Verify mobile DOM elements exist
+const mobileIds = [
+    'mobileEvalBar', 'mobileEvalWhite', 'mobileEvalPill',
+    'mobileMoveTicker', 'tickerScroll', 'tickerNavLeft', 'tickerNavRight',
+    'mobileNavToolbar', 'mobileBtnPrev', 'mobileBtnNext', 'mobileBtnKey',
+    'mobileKeyBadge', 'mobileNavSan', 'mobileNavCount', 'mobileBtnFlip',
+    'mobileMovesOffcanvas', 'mobileMovesOffcanvasBody', 'mobileSheetMoveCount'
+];
+mobileIds.forEach(id => {
+    assert(indexHtml.includes(`id="${id}"`), `index.html must include #${id}`);
+});
+
+// Verify mobile CSS rules
+assert(indexHtml.includes('.mobile-eval-bar'), "Must include .mobile-eval-bar CSS");
+assert(indexHtml.includes('.mobile-move-ticker'), "Must include .mobile-move-ticker CSS");
+assert(indexHtml.includes('.ticker-chip'), "Must include .ticker-chip CSS");
+assert(indexHtml.includes('.mobile-nav-toolbar'), "Must include .mobile-nav-toolbar CSS");
+assert(indexHtml.includes('.mobile-nav-capsule'), "Must include .mobile-nav-capsule CSS");
+assert(indexHtml.includes('.mobile-moves-offcanvas'), "Must include .mobile-moves-offcanvas CSS");
+assert(indexHtml.includes('@media (max-width: 991px)'), "Must include @media (max-width: 991px)");
+assert(indexHtml.includes('overflow-y: auto !important;'), "Move diagnostic panel must be scrollable on mobile");
+
+// Verify mobile JavaScript functions and handlers
+assert(indexHtml.includes('function renderMobileMoveTicker('), "Must include renderMobileMoveTicker");
+assert(indexHtml.includes('function syncMobileOffcanvas('), "Must include syncMobileOffcanvas");
+assert(indexHtml.includes('mobileBtnPrev.addEventListener'), "Must bind mobileBtnPrev click listener");
+assert(indexHtml.includes('mobileBtnNext.addEventListener'), "Must bind mobileBtnNext click listener");
+assert(indexHtml.includes('mobileBtnKey.addEventListener'), "Must bind mobileBtnKey click listener");
+assert(indexHtml.includes('mobileBtnFlip.addEventListener'), "Must bind mobileBtnFlip click listener");
+
+console.log("✓ Mobile UI Rework & Layout Integrity passed!");
+
 console.log("ALL BROWSER MODULE TESTS PASSED SUCCESSFULLY! 🎉");
+
 
 
