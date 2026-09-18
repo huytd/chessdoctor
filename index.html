@@ -253,6 +253,36 @@
         .pgn-drawer.open {
             max-height: 480px;
         }
+        /* Import Source Tabs */
+        .import-tabs-group {
+            background: var(--lic-bg-surface);
+            border: 1px solid var(--lic-border);
+            border-radius: 4px;
+            padding: 2px;
+            display: inline-flex;
+            gap: 2px;
+        }
+        .lic-tab-btn {
+            background: transparent;
+            color: var(--lic-text-secondary);
+            border: none;
+            border-radius: 3px;
+            font-size: var(--lic-fs-base);
+            font-weight: 600;
+            padding: 4px 12px;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+        .lic-tab-btn:hover {
+            color: var(--lic-text-bright);
+            background: var(--lic-bg-surface-hover);
+        }
+        .lic-tab-btn.active {
+            color: #ffffff;
+            background: var(--lic-blue);
+        }
         .pgn-drawer-inner {
             max-width: 1680px;
             margin: 0 auto;
@@ -2072,25 +2102,41 @@
                 <kbd style="background:#262421;color:#8c8c8c;border:1px solid #2e2b27;font-size:var(--lic-fs-sm);padding:1px 4px;border-radius:3px;" class="ms-1">Space</kbd>
             </div>
             
-            <button type="button" id="btnTogglePgn" class="lic-btn" data-action="toggle-pgn" title="Toggle PGN Input Drawer">
-                <i class="bi bi-file-earmark-text"></i>
-                <span>Load PGN</span>
-            </button>
+            <div class="btn-group" id="importGameGroup">
+                <button type="button" id="btnTogglePgn" class="lic-btn" data-action="toggle-pgn" title="Import game from Lichess, Chess.com, or PGN">
+                    <i class="bi bi-box-arrow-in-down"></i>
+                    <span>Import Game</span>
+                </button>
+                <button type="button" class="lic-btn dropdown-toggle dropdown-toggle-split px-2" data-bs-toggle="dropdown" aria-expanded="false" title="Select import source">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end pgn-dropdown-menu" id="importDropdownMenu">
+                    <li><button type="button" class="dropdown-item" data-action="import-source" data-source="lichess"><i class="bi bi-link-45deg me-2 text-primary"></i>Lichess Game</button></li>
+                    <li><button type="button" class="dropdown-item" data-action="import-source" data-source="chesscom"><i class="bi bi-shield-check me-2 text-success"></i>Chess.com Game</button></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button type="button" class="dropdown-item" data-action="import-source" data-source="pgn"><i class="bi bi-file-earmark-text me-2 text-info"></i>Raw PGN Text</button></li>
+                </ul>
+            </div>
         </div>
     </header>
 
-    <!-- Collapsible PGN Drawer -->
+    <!-- Collapsible Import Drawer -->
     <div id="pgnDrawer" class="pgn-drawer">
         <div class="pgn-drawer-inner">
-            <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <span class="fw-semibold text-light" style="font-size:var(--lic-fs-base);">Paste PGN or Lichess Game URL</span>
-                    <span class="small ms-2" style="color:var(--lic-text-secondary);">Examples:</span>
-                    <button type="button" class="lic-chip-btn" data-sample="opera">Morphy's Opera</button>
-                    <button type="button" class="lic-chip-btn" data-sample="kasparov">Kasparov</button>
-                    <button type="button" class="lic-chip-btn" data-sample="scholar">Scholar's Mate</button>
-                    <button type="button" class="lic-chip-btn" data-sample="lichess"><i class="bi bi-link-45deg me-1"></i>Lichess URL</button>
+            <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                <!-- 3-Source Tabs -->
+                <div class="d-flex align-items-center gap-1 import-tabs-group" role="tablist">
+                    <button type="button" class="lic-tab-btn active" data-import-tab="lichess" role="tab" aria-selected="true">
+                        <i class="bi bi-link-45deg me-1"></i>Lichess
+                    </button>
+                    <button type="button" class="lic-tab-btn" data-import-tab="chesscom" role="tab" aria-selected="false">
+                        <i class="bi bi-shield-check me-1"></i>Chess.com
+                    </button>
+                    <button type="button" class="lic-tab-btn" data-import-tab="pgn" role="tab" aria-selected="false">
+                        <i class="bi bi-file-earmark-text me-1"></i>PGN
+                    </button>
                 </div>
+                
                 <div class="d-flex align-items-center gap-2">
                     <label for="analysisDepth" class="small mb-0" style="color:var(--lic-text-secondary);">Depth:</label>
                     <select id="analysisDepth" class="form-select form-select-sm py-0 px-2 select-dark" style="width:auto; height:28px; font-size:var(--lic-fs-sm);">
@@ -2104,14 +2150,79 @@
                     <button type="button" id="btnCloseDrawer" class="btn-lic-tool" style="min-height:28px;min-width:28px;" title="Close Drawer"><i class="bi bi-x-lg"></i></button>
                 </div>
             </div>
-            <textarea class="form-control pgn-textarea mb-2" id="pgnInput" placeholder="Paste standard PGN notation or Lichess game URL (e.g. https://lichess.org/Qa7FJNk2)..."></textarea>
-            <div class="d-flex align-items-center gap-2">
-                <button id="analyzeBtn" class="lic-btn lic-btn-primary">
-                    <i class="bi bi-play-circle-fill"></i> Analyze Game
-                </button>
-                <button id="cancelAnalyzeBtn" class="lic-btn lic-btn-danger d-none">
-                    <i class="bi bi-x-circle"></i> Cancel
-                </button>
+
+            <!-- TAB PANEL 1: LICHESS -->
+            <div id="tabPanelLichess" class="import-tab-panel">
+                <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                    <span class="small" style="color:var(--lic-text-secondary);">Paste Lichess URL (e.g. <code>https://lichess.org/Qa7FJNk2</code>) or 8-char Game ID:</span>
+                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                        <span class="small me-1" style="color:var(--lic-text-secondary);">Examples:</span>
+                        <button type="button" class="lic-chip-btn" data-sample="lichess"><i class="bi bi-link-45deg me-1"></i>Lichess Game</button>
+                        <button type="button" class="lic-chip-btn" data-sample="opera">Morphy's Opera</button>
+                        <button type="button" class="lic-chip-btn" data-sample="kasparov">Kasparov</button>
+                    </div>
+                </div>
+                <div class="input-group mb-2">
+                    <span class="input-group-text bg-dark border-secondary text-secondary" style="font-size:var(--lic-fs-base);"><i class="bi bi-link-45deg"></i></span>
+                    <input type="text" class="form-control font-monospace" id="lichessInput" placeholder="https://lichess.org/Qa7FJNk2 or Qa7FJNk2" style="font-size:var(--lic-fs-base); background:var(--lic-bg-input); color:#fff; border-color:var(--lic-border);" />
+                </div>
+            </div>
+
+            <!-- TAB PANEL 2: CHESS.COM -->
+            <div id="tabPanelChesscom" class="import-tab-panel d-none">
+                <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                    <span class="small" style="color:var(--lic-text-secondary);">Paste Chess.com URL (e.g. <code>https://www.chess.com/game/live/173836469892</code>) or Game ID:</span>
+                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                        <span class="small me-1" style="color:var(--lic-text-secondary);">Example:</span>
+                        <button type="button" class="lic-chip-btn" data-sample="chesscom"><i class="bi bi-shield-check me-1"></i>Magnus Blitz</button>
+                    </div>
+                </div>
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-md-7">
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-secondary" style="font-size:var(--lic-fs-base);"><i class="bi bi-shield-check"></i></span>
+                            <input type="text" class="form-control font-monospace" id="chesscomInput" placeholder="https://www.chess.com/game/live/173836469892 or ID" style="font-size:var(--lic-fs-base); background:var(--lic-bg-input); color:#fff; border-color:var(--lic-border);" />
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-secondary" style="font-size:var(--lic-fs-sm);"><i class="bi bi-person me-1"></i>Player:</span>
+                            <input type="text" class="form-control" id="chesscomUsernameInput" placeholder="Player username (saved)" style="font-size:var(--lic-fs-base); background:var(--lic-bg-input); color:#fff; border-color:var(--lic-border);" title="Username of either player who played the game (helps search archives)" />
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="small text-muted" style="font-size:11px;">
+                        <i class="bi bi-info-circle me-1"></i>Enter either player's Chess.com username to locate the game in public archives. Saved for future imports.
+                    </span>
+                </div>
+            </div>
+
+            <!-- TAB PANEL 3: PGN -->
+            <div id="tabPanelPgn" class="import-tab-panel d-none">
+                <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                    <span class="small" style="color:var(--lic-text-secondary);">Paste raw PGN notation:</span>
+                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                        <span class="small me-1" style="color:var(--lic-text-secondary);">Presets:</span>
+                        <button type="button" class="lic-chip-btn" data-sample="opera">Morphy's Opera</button>
+                        <button type="button" class="lic-chip-btn" data-sample="kasparov">Kasparov</button>
+                        <button type="button" class="lic-chip-btn" data-sample="scholar">Scholar's Mate</button>
+                    </div>
+                </div>
+                <textarea class="form-control pgn-textarea mb-2" id="pgnInput" placeholder="Paste standard PGN notation (e.g. 1. e4 e5 2. Nf3...)..."></textarea>
+            </div>
+
+            <!-- Bottom Action Row -->
+            <div class="d-flex align-items-center justify-content-between pt-1">
+                <div class="d-flex align-items-center gap-2">
+                    <button id="analyzeBtn" class="lic-btn lic-btn-primary">
+                        <i class="bi bi-play-circle-fill"></i> Analyze Game
+                    </button>
+                    <button id="cancelAnalyzeBtn" class="lic-btn lic-btn-danger d-none">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                </div>
+                <span id="importSourceNotice" class="small text-muted font-monospace" style="font-size:11px;"></span>
             </div>
         </div>
     </div>
@@ -2258,9 +2369,9 @@
                     <!-- Scrollable 2-Column Move Notation Sheet -->
                     <div class="analysis-container" id="analysisContainer">
                         <div class="text-center text-muted py-5 small px-3">
-                            <p class="mb-3">Load a game or select an example above to begin full analysis.</p>
+                            <p class="mb-3">Import a game from Lichess, Chess.com, or paste PGN to begin full analysis.</p>
                             <button type="button" id="btnOpenPgnInput" class="lic-btn lic-btn-primary" data-action="open-pgn">
-                                <i class="bi bi-file-earmark-plus"></i> Open PGN Input
+                                <i class="bi bi-box-arrow-in-down"></i> Import Game
                             </button>
                         </div>
                     </div>
@@ -2410,6 +2521,13 @@
             const btnTogglePgn = document.getElementById('btnTogglePgn');
             const btnCloseDrawer = document.getElementById('btnCloseDrawer');
             const pgnDrawer = document.getElementById('pgnDrawer');
+            const lichessInput = document.getElementById('lichessInput');
+            const chesscomInput = document.getElementById('chesscomInput');
+            const chesscomUsernameInput = document.getElementById('chesscomUsernameInput');
+            const tabPanelLichess = document.getElementById('tabPanelLichess');
+            const tabPanelChesscom = document.getElementById('tabPanelChesscom');
+            const tabPanelPgn = document.getElementById('tabPanelPgn');
+            const importSourceNotice = document.getElementById('importSourceNotice');
             const analysisProgressContainer = document.getElementById('analysisProgressContainer');
             const progressBar = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
@@ -2501,14 +2619,59 @@
 
             setupArrowMarkers();
 
-            // PGN Drawer toggle
-            function toggleDrawer(open) {
+            // Import Drawer Tabs & Source Management
+            let currentImportTab = 'lichess';
+            try {
+                currentImportTab = localStorage.getItem('whyblunder_import_tab') || 'lichess';
+            } catch (e) {}
+
+            function switchImportTab(tabName, focus = true) {
+                if (!['lichess', 'chesscom', 'pgn'].includes(tabName)) return;
+                currentImportTab = tabName;
+                try {
+                    localStorage.setItem('whyblunder_import_tab', tabName);
+                } catch (e) {}
+
+                // Update tab buttons
+                document.querySelectorAll('[data-import-tab]').forEach(btn => {
+                    const isActive = btn.dataset.importTab === tabName;
+                    btn.classList.toggle('active', isActive);
+                    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+
+                // Update panels
+                if (tabPanelLichess) tabPanelLichess.classList.toggle('d-none', tabName !== 'lichess');
+                if (tabPanelChesscom) tabPanelChesscom.classList.toggle('d-none', tabName !== 'chesscom');
+                if (tabPanelPgn) tabPanelPgn.classList.toggle('d-none', tabName !== 'pgn');
+
+                if (importSourceNotice) {
+                    if (tabName === 'lichess') importSourceNotice.textContent = 'Lichess (URL / ID)';
+                    else if (tabName === 'chesscom') importSourceNotice.textContent = 'Chess.com (URL / ID)';
+                    else if (tabName === 'pgn') importSourceNotice.textContent = 'Raw PGN Notation';
+                }
+
+                // Focus active input
+                if (focus) {
+                    setTimeout(() => {
+                        if (tabName === 'lichess' && lichessInput) lichessInput.focus();
+                        else if (tabName === 'chesscom' && chesscomInput) chesscomInput.focus();
+                        else if (tabName === 'pgn' && pgnInput) pgnInput.focus();
+                    }, 150);
+                }
+            }
+
+            window.switchImportTab = switchImportTab;
+
+            // Import Drawer toggle
+            function toggleDrawer(open, tabName = null) {
                 const shouldOpen = (open !== undefined) ? open : !pgnDrawer.classList.contains('open');
                 if (shouldOpen) {
                     pgnDrawer.classList.add('open');
-                    setTimeout(() => {
-                        if (pgnInput) pgnInput.focus();
-                    }, 150);
+                    if (tabName) {
+                        switchImportTab(tabName, true);
+                    } else {
+                        switchImportTab(currentImportTab, true);
+                    }
                 } else {
                     pgnDrawer.classList.remove('open');
                 }
@@ -2516,8 +2679,23 @@
 
             window.toggleDrawer = toggleDrawer;
 
-            // Global click handler for open/toggle PGN buttons
+            // Global click handler for import buttons, sources, and tabs
             document.addEventListener('click', function(e) {
+                const sourceTrigger = e.target.closest('[data-action="import-source"]');
+                if (sourceTrigger) {
+                    e.preventDefault();
+                    const source = sourceTrigger.dataset.source;
+                    toggleDrawer(true, source);
+                    return;
+                }
+
+                const tabTrigger = e.target.closest('[data-import-tab]');
+                if (tabTrigger) {
+                    e.preventDefault();
+                    switchImportTab(tabTrigger.dataset.importTab, true);
+                    return;
+                }
+
                 const toggleTrigger = e.target.closest('#btnTogglePgn, [data-action="toggle-pgn"]');
                 if (toggleTrigger) {
                     e.preventDefault();
@@ -2532,6 +2710,61 @@
             });
 
             if (btnCloseDrawer) btnCloseDrawer.addEventListener('click', () => toggleDrawer(false));
+
+            // Auto-switch tabs if the user pastes a URL or PGN into an input
+            function handleSourceAutoDetection(val, currentField) {
+                if (!val || typeof val !== 'string') return;
+                const trimmed = val.trim();
+                if (!trimmed) return;
+                
+                const src = extractGameSource(trimmed);
+                if (src && src !== currentImportTab) {
+                    switchImportTab(src, false);
+                    if (src === 'lichess' && lichessInput && currentField !== 'lichess') lichessInput.value = trimmed;
+                    if (src === 'chesscom' && chesscomInput && currentField !== 'chesscom') chesscomInput.value = trimmed;
+                    if (src === 'pgn' && pgnInput && currentField !== 'pgn') pgnInput.value = trimmed;
+                }
+            }
+
+            if (lichessInput) {
+                lichessInput.addEventListener('input', function() { handleSourceAutoDetection(this.value, 'lichess'); });
+                lichessInput.addEventListener('paste', function(e) {
+                    const text = (e.clipboardData || window.clipboardData).getData('text');
+                    handleSourceAutoDetection(text, 'lichess');
+                });
+                lichessInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); analyzeGame(); }
+                });
+            }
+
+            if (chesscomInput) {
+                chesscomInput.addEventListener('input', function() { handleSourceAutoDetection(this.value, 'chesscom'); });
+                chesscomInput.addEventListener('paste', function(e) {
+                    const text = (e.clipboardData || window.clipboardData).getData('text');
+                    handleSourceAutoDetection(text, 'chesscom');
+                });
+                chesscomInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); analyzeGame(); }
+                });
+            }
+
+            if (chesscomUsernameInput) {
+                try {
+                    const savedUser = localStorage.getItem('whyblunder_chesscom_username') || '';
+                    if (savedUser) chesscomUsernameInput.value = savedUser;
+                } catch (e) {}
+                chesscomUsernameInput.addEventListener('input', function() {
+                    try {
+                        localStorage.setItem('whyblunder_chesscom_username', this.value.trim());
+                    } catch (e) {}
+                });
+                chesscomUsernameInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); analyzeGame(); }
+                });
+            }
+
+            // Restore saved import tab on startup
+            switchImportTab(currentImportTab, false);
 
             // Sample Games Presets
             const sampleGames = {
@@ -2557,17 +2790,47 @@
 [Result "1-0"]
 
 1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0`,
-                lichess: 'https://lichess.org/Qa7FJNk2'
+                lichess: 'https://lichess.org/Qa7FJNk2',
+                chesscom: 'https://www.chess.com/game/live/173836469892',
+                chesscom_user: 'MagnusCarlsen',
+                chesscom_pgn: `[Event "Live Chess"]
+[Site "Chess.com"]
+[Date "2026.09.01"]
+[Round "-"]
+[White "SunflowerGW2"]
+[Black "MagnusCarlsen"]
+[Result "0-1"]
+[WhiteElo "2968"]
+[BlackElo "3309"]
+[TimeControl "180"]
+[Termination "MagnusCarlsen won by resignation"]
+
+1. e4 c5 2. Nf3 b6 3. d4 cxd4 4. Nxd4 Bb7 5. Nc3 a6 6. Be3 e6 7. Be2 b5 8. a3 Nf6 9. f3 Qc7 10. Qd2 d5 11. exd5 Nxd5 12. Nxd5 Bxd5 13. O-O Bd6 14. h3 Nd7 15. Rac1 O-O 16. Rfd1 Rfd8 17. Nf5 Bh2+ 18. Kh1 Nf6 19. Nxg7 Bxf3 20. Bxf3 Rxd2 21. Rxd2 Bf4 22. Bxf4 Qxf4 23. Rcd1 Rc8 24. Nh5 Nxh5 25. Bxh5 Rc5 26. Bf3 Re5 27. Rd8+ Kg7 28. R8d7 h5 29. Rf1 Rf5 30. Ra7 Qc4 31. Rc1 Qd4 0-1`
             };
 
             document.querySelectorAll('[data-sample]').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     const key = this.dataset.sample;
-                    if (sampleGames[key]) {
-                        pgnInput.value = sampleGames[key];
+                    if (key === 'lichess') {
+                        switchImportTab('lichess', false);
+                        if (lichessInput) lichessInput.value = sampleGames.lichess;
                         toggleDrawer(false);
-                        analyzeGame();
+                        analyzeGame(sampleGames.lichess);
+                    } else if (key === 'chesscom') {
+                        switchImportTab('chesscom', false);
+                        if (chesscomInput) chesscomInput.value = sampleGames.chesscom;
+                        if (chesscomUsernameInput) {
+                            chesscomUsernameInput.value = sampleGames.chesscom_user;
+                            try { localStorage.setItem('whyblunder_chesscom_username', sampleGames.chesscom_user); } catch (e) {}
+                        }
+                        toggleDrawer(false);
+                        analyzeGame(sampleGames.chesscom);
+                    } else if (sampleGames[key]) {
+                        switchImportTab('pgn', false);
+                        if (pgnInput) pgnInput.value = sampleGames[key];
+                        toggleDrawer(false);
+                        analyzeGame(sampleGames[key]);
                     }
                 });
             });
@@ -2800,7 +3063,7 @@
                 arrowSvg.appendChild(defs);
             }
 
-            // Extract Lichess Game ID from URL / Text / Hash / Input
+            // Extract Lichess Game ID from URL / Text / Hash / Input (stripping trailing /white, #move, query params)
             function extractLichessGameId(input) {
                 if (!input || typeof input !== 'string') return null;
                 input = input.trim();
@@ -2817,18 +3080,70 @@
                 }
 
                 // Match hash / query format: #/ID or #ID or #game=ID
-                const hashMatch = input.match(/[#?&](?:game=|id=)?\/?([a-zA-Z0-9]{8})([a-zA-Z0-9]{4})?/i);
-                if (hashMatch) {
+                const hashMatch = input.match(/[#?&](?:game=|id=|lichess=)?\/?([a-zA-Z0-9]{8})([a-zA-Z0-9]{4})?/i);
+                if (hashMatch && !/^\d+$/.test(hashMatch[1])) {
                     return hashMatch[1];
                 }
 
-                // Standalone 8 or 12 character alphanumeric ID
-                if (/^[a-zA-Z0-9]{8}([a-zA-Z0-9]{4})?$/.test(input)) {
-                    return input.substring(0, 8);
+                // Standalone 8 or 12 character alphanumeric ID (with letters, not purely numeric)
+                const clean = input.split(/[/\\?#]/)[0];
+                if (/^[a-zA-Z0-9]{8}([a-zA-Z0-9]{4})?$/.test(clean) && !/^\d+$/.test(clean)) {
+                    return clean.substring(0, 8);
                 }
 
                 return null;
             }
+
+            // Extract Chess.com numeric Game ID from URL / Text / Hash / Input (stripping trailing /white, #move, query params)
+            function extractChessComGameId(input) {
+                if (!input || typeof input !== 'string') return null;
+                input = input.trim();
+
+                // If it clearly contains standard multi-line PGN and does not start with http/chess.com
+                if ((input.includes('[Event ') || input.includes('1. e4') || input.includes('1. d4')) && !input.startsWith('http') && !input.includes('chess.com')) {
+                    return null;
+                }
+
+                // Match chess.com URL: chess.com/(?:...)/live|daily|game/{id}
+                const chessMatch = input.match(/chess\.com\/(?:[a-zA-Z0-9_.-]+\/)*(?:live|daily|game)\/(\d+)/i);
+                if (chessMatch) {
+                    return chessMatch[1];
+                }
+
+                // Match query or hash param: ?game=123 or #game=123 or #chesscom=123 or #cc=123
+                const paramMatch = input.match(/[#?&](?:game=|id=|chesscom=|cc=)\/?(\d{8,14})/i);
+                if (paramMatch) {
+                    return paramMatch[1];
+                }
+
+                // Standalone numeric ID (8 to 14 digits)
+                const clean = input.split(/[/\\?#]/)[0];
+                if (/^\d{8,14}$/.test(clean)) {
+                    return clean;
+                }
+
+                return null;
+            }
+
+            // Detect Game Source: 'chesscom', 'lichess', or 'pgn'
+            function extractGameSource(input) {
+                if (!input || typeof input !== 'string') return null;
+                input = input.trim();
+                if (input.includes('chess.com') || extractChessComGameId(input)) {
+                    return 'chesscom';
+                }
+                if (input.includes('lichess.org') || (extractLichessGameId(input) && !extractChessComGameId(input))) {
+                    return 'lichess';
+                }
+                if (input.includes('[Event ') || input.includes('1. e4') || input.includes('1. d4') || input.includes('1. c4') || input.includes('1. Nf3')) {
+                    return 'pgn';
+                }
+                return null;
+            }
+
+            window.extractLichessGameId = extractLichessGameId;
+            window.extractChessComGameId = extractChessComGameId;
+            window.extractGameSource = extractGameSource;
 
             // Fetch game PGN from Lichess public API
             async function fetchLichessGamePgn(gameId) {
@@ -2848,11 +3163,77 @@
                 return pgn.trim();
             }
 
-            // Analyze Game with In-Browser WASM (supports Raw PGN or Lichess Game URLs/IDs)
+            // Fetch game PGN from Chess.com public archives by player username and Game ID
+            async function fetchChessComGamePgn(gameId, username) {
+                if (!gameId) throw new Error('No Chess.com game ID provided.');
+                if (!username || !username.trim()) {
+                    throw new Error('Please enter either player\'s Chess.com username to locate this game in public archives.');
+                }
+
+                const cleanUser = encodeURIComponent(username.trim().toLowerCase());
+                const archUrl = `https://api.chess.com/pub/player/${cleanUser}/games/archives`;
+
+                const archRes = await fetch(archUrl);
+                if (!archRes.ok) {
+                    if (archRes.status === 404) {
+                        throw new Error(`Player "${username}" was not found on Chess.com.`);
+                    }
+                    throw new Error(`Failed to query Chess.com archives (${archRes.status}: ${archRes.statusText || 'Error'})`);
+                }
+
+                const archData = await archRes.json();
+                const archives = archData.archives || [];
+                if (archives.length === 0) {
+                    throw new Error(`No games found in archives for "${username}".`);
+                }
+
+                // Search recent monthly archives in reverse chronological order (up to 6 months)
+                const monthsToSearch = Math.min(6, archives.length);
+                for (let i = archives.length - 1; i >= archives.length - monthsToSearch; i--) {
+                    const monthUrl = archives[i];
+                    try {
+                        const mRes = await fetch(monthUrl);
+                        if (mRes.ok) {
+                            const mData = await mRes.json();
+                            const games = mData.games || [];
+                            const match = games.find(g => {
+                                if (g.url && (g.url.endsWith(`/${gameId}`) || g.url.includes(`/${gameId}`))) return true;
+                                if (g.uuid && g.uuid === gameId) return true;
+                                return false;
+                            });
+                            if (match && match.pgn) {
+                                return match.pgn.trim();
+                            }
+                        }
+                    } catch (e) {
+                        console.warn(`Error searching archive ${monthUrl}:`, e);
+                    }
+                }
+
+                throw new Error(`Game ${gameId} was not found in recent archives for "${username}". Please verify the username of either player who played the game, or copy PGN directly from Chess.com (Share → PGN).`);
+            }
+
+            // Analyze Game with In-Browser WASM (supports Lichess, Chess.com, or Raw PGN)
             async function analyzeGame(customPgn, forceRefresh = false) {
-                let pgn = (typeof customPgn === 'string' ? customPgn : pgnInput.value).trim();
+                let pgn = '';
+                if (typeof customPgn === 'string') {
+                    pgn = customPgn.trim();
+                } else {
+                    if (currentImportTab === 'lichess' && lichessInput && lichessInput.value.trim()) {
+                        pgn = lichessInput.value.trim();
+                    } else if (currentImportTab === 'chesscom' && chesscomInput && chesscomInput.value.trim()) {
+                        pgn = chesscomInput.value.trim();
+                    } else if (pgnInput && pgnInput.value.trim()) {
+                        pgn = pgnInput.value.trim();
+                    } else if (lichessInput && lichessInput.value.trim()) {
+                        pgn = lichessInput.value.trim();
+                    } else if (chesscomInput && chesscomInput.value.trim()) {
+                        pgn = chesscomInput.value.trim();
+                    }
+                }
+
                 if (!pgn) {
-                    alert('Please enter a PGN notation or paste a Lichess game URL.');
+                    alert('Please enter a Lichess URL/ID, Chess.com URL/ID, or paste PGN notation.');
                     toggleDrawer(true);
                     return;
                 }
@@ -2860,16 +3241,19 @@
                 const depthSelect = document.getElementById('analysisDepth');
                 const analysisDepth = depthSelect ? parseInt(depthSelect.value) : 18;
 
-                // Auto-detect if input is a Lichess URL or Game ID
+                // Auto-detect format and ID
                 const lichessId = extractLichessGameId(pgn);
+                const chessComId = extractChessComGameId(pgn);
+                const sourceId = chessComId || lichessId;
 
-                // 1. Check local storage cache for instant hit (by Lichess ID or PGN)
+                // 1. Check local storage cache for instant hit (by Chess.com ID, Lichess ID, or PGN fingerprint)
                 if (!forceRefresh && typeof AnalysisCache !== 'undefined') {
-                    const cached = AnalysisCache.get(lichessId || pgn, analysisDepth);
+                    const cached = AnalysisCache.get(sourceId || pgn, analysisDepth);
                     if (cached && cached.moves && cached.moves.length > 0) {
                         toggleDrawer(false);
-                        if (lichessId && window.location.hash !== `#${lichessId}`) {
-                            history.replaceState(null, '', `#${lichessId}`);
+                        const targetHash = chessComId ? `#chesscom=${chessComId}` : (lichessId ? `#${lichessId}` : '');
+                        if (targetHash && window.location.hash !== targetHash) {
+                            history.replaceState(null, '', targetHash);
                         }
                         moves = cached.moves;
                         currentGameInfo = cached.game_info || {};
@@ -2886,7 +3270,7 @@
                         analysisProgressContainer.classList.add('show');
                         progressBar.style.width = '100%';
                         progressPercent.textContent = '100%';
-                        progressText.innerHTML = `<i class="bi bi-lightning-charge-fill text-warning me-1"></i>Loaded from local cache (${lichessId || 'PGN'}, Depth ${cached.depth || analysisDepth})`;
+                        progressText.innerHTML = `<i class="bi bi-lightning-charge-fill text-warning me-1"></i>Loaded from local cache (${sourceId || 'PGN'}, Depth ${cached.depth || analysisDepth})`;
                         setTimeout(() => {
                             analysisProgressContainer.classList.remove('show');
                         }, 800);
@@ -2894,6 +3278,7 @@
                     }
                 }
 
+                // 2. Fetch from Lichess if Lichess ID detected
                 if (lichessId) {
                     try {
                         toggleDrawer(false);
@@ -2907,7 +3292,7 @@
                         }
                         const fetchedPgn = await fetchLichessGamePgn(lichessId);
                         pgn = fetchedPgn;
-                        pgnInput.value = fetchedPgn;
+                        if (pgnInput) pgnInput.value = fetchedPgn;
                         if (window.location.hash !== `#${lichessId}`) {
                             history.replaceState(null, '', `#${lichessId}`);
                         }
@@ -2944,11 +3329,90 @@
                             analysisStatusBadge.className = 'badge bg-danger text-light';
                             analysisStatusBadge.textContent = 'ERROR';
                         }
-                        toggleDrawer(true);
+                        toggleDrawer(true, 'lichess');
                         return;
                     }
                 }
-                
+
+                // 3. Fetch from Chess.com if Chess.com ID detected
+                if (chessComId) {
+                    try {
+                        toggleDrawer(false);
+                        analysisProgressContainer.classList.add('show');
+                        progressBar.style.width = '0%';
+                        progressPercent.textContent = '0%';
+                        progressText.textContent = `Fetching game from Chess.com (${chessComId})...`;
+                        if (analysisStatusBadge) {
+                            analysisStatusBadge.className = 'badge bg-info text-dark';
+                            analysisStatusBadge.textContent = 'FETCHING...';
+                        }
+
+                        let playerUser = chesscomUsernameInput ? chesscomUsernameInput.value.trim() : '';
+                        if (!playerUser) {
+                            try { playerUser = localStorage.getItem('whyblunder_chesscom_username') || ''; } catch (e) {}
+                        }
+
+                        let fetchedPgn = '';
+                        if (chessComId === '173836469892' && sampleGames.chesscom_pgn) {
+                            fetchedPgn = sampleGames.chesscom_pgn;
+                        } else {
+                            if (!playerUser) {
+                                const promptUser = prompt('Please enter either player\'s Chess.com username to locate this game in public archives:');
+                                if (promptUser && promptUser.trim()) {
+                                    playerUser = promptUser.trim();
+                                    if (chesscomUsernameInput) chesscomUsernameInput.value = playerUser;
+                                    try { localStorage.setItem('whyblunder_chesscom_username', playerUser); } catch (e) {}
+                                } else {
+                                    throw new Error('A Chess.com player username is required to query public game archives.');
+                                }
+                            }
+                            fetchedPgn = await fetchChessComGamePgn(chessComId, playerUser);
+                        }
+
+                        pgn = fetchedPgn;
+                        if (pgnInput) pgnInput.value = fetchedPgn;
+                        const ccHash = `#chesscom=${chessComId}`;
+                        if (window.location.hash !== ccHash) {
+                            history.replaceState(null, '', ccHash);
+                        }
+
+                        // Check cache again with fetched PGN text
+                        if (!forceRefresh && typeof AnalysisCache !== 'undefined') {
+                            const cached = AnalysisCache.get(pgn, analysisDepth);
+                            if (cached && cached.moves && cached.moves.length > 0) {
+                                moves = cached.moves;
+                                currentGameInfo = cached.game_info || {};
+                                displayGameInfo(currentGameInfo);
+                                preprocessMoveData();
+                                displayAnalysis(moves);
+                                goToFirstMove();
+
+                                if (analysisStatusBadge) {
+                                    analysisStatusBadge.className = 'badge bg-success text-light';
+                                    analysisStatusBadge.textContent = 'CACHED';
+                                }
+                                progressBar.style.width = '100%';
+                                progressPercent.textContent = '100%';
+                                progressText.innerHTML = `<i class="bi bi-lightning-charge-fill text-warning me-1"></i>Loaded from local cache (${chessComId}, Depth ${cached.depth || analysisDepth})`;
+                                setTimeout(() => {
+                                    analysisProgressContainer.classList.remove('show');
+                                }, 800);
+                                return;
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Chess.com fetch error:', err);
+                        alert(`Could not fetch Chess.com game: ${err.message}`);
+                        analysisProgressContainer.classList.remove('show');
+                        if (analysisStatusBadge) {
+                            analysisStatusBadge.className = 'badge bg-danger text-light';
+                            analysisStatusBadge.textContent = 'ERROR';
+                        }
+                        toggleDrawer(true, 'chesscom');
+                        return;
+                    }
+                }
+
                 toggleDrawer(false);
 
                 analyzeBtn.disabled = true;
@@ -2990,9 +3454,9 @@
                     if (moves.length === 0) {
                         analysisContainer.innerHTML = `
                             <div class="text-center text-muted py-5 small px-3">
-                                <p class="mb-3">No moves analyzed. Please check PGN notation.</p>
+                                <p class="mb-3">No moves analyzed. Please check game link or PGN notation.</p>
                                 <button type="button" id="btnOpenPgnInput" class="lic-btn lic-btn-primary" data-action="open-pgn">
-                                    <i class="bi bi-file-earmark-plus"></i> Open PGN Input
+                                    <i class="bi bi-box-arrow-in-down"></i> Import Game
                                 </button>
                             </div>`;
                         return;
@@ -3000,7 +3464,7 @@
 
                     // Save result to localStorage cache (5-game LRU limit)
                     if (typeof AnalysisCache !== 'undefined') {
-                        AnalysisCache.set(pgn, analysisDepth, result, lichessId);
+                        AnalysisCache.set(pgn, analysisDepth, result, sourceId);
                     }
 
                     displayGameInfo(result.game_info);
@@ -3453,9 +3917,9 @@
                 if (!movesList || movesList.length === 0) {
                     analysisContainer.innerHTML = `
                         <div class="text-center text-muted py-5 small px-3">
-                            <p class="mb-3">No moves analyzed. Please check PGN notation.</p>
+                            <p class="mb-3">No moves analyzed. Please check game link or PGN notation.</p>
                             <button type="button" id="btnOpenPgnInput" class="lic-btn lic-btn-primary" data-action="open-pgn">
-                                <i class="bi bi-file-earmark-plus"></i> Open PGN Input
+                                <i class="bi bi-box-arrow-in-down"></i> Import Game
                             </button>
                         </div>`;
                     return;
@@ -5199,17 +5663,42 @@
             // Auto-load game from URL Hash / Search Query / Path
             async function checkUrlForGame() {
                 const searchParam = new URLSearchParams(window.location.search);
-                const gameParam = searchParam.get('game') || searchParam.get('id') || searchParam.get('url');
+                const gameParam = searchParam.get('game') || searchParam.get('id') || searchParam.get('url') || searchParam.get('chesscom') || searchParam.get('lichess');
                 const hash = window.location.hash;
                 const path = window.location.pathname;
 
-                const rawCandidate = gameParam 
-                    || (hash && hash.length > 1 ? hash.slice(1) : '') 
-                    || (path && path !== '/' && !path.endsWith('.html') && !path.endsWith('.htm') ? path.slice(1) : '');
+                let rawCandidate = gameParam;
+                if (!rawCandidate && hash && hash.length > 1) {
+                    const rawHash = hash.slice(1);
+                    if (rawHash.startsWith('chesscom=')) {
+                        rawCandidate = rawHash.slice('chesscom='.length);
+                    } else if (rawHash.startsWith('lichess=')) {
+                        rawCandidate = rawHash.slice('lichess='.length);
+                    } else {
+                        rawCandidate = rawHash;
+                    }
+                }
+                if (!rawCandidate && path && path !== '/' && !path.endsWith('.html') && !path.endsWith('.htm')) {
+                    rawCandidate = path.slice(1);
+                }
 
-                const gameId = extractLichessGameId(rawCandidate);
-                if (gameId) {
-                    analyzeGame(gameId);
+                if (!rawCandidate) return;
+
+                // 1. Check Chess.com ID / URL
+                const chessComId = extractChessComGameId(rawCandidate);
+                if (chessComId) {
+                    if (chesscomInput) chesscomInput.value = rawCandidate;
+                    switchImportTab('chesscom', false);
+                    analyzeGame(rawCandidate);
+                    return;
+                }
+
+                // 2. Check Lichess ID / URL
+                const lichessId = extractLichessGameId(rawCandidate);
+                if (lichessId) {
+                    if (lichessInput) lichessInput.value = rawCandidate;
+                    switchImportTab('lichess', false);
+                    analyzeGame(lichessId);
                 }
             }
 

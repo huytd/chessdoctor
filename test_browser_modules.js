@@ -434,6 +434,42 @@ assert.strictEqual(hitLichessById.game_info.white, 'Morphy');
 const hitLichessByUrl = cache.get('https://lichess.org/Qa7FJNk2', 18);
 assert(hitLichessByUrl !== null, "Should retrieve by full Lichess URL");
 
+// Test Lichess URL sanitization
+const hitLichessSanitized = cache.get('https://lichess.org/Qa7FJNk2/white#12', 18);
+assert(hitLichessSanitized !== null, "Should retrieve by Lichess URL with /white#12");
+assert.strictEqual(AnalysisCacheModule.extractLichessId('https://lichess.org/Qa7FJNk2/black#10'), 'Qa7FJNk2');
+assert.strictEqual(AnalysisCacheModule.extractLichessId('Qa7FJNk2/white'), 'Qa7FJNk2');
+assert.strictEqual(AnalysisCacheModule.extractLichessId('https://lichess.org/Qa7FJNk2?theme=dark'), 'Qa7FJNk2');
+
+// Test Chess.com ID extraction & URL sanitization
+assert.strictEqual(AnalysisCacheModule.extractChessComId('https://www.chess.com/game/live/173836469892'), '173836469892');
+assert.strictEqual(AnalysisCacheModule.extractChessComId('https://www.chess.com/game/live/173836469892/white#6'), '173836469892');
+assert.strictEqual(AnalysisCacheModule.extractChessComId('https://www.chess.com/game/live/173836469892?username=hikaru#move=20'), '173836469892');
+assert.strictEqual(AnalysisCacheModule.extractChessComId('https://www.chess.com/game/daily/1234567890'), '1234567890');
+assert.strictEqual(AnalysisCacheModule.extractChessComId('173836469892'), '173836469892');
+assert.strictEqual(AnalysisCacheModule.extractChessComId('173836469892/white#6'), '173836469892');
+assert.strictEqual(AnalysisCacheModule.extractChessComId('?game=173836469892'), '173836469892');
+assert.strictEqual(AnalysisCacheModule.extractChessComId('#chesscom=173836469892'), '173836469892');
+assert.strictEqual(AnalysisCacheModule.extractChessComId('https://lichess.org/Qa7FJNk2'), null);
+assert.strictEqual(AnalysisCacheModule.extractChessComId('1. e4 e5 2. Nf3'), null);
+
+// Test Chess.com ID cache matching
+const chessComUrl = "https://www.chess.com/game/live/173836469892";
+cache.set(chessComUrl, 18, {
+    game_info: { white: 'Hikaru', black: 'Magnus' },
+    moves: [{ move: 'e4', quality: 'good move' }]
+}, '173836469892');
+
+const hitChessComById = cache.get('173836469892', 18);
+assert(hitChessComById !== null, "Should retrieve by Chess.com ID");
+assert.strictEqual(hitChessComById.game_info.white, 'Hikaru');
+
+const hitChessComByUrl = cache.get('https://www.chess.com/game/live/173836469892/white#6', 18);
+assert(hitChessComByUrl !== null, "Should retrieve by full Chess.com URL with trailing /white#6");
+
+const hitChessComByHash = cache.get('#chesscom=173836469892', 18);
+assert(hitChessComByHash !== null, "Should retrieve by Chess.com hash parameter");
+
 // Test 5-game LRU eviction limit
 cache.clear();
 for (let i = 1; i <= 6; i++) {
@@ -728,6 +764,53 @@ assert(indexHtml.includes('mobileBtnKey.addEventListener'), "Must bind mobileBtn
 assert(indexHtml.includes('mobileBtnFlip.addEventListener'), "Must bind mobileBtnFlip click listener");
 
 console.log("✓ Mobile UI Rework & Layout Integrity passed!");
+
+// -------------------------------------------------------------
+// 11. Chess.com & Multi-Source Import Integration Tests
+// -------------------------------------------------------------
+console.log("Testing Chess.com & Multi-Source Import UI and Logic...");
+
+// Verify Import Game header button and icon
+assert(indexHtml.includes('id="btnTogglePgn"'), "index.html must include #btnTogglePgn");
+assert(indexHtml.includes('Import Game'), "index.html must include 'Import Game' button text");
+assert(indexHtml.includes('bi-box-arrow-in-down'), "index.html must use bi-box-arrow-in-down icon for Import Game");
+
+// Verify Import dropdown menu options
+assert(indexHtml.includes('id="importDropdownMenu"'), "index.html must include #importDropdownMenu");
+assert(indexHtml.includes('data-source="lichess"'), "Dropdown must include option for Lichess");
+assert(indexHtml.includes('data-source="chesscom"'), "Dropdown must include option for Chess.com");
+assert(indexHtml.includes('data-source="pgn"'), "Dropdown must include option for Raw PGN");
+
+// Verify segmented tab buttons
+assert(indexHtml.includes('data-import-tab="lichess"'), "index.html must include Lichess tab trigger");
+assert(indexHtml.includes('data-import-tab="chesscom"'), "index.html must include Chess.com tab trigger");
+assert(indexHtml.includes('data-import-tab="pgn"'), "index.html must include PGN tab trigger");
+
+// Verify tab panels & inputs
+assert(indexHtml.includes('id="tabPanelLichess"'), "index.html must include #tabPanelLichess");
+assert(indexHtml.includes('id="tabPanelChesscom"'), "index.html must include #tabPanelChesscom");
+assert(indexHtml.includes('id="tabPanelPgn"'), "index.html must include #tabPanelPgn");
+assert(indexHtml.includes('id="lichessInput"'), "index.html must include #lichessInput");
+assert(indexHtml.includes('id="chesscomInput"'), "index.html must include #chesscomInput");
+assert(indexHtml.includes('id="chesscomUsernameInput"'), "index.html must include #chesscomUsernameInput");
+assert(indexHtml.includes('id="pgnInput"'), "index.html must include #pgnInput");
+
+// Verify empty-state container action button updated
+assert(indexHtml.includes('id="btnOpenPgnInput"'), "index.html must preserve #btnOpenPgnInput ID for compatibility");
+assert(indexHtml.includes('Import Game</span>') || indexHtml.includes('Import Game\n'), "Empty state button must display 'Import Game'");
+
+// Verify JS functions for multi-source import
+assert(indexHtml.includes('function switchImportTab('), "index.html must include switchImportTab function");
+assert(indexHtml.includes('function extractChessComGameId('), "index.html must include extractChessComGameId function");
+assert(indexHtml.includes('function extractGameSource('), "index.html must include extractGameSource function");
+assert(indexHtml.includes('function fetchChessComGamePgn('), "index.html must include fetchChessComGamePgn function");
+assert(indexHtml.includes('function checkUrlForGame('), "index.html must include checkUrlForGame function");
+
+// Verify Chess.com sample game config
+assert(indexHtml.includes("chesscom: 'https://www.chess.com/game/live/173836469892'"), "index.html must include Chess.com sample game URL");
+assert(indexHtml.includes('chesscom_pgn:'), "index.html must include Chess.com bundled sample PGN");
+
+console.log("✓ Chess.com & Multi-Source Import Integration passed!");
 
 console.log("ALL BROWSER MODULE TESTS PASSED SUCCESSFULLY! 🎉");
 

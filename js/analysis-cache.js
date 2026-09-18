@@ -61,13 +61,53 @@
     }
 
     /**
-     * Extracts Lichess game ID from URL or raw ID
+     * Extracts Lichess game ID from URL or raw ID, stripping trailing /white, #move, query params.
      */
     function extractLichessId(candidate) {
         if (!candidate || typeof candidate !== 'string') return null;
         const trimmed = candidate.trim();
-        const urlMatch = trimmed.match(/(?:lichess\.org\/|^)([A-Za-z0-9]{8,12})/);
-        return urlMatch ? urlMatch[1] : null;
+        // If it clearly contains standard multi-line PGN and does not start with http/lichess.org
+        if ((trimmed.includes('[Event ') || trimmed.includes('1. e4') || trimmed.includes('1. d4')) && !trimmed.startsWith('http') && !trimmed.startsWith('lichess.org')) {
+            return null;
+        }
+        // Match lichess URL format: lichess.org/{gameId}
+        const urlMatch = trimmed.match(/lichess\.org\/(?:embed\/game\/)?([a-zA-Z0-9]{8})([a-zA-Z0-9]{4})?/i);
+        if (urlMatch) return urlMatch[1];
+        // Match hash/query format: #/ID or #ID
+        const hashMatch = trimmed.match(/[#?&](?:game=|id=)?\/?([a-zA-Z0-9]{8})([a-zA-Z0-9]{4})?/i);
+        if (hashMatch && !/^\d+$/.test(hashMatch[1])) {
+            return hashMatch[1];
+        }
+        // Standalone 8 or 12 character alphanumeric ID (not purely numeric)
+        const cleanId = trimmed.split(/[/\\?#]/)[0];
+        if (/^[a-zA-Z0-9]{8}([a-zA-Z0-9]{4})?$/.test(cleanId) && !/^\d+$/.test(cleanId)) {
+            return cleanId.substring(0, 8);
+        }
+        return null;
+    }
+
+    /**
+     * Extracts Chess.com numeric game ID from URL or raw ID, stripping trailing /white, #move, query params.
+     */
+    function extractChessComId(candidate) {
+        if (!candidate || typeof candidate !== 'string') return null;
+        const trimmed = candidate.trim();
+        // If it clearly contains standard multi-line PGN and does not start with http/chess.com
+        if ((trimmed.includes('[Event ') || trimmed.includes('1. e4') || trimmed.includes('1. d4')) && !trimmed.startsWith('http') && !trimmed.includes('chess.com')) {
+            return null;
+        }
+        // Match chess.com URL: chess.com/(?:analysis/)?(?:game/)?(?:live|daily)/(\d+) or similar
+        const urlMatch = trimmed.match(/chess\.com\/(?:[a-zA-Z0-9_.-]+\/)*(?:live|daily|game)\/(\d+)/i);
+        if (urlMatch) return urlMatch[1];
+        // Match query or hash param: ?game=123 or #game=123 or #chesscom=123
+        const paramMatch = trimmed.match(/[#?&](?:game=|id=|chesscom=|cc=)?\/?(\d{8,14})/i);
+        if (paramMatch) return paramMatch[1];
+        // Standalone numeric ID (8 to 14 digits)
+        const cleanId = trimmed.split(/[/\\?#]/)[0];
+        if (/^\d{8,14}$/.test(cleanId)) {
+            return cleanId;
+        }
+        return null;
     }
 
     class AnalysisCache {
@@ -128,9 +168,13 @@
 
             const fingerprint = extractPgnFingerprint(pgn);
             const lichessId = extractLichessId(pgn);
+            const chessComId = extractChessComId(pgn);
 
             const matchIndex = entries.findIndex(entry => {
                 if (lichessId && entry.lichessId && entry.lichessId.toLowerCase() === lichessId.toLowerCase()) {
+                    return true;
+                }
+                if (chessComId && entry.chessComId && entry.chessComId === chessComId) {
                     return true;
                 }
                 if (fingerprint && entry.fingerprint && entry.fingerprint === fingerprint) {
@@ -162,20 +206,24 @@
          * @param {string} pgn - PGN text
          * @param {number} depth - Analysis depth
          * @param {object} analysisResult - { game_info, moves }
-         * @param {string} [lichessId] - Optional lichess ID
+         * @param {string} [sourceId] - Optional lichess or chess.com ID
          */
-        set(pgn, depth, analysisResult, lichessId = null) {
+        set(pgn, depth, analysisResult, sourceId = null) {
             if (!pgn || !analysisResult || !analysisResult.moves || analysisResult.moves.length === 0) {
                 return false;
             }
 
             const entries = this.getAll();
             const fingerprint = extractPgnFingerprint(pgn);
-            const resolvedLichessId = lichessId || extractLichessId(pgn);
+            const resolvedLichessId = extractLichessId(sourceId) || extractLichessId(pgn);
+            const resolvedChessComId = extractChessComId(sourceId) || extractChessComId(pgn);
 
             // Filter out existing matching entry
             const filtered = entries.filter(entry => {
                 if (resolvedLichessId && entry.lichessId && entry.lichessId.toLowerCase() === resolvedLichessId.toLowerCase()) {
+                    return false;
+                }
+                if (resolvedChessComId && entry.chessComId && entry.chessComId === resolvedChessComId) {
                     return false;
                 }
                 if (fingerprint && entry.fingerprint && entry.fingerprint === fingerprint) {
@@ -188,6 +236,7 @@
                 id: hashKey(fingerprint + '_' + depth),
                 fingerprint: fingerprint,
                 lichessId: resolvedLichessId || null,
+                chessComId: resolvedChessComId || null,
                 depth: depth || 18,
                 timestamp: Date.now(),
                 game_info: analysisResult.game_info || {},
@@ -220,6 +269,7 @@
     defaultInstance.AnalysisCache = AnalysisCache;
     defaultInstance.extractPgnFingerprint = extractPgnFingerprint;
     defaultInstance.extractLichessId = extractLichessId;
+    defaultInstance.extractChessComId = extractChessComId;
 
     return defaultInstance;
 }));
